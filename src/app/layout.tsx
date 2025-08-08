@@ -5,7 +5,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'ConsensusFlow',
+  title: 'WeDecide',
   description: 'Streamline your decision-making process.',
 };
 

@@ -30,7 +30,7 @@ function Logo() {
           <path d="m9 12 2 2 4-4" />
         </svg>
       </div>
-      <h2 className="text-lg font-semibold tracking-tighter text-primary">ConsensusFlow</h2>
+      <h2 className="text-lg font-semibold tracking-tighter text-primary">WeDecide</h2>
     </div>
   );
 }
