@@ -7,6 +7,7 @@ import type { Decision, DecisionStatus } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { FileSearch } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
@@ -27,6 +28,17 @@ function StatusBadge({ status }: { status: DecisionStatus }) {
 
   return <Badge variant={variant} className={badgeClass}>{text}</Badge>;
 }
+
+function FormattedDate({ dateString }: { dateString: string }) {
+  const [formattedDate, setFormattedDate] = useState('');
+
+  useEffect(() => {
+    setFormattedDate(format(new Date(dateString), 'PPP'));
+  }, [dateString]);
+
+  return <>{formattedDate}</>;
+}
+
 
 export function DashboardTable({ decisions }: { decisions: Decision[] }) {
   return (
@@ -56,7 +68,9 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
                 <StatusBadge status={decision.status} />
               </TableCell>
               <TableCell>{decision.decisionType}</TableCell>
-              <TableCell>{format(new Date(decision.submittedAt), 'PPP')}</TableCell>
+              <TableCell>
+                <FormattedDate dateString={decision.submittedAt} />
+              </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={`/review/${decision.id}`}>
