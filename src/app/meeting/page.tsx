@@ -19,34 +19,41 @@ export default async function MeetingPage() {
         <p className="text-muted-foreground">Review and finalize decisions for the current meeting.</p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-8">
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
             <h2 className="text-xl font-semibold tracking-tight">Scheduled for Decision</h2>
             {scheduledDecisions.length > 0 ? (
-                scheduledDecisions.map(decision => (
+              scheduledDecisions.map(decision => (
                 <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} />
-                ))
+              ))
             ) : (
-                <Card className="flex items-center justify-center h-40">
+              <Card className="flex items-center justify-center h-40">
                 <p className="text-muted-foreground">No decisions currently scheduled for meeting.</p>
-                </Card>
+              </Card>
             )}
-
-            <Separator className="my-8" />
-
-            <h2 className="text-xl font-semibold tracking-tight">Past Decisions</h2>
-            {pastDecisions.length > 0 ? (
-                pastDecisions.map(decision => (
-                <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} />
-                ))
-            ) : (
-                <Card className="flex items-center justify-center h-40">
-                <p className="text-muted-foreground">No past decisions recorded.</p>
-                </Card>
-            )}
-        </div>
-        <div className="lg:col-span-1">
+          </div>
+          <div className="lg:col-span-1">
+             <h2 className="text-xl font-semibold tracking-tight invisible">Intelligent Support</h2>
             <IntelligentSupport decisions={scheduledDecisions} />
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight mb-6">Past Decisions</h2>
+          <div className="space-y-6">
+            {pastDecisions.length > 0 ? (
+              pastDecisions.map(decision => (
+                <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} />
+              ))
+            ) : (
+              <Card className="flex items-center justify-center h-40">
+                <p className="text-muted-foreground">No past decisions recorded.</p>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </div>
