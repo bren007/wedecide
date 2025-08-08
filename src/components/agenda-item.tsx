@@ -1,11 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { Decision, DecisionStatus } from '@/lib/types';
+import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2 } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target } from 'lucide-react';
 import { useTransition } from 'react';
 
 type OutcomeButtonProps = {
@@ -45,7 +45,7 @@ const statusConfig = {
 };
 
 
-export function AgendaItem({ decision }: { decision: Decision }) {
+export function AgendaItem({ decision, objective }: { decision: Decision; objective?: Objective }) {
   const { title, background, decisionType, status, id } = decision;
   const isPastDecision = status !== 'Scheduled for Meeting';
   const config = statusConfig[status] || {};
@@ -67,8 +67,17 @@ export function AgendaItem({ decision }: { decision: Decision }) {
             )}
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground text-sm">{background}</p>
+      <CardContent className="space-y-4">
+        {objective && (
+          <div className="flex items-start gap-3 text-muted-foreground p-3 bg-muted/50 rounded-lg text-sm">
+            <Target className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+            <div>
+              <p className="font-semibold text-foreground">{objective.name}</p>
+              <p>{objective.description}</p>
+            </div>
+          </div>
+        )}
+        <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
       </CardContent>
       {!isPastDecision && (
         <CardFooter className="flex justify-end gap-2">
