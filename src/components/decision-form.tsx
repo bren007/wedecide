@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react';
 import { createDecision, type FormState } from '@/app/submit/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ function SubmitButton() {
 
 export function DecisionForm() {
   const initialState: FormState = {};
-  const [state, dispatch] = useFormState(createDecision, initialState);
+  const [state, dispatch] = useActionState(createDecision, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
