@@ -1,0 +1,90 @@
+import type { Decision, DecisionStatus } from './types';
+import { revalidatePath } from 'next/cache';
+
+// In a real application, this would be a database.
+// For this demo, we're using a mutable in-memory array.
+let decisions: Decision[] = [
+  {
+    id: 'DEC-001',
+    title: 'Project Phoenix: Q3 Budget Allocation',
+    background: 'Project Phoenix is entering its third quarter and requires a significant budget allocation to scale operations. The project has met all its Q2 milestones and is projected to exceed its annual targets. This proposal outlines the need for an additional $250,000 for new hires, marketing, and infrastructure upgrades. The finance department has reviewed the preliminary request and found it to be within the company\'s strategic investment framework.',
+    decisionType: 'Approve',
+    status: 'Scheduled for Meeting',
+    submittedAt: new Date('2023-10-15T09:00:00Z').toISOString(),
+  },
+  {
+    id: 'DEC-002',
+    title: 'Adoption of New HR Management Software',
+    background: 'The current HR software is outdated, leading to inefficiencies in payroll, recruitment, and employee data management. After evaluating several market-leading solutions, the HR department recommends adopting "HR-Flow", a cloud-based platform that promises to streamline all HR processes. This proposal seeks endorsement for the transition, with a projected implementation timeline of 6 months.',
+    decisionType: 'Endorse',
+    status: 'In Review',
+    submittedAt: new Date('2023-10-20T14:30:00Z').toISOString(),
+  },
+  {
+    id: 'DEC-003',
+    title: 'Updated Work-From-Home Policy',
+    background: 'This document provides an overview of the proposed changes to the company\'s work-from-home policy. The key changes include a hybrid model requiring employees to be in the office three days a week and new guidelines for home office setup and security. This is for noting purposes, and feedback will be collected in a separate forum.',
+    decisionType: 'Note',
+    status: 'Submitted',
+    submittedAt: new Date('2023-10-22T11:00:00Z').toISOString(),
+  },
+  {
+    id: 'DEC-004',
+    title: 'Annual Company Offsite Event 2024',
+    background: 'Proposal for the annual company offsite event. The proposed location is a resort in the mountains, with a focus on team-building activities and strategic planning sessions. The total estimated cost is $80,000.',
+    decisionType: 'Approve',
+    status: 'Approved',
+    submittedAt: new Date('2023-09-01T10:00:00Z').toISOString(),
+  },
+  {
+    id: 'DEC-005',
+    title: 'New Partnership with Innovate Inc.',
+    background: 'A strategic partnership opportunity has emerged with Innovate Inc., a leader in the AI research space. This collaboration would give us access to their proprietary technology, accelerating our product development. This proposal is to endorse the partnership agreement draft.',
+    decisionType: 'Endorse',
+    status: 'Endorsed',
+    submittedAt: new Date('2023-09-05T16:00:00Z').toISOString(),
+  },
+  {
+    id: 'DEC-006',
+    title: 'Q4 Marketing Campaign Launch',
+    background: 'Details of the upcoming Q4 marketing campaign, "Future Forward". The campaign will target new demographics through social media and influencer collaborations. This is for the board to note.',
+    decisionType: 'Note',
+    status: 'Noted',
+    submittedAt: new Date('2023-09-10T12:00:00Z').toISOString(),
+  },
+];
+
+export async function getDecisions(): Promise<Decision[]> {
+  // Simulate network latency
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return decisions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+}
+
+export async function getDecisionById(id: string): Promise<Decision | undefined> {
+  // Simulate network latency
+  await new Promise(resolve => setTimeout(resolve, 50));
+  return decisions.find(d => d.id === id);
+}
+
+export async function addDecision(decision: Omit<Decision, 'id' | 'submittedAt' | 'status'>) {
+    const newDecision: Decision = {
+        ...decision,
+        id: `DEC-${String(decisions.length + 1).padStart(3, '0')}`,
+        submittedAt: new Date().toISOString(),
+        status: 'Submitted',
+    };
+    decisions.unshift(newDecision);
+    revalidatePath('/');
+    revalidatePath(`/review/${newDecision.id}`);
+    return newDecision;
+}
+
+export async function updateDecisionStatus(id: string, status: DecisionStatus) {
+    const decision = await getDecisionById(id);
+    if (decision) {
+        decision.status = status;
+        revalidatePath('/');
+        revalidatePath(`/review/${id}`);
+        revalidatePath('/meeting');
+    }
+}

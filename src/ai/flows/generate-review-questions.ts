@@ -1,0 +1,59 @@
+'use server';
+
+/**
+ * @fileOverview This file defines a Genkit flow for generating questions to assess a proposal's fitness for review.
+ *
+ * - generateFitnessReviewQuestions - A function that triggers the question generation flow.
+ * - GenerateFitnessReviewQuestionsInput - The input type for the generateFitnessReviewQuestions function.
+ * - GenerateFitnessReviewQuestionsOutput - The return type for the generateFitnessReviewQuestions function.
+ */
+
+import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
+
+const GenerateFitnessReviewQuestionsInputSchema = z.object({
+  title: z.string().describe('The title of the proposal.'),
+  background: z.string().describe('The background information of the proposal.'),
+  decisionType: z.enum(['Approve', 'Endorse', 'Note']).describe('The type of decision being sought.'),
+});
+export type GenerateFitnessReviewQuestionsInput = z.infer<
+  typeof GenerateFitnessReviewQuestionsInputSchema
+>;
+
+const GenerateFitnessReviewQuestionsOutputSchema = z.object({
+  questions: z.array(z.string()).describe('A list of questions to assess the proposal\u2019s fitness for review.'),
+});
+export type GenerateFitnessReviewQuestionsOutput = z.infer<
+  typeof GenerateFitnessReviewQuestionsOutputSchema
+>;
+
+export async function generateFitnessReviewQuestions(
+  input: GenerateFitnessReviewQuestionsInput
+): Promise<GenerateFitnessReviewQuestionsOutput> {
+  return generateFitnessReviewQuestionsFlow(input);
+}
+
+const prompt = ai.definePrompt({
+  name: 'generateFitnessReviewQuestionsPrompt',
+  input: {schema: GenerateFitnessReviewQuestionsInputSchema},
+  output: {schema: GenerateFitnessReviewQuestionsOutputSchema},
+  prompt: `You are a secretariat member responsible for vetting proposals. Generate a list of questions that will help assess the fitness of the following proposal for review. Focus on questions that highlight relevance, completeness, and potential impact.
+
+Proposal Title: {{{title}}}
+Background: {{{background}}}
+Decision Type: {{{decisionType}}}
+
+Questions (as a numbered list):`,
+});
+
+const generateFitnessReviewQuestionsFlow = ai.defineFlow(
+  {
+    name: 'generateFitnessReviewQuestionsFlow',
+    inputSchema: GenerateFitnessReviewQuestionsInputSchema,
+    outputSchema: GenerateFitnessReviewQuestionsOutputSchema,
+  },
+  async input => {
+    const {output} = await prompt(input);
+    return output!;
+  }
+);
