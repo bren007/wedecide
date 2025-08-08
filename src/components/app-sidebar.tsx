@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { LayoutDashboard, FilePlus2, ClipboardList, Settings } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -35,13 +35,42 @@ function Logo() {
   );
 }
 
-export function AppSidebar() {
+function NavLinks() {
   const pathname = usePathname();
+  const isActive = (path: string) => pathname === path;
 
-  const isActive = (path: string) => {
-    return pathname === path;
-  };
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive('/')}>
+          <Link href="/">
+            <LayoutDashboard />
+            <span>Dashboard</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive('/submit')}>
+          <Link href="/submit">
+            <FilePlus2 />
+            <span>Submit Decision</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive('/meeting')}>
+          <Link href="/meeting">
+            <ClipboardList />
+            <span>Meeting Agenda</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
 
+
+export function AppSidebar() {
   return (
     <>
       <SidebarHeader>
@@ -49,32 +78,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <Separator />
       <SidebarContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive('/')}>
-              <Link href="/">
-                <LayoutDashboard />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive('/submit')}>
-              <Link href="/submit">
-                <FilePlus2 />
-                <span>Submit Decision</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive('/meeting')}>
-              <Link href="/meeting">
-                <ClipboardList />
-                <span>Meeting Agenda</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavLinks />
       </SidebarContent>
     </>
   );
