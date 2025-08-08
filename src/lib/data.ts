@@ -1,8 +1,15 @@
-import type { Decision, DecisionStatus } from './types';
+import type { Decision, DecisionStatus, Objective } from './types';
 import { revalidatePath } from 'next/cache';
 
 // In a real application, this would be a database.
 // For this demo, we're using a mutable in-memory array.
+const objectives: Objective[] = [
+  { id: 'OBJ-001', name: 'Market Expansion', description: 'Expand market share in emerging regions by 15%.' },
+  { id: 'OBJ-002', name: 'Operational Efficiency', description: 'Reduce operational costs by 10% through automation.' },
+  { id: 'OBJ-003', name: 'Product Innovation', description: 'Launch two new major product features this year.' },
+  { id: 'OBJ-004', name: 'Customer Satisfaction', description: 'Improve customer satisfaction score to 95%.' },
+];
+
 let decisions: Decision[] = [
   {
     id: 'DEC-001',
@@ -11,6 +18,7 @@ let decisions: Decision[] = [
     decisionType: 'Approve',
     status: 'Scheduled for Meeting',
     submittedAt: new Date('2023-10-15T09:00:00Z').toISOString(),
+    objectiveId: 'OBJ-003',
   },
   {
     id: 'DEC-002',
@@ -19,6 +27,7 @@ let decisions: Decision[] = [
     decisionType: 'Endorse',
     status: 'In Review',
     submittedAt: new Date('2023-10-20T14:30:00Z').toISOString(),
+    objectiveId: 'OBJ-002',
   },
   {
     id: 'DEC-003',
@@ -27,6 +36,7 @@ let decisions: Decision[] = [
     decisionType: 'Note',
     status: 'Submitted',
     submittedAt: new Date('2023-10-22T11:00:00Z').toISOString(),
+    objectiveId: 'OBJ-004',
   },
   {
     id: 'DEC-004',
@@ -35,6 +45,7 @@ let decisions: Decision[] = [
     decisionType: 'Approve',
     status: 'Approved',
     submittedAt: new Date('2023-09-01T10:00:00Z').toISOString(),
+    objectiveId: 'OBJ-004',
   },
   {
     id: 'DEC-005',
@@ -43,6 +54,7 @@ let decisions: Decision[] = [
     decisionType: 'Endorse',
     status: 'Endorsed',
     submittedAt: new Date('2023-09-05T16:00:00Z').toISOString(),
+    objectiveId: 'OBJ-001',
   },
   {
     id: 'DEC-006',
@@ -51,6 +63,7 @@ let decisions: Decision[] = [
     decisionType: 'Note',
     status: 'Noted',
     submittedAt: new Date('2023-09-10T12:00:00Z').toISOString(),
+    objectiveId: 'OBJ-001',
   },
 ];
 
@@ -87,4 +100,16 @@ export async function updateDecisionStatus(id: string, status: DecisionStatus) {
         revalidatePath(`/review/${id}`);
         revalidatePath('/meeting');
     }
+}
+
+export async function getObjectives(): Promise<Objective[]> {
+  // Simulate network latency
+  await new Promise(resolve => setTimeout(resolve, 50));
+  return objectives;
+}
+
+export async function getObjectiveById(id: string): Promise<Objective | undefined> {
+  // Simulate network latency
+  await new Promise(resolve => setTimeout(resolve, 50));
+  return objectives.find(o => o.id === id);
 }

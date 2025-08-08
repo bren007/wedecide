@@ -1,4 +1,4 @@
-import { getDecisionById } from '@/lib/data';
+import { getDecisionById, getObjectiveById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { approveForMeeting } from './actions';
 import { ProposalSummary } from '@/components/proposal-summary';
 import { FitnessQuestions } from '@/components/fitness-questions';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Target } from 'lucide-react';
 
 export default async function ReviewPage({ params }: { params: { id: string } }) {
   const decision = await getDecisionById(params.id);
@@ -15,6 +15,8 @@ export default async function ReviewPage({ params }: { params: { id: string } })
   if (!decision) {
     notFound();
   }
+
+  const objective = await getObjectiveById(decision.objectiveId);
 
   const canApprove = decision.status === 'Submitted' || decision.status === 'In Review';
 
@@ -38,6 +40,18 @@ export default async function ReviewPage({ params }: { params: { id: string } })
               </div>
             </CardHeader>
             <CardContent>
+              {objective && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2 text-lg">Strategic Objective</h3>
+                  <div className="flex items-start gap-3 text-muted-foreground p-4 bg-muted/50 rounded-lg">
+                    <Target className="h-5 w-5 mt-1 shrink-0 text-primary" />
+                    <div>
+                      <p className="font-semibold text-foreground">{objective.name}</p>
+                      <p className="text-sm">{objective.description}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
               <h3 className="font-semibold mb-2 text-lg">Background</h3>
               <p className="text-muted-foreground whitespace-pre-wrap">{decision.background}</p>
             </CardContent>

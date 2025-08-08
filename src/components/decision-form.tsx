@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Send, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import type { Objective } from '@/lib/types';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -22,7 +24,7 @@ function SubmitButton() {
   );
 }
 
-export function DecisionForm() {
+export function DecisionForm({ objectives }: { objectives: Objective[] }) {
   const initialState: FormState = {};
   const [state, dispatch] = useActionState(createDecision, initialState);
   const { toast } = useToast();
@@ -44,6 +46,25 @@ export function DecisionForm() {
         <Input id="title" name="title" placeholder="e.g., Project Phoenix Q3 Budget" />
         {state.errors?.title && (
           <p className="text-sm text-destructive">{state.errors.title.join(', ')}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="objective">Strategic Objective</Label>
+        <Select name="objectiveId">
+          <SelectTrigger>
+            <SelectValue placeholder="Select an objective..." />
+          </SelectTrigger>
+          <SelectContent>
+            {objectives.map(objective => (
+              <SelectItem key={objective.id} value={objective.id}>
+                {objective.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {state.errors?.objectiveId && (
+          <p className="text-sm text-destructive">{state.errors.objectiveId.join(', ')}</p>
         )}
       </div>
 

@@ -1,3 +1,9 @@
+export type Objective = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 export type Decision = {
   id: string;
   title: string;
@@ -5,6 +11,7 @@ export type Decision = {
   decisionType: 'Approve' | 'Endorse' | 'Note';
   status: DecisionStatus;
   submittedAt: string;
+  objectiveId: string;
 };
 
 export type DecisionStatus = 

@@ -3,7 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { Decision, DecisionStatus } from '@/lib/types';
+import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { FileSearch } from 'lucide-react';
@@ -33,8 +33,14 @@ function FormattedDate({ dateString }: { dateString: string }) {
   const [formattedDate, setFormattedDate] = useState('');
 
   useEffect(() => {
+    // This now runs only on the client, avoiding the hydration mismatch.
     setFormattedDate(format(new Date(dateString), 'PPP'));
   }, [dateString]);
+
+  // Render a placeholder on the server and initial client render
+  if (!formattedDate) {
+    return null;
+  }
 
   return <>{formattedDate}</>;
 }

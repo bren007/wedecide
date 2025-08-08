@@ -11,6 +11,7 @@ const DecisionSchema = z.object({
   decisionType: z.enum(['Approve', 'Endorse', 'Note'], {
     errorMap: () => ({ message: 'Please select a decision type.' }),
   }),
+  objectiveId: z.string().min(1, 'Please select an objective.'),
 });
 
 export type FormState = {
@@ -18,6 +19,7 @@ export type FormState = {
     title?: string[];
     background?: string[];
     decisionType?: string[];
+    objectiveId?: string[];
   };
   message?: string;
 };
@@ -27,6 +29,7 @@ export async function createDecision(prevState: FormState, formData: FormData) {
     title: formData.get('title'),
     background: formData.get('background'),
     decisionType: formData.get('decisionType'),
+    objectiveId: formData.get('objectiveId'),
   });
 
   if (!validatedFields.success) {
