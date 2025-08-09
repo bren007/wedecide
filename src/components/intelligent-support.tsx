@@ -55,7 +55,7 @@ export function IntelligentSupport({ decisions }: { decisions: Decision[] }) {
           <Sparkles className="text-primary" />
           Intelligent Support
         </CardTitle>
-        <CardDescription>Select a decision and generate targeted questions to aid deliberation.</CardDescription>
+        <CardDescription>Select a proposal and generate targeted questions that assist group exploration and lead to well informed decision making</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
