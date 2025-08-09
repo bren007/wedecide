@@ -59,7 +59,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
         </div>
 
         <div className="lg:col-span-1 space-y-6">
-            <ProposalSummary background={decision.background} objective={objective} />
+            <ProposalSummary decisions={[decision]} />
             <FitnessQuestions decision={decision} />
         </div>
       </div>

@@ -1,24 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { summarizeProposalBackground } from '@/ai/flows/summarize-proposal';
 import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
-import type { Objective } from '@/lib/types';
+import type { Decision, Objective } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getObjectiveById } from '@/lib/data';
 
-export function ProposalSummary({ background, objective }: { background: string; objective?: Objective }) {
+
+export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
+  const [selectedDecisionId, setSelectedDecisionId] = useState<string | undefined>(decisions.length > 0 ? decisions[0].id : undefined);
   const [summary, setSummary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  const selectedDecision = decisions.find(d => d.id === selectedDecisionId);
+  const [objective, setObjective] = useState<Objective | undefined>(undefined);
+
+  useEffect(() => {
+    if (selectedDecision) {
+        getObjectiveById(selectedDecision.objectiveId).then(setObjective);
+    } else {
+        setObjective(undefined);
+    }
+    setSummary('');
+  }, [selectedDecision]);
 
   const handleSummarize = async () => {
-    if (!objective) {
+    if (!selectedDecision || !objective) {
         toast({
             title: 'Error',
-            description: 'An objective must be linked to generate a strategic summary.',
+            description: 'A decision with an objective must be selected to generate a strategic summary.',
             variant: 'destructive',
         });
         return;
@@ -27,7 +43,7 @@ export function ProposalSummary({ background, objective }: { background: string;
     setSummary('');
     try {
       const result = await summarizeProposalBackground({
-        background,
+        background: selectedDecision.background,
         objectiveName: objective.name,
         objectiveDescription: objective.description,
        });
@@ -51,7 +67,23 @@ export function ProposalSummary({ background, objective }: { background: string;
         <CardDescription>Generate a concise summary of the proposal background and its strategic alignment.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={handleSummarize} disabled={isLoading || !objective} className="w-full">
+        {decisions.length > 1 && (
+            <div className="space-y-2">
+                <Select onValueChange={setSelectedDecisionId} value={selectedDecisionId}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a decision to summarize..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {decisions.map(decision => (
+                    <SelectItem key={decision.id} value={decision.id}>
+                        {decision.title}
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
+            </div>
+        )}
+        <Button onClick={handleSummarize} disabled={isLoading || !selectedDecision || !objective} className="w-full">
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
