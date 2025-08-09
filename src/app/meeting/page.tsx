@@ -20,9 +20,12 @@ export default async function MeetingPage() {
       </div>
 
       <div className="space-y-8">
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+           <h2 className="text-xl font-semibold tracking-tight lg:col-span-2">Scheduled for Decision</h2>
+           <h2 className="text-xl font-semibold tracking-tight hidden lg:block">Intelligent Support</h2>
+        </div>
+        <div className="grid gap-8 lg:grid-cols-3 items-start">
           <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-xl font-semibold tracking-tight">Scheduled for Decision</h2>
             {scheduledDecisions.length > 0 ? (
               scheduledDecisions.map(decision => (
                 <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} />
@@ -34,7 +37,6 @@ export default async function MeetingPage() {
             )}
           </div>
           <div className="lg:col-span-1">
-             <h2 className="text-xl font-semibold tracking-tight invisible">Intelligent Support</h2>
             <IntelligentSupport decisions={scheduledDecisions} />
           </div>
         </div>
