@@ -1,7 +1,8 @@
 'use server';
 
 import { z } from 'zod';
-import { addDecision } from '@/lib/data';
+import { decisions } from '@/lib/data';
+import type { Decision } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -24,6 +25,17 @@ export type FormState = {
   message?: string;
 };
 
+async function addDecision(decision: Omit<Decision, 'id' | 'submittedAt' | 'status'>) {
+    const newDecision: Decision = {
+        ...decision,
+        id: `DEC-${String(decisions.length + 1).padStart(3, '0')}`,
+        submittedAt: new Date().toISOString(),
+        status: 'Submitted',
+    };
+    decisions.unshift(newDecision);
+    return newDecision;
+}
+
 export async function createDecision(prevState: FormState, formData: FormData) {
   const validatedFields = DecisionSchema.safeParse({
     title: formData.get('title'),
@@ -40,13 +52,14 @@ export async function createDecision(prevState: FormState, formData: FormData) {
   }
   
   try {
-    await addDecision(validatedFields.data);
+    const newDecision = await addDecision(validatedFields.data);
+    revalidatePath('/');
+    revalidatePath(`/review/${newDecision.id}`);
   } catch (error) {
     return {
       message: 'Database Error: Failed to Create Decision.',
     };
   }
 
-  revalidatePath('/');
   redirect('/');
 }

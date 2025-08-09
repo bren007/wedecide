@@ -1,8 +1,15 @@
 'use server';
 
-import { updateDecisionStatus } from '@/lib/data';
+import { getDecisionById } from '@/lib/data';
 import type { DecisionStatus } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+
+async function updateDecisionStatus(id: string, status: DecisionStatus) {
+  const decision = await getDecisionById(id);
+  if (decision) {
+      decision.status = status;
+  }
+}
 
 export async function setDecisionOutcome(id: string, outcome: DecisionStatus) {
   // Add a check to ensure only valid outcome statuses are set

@@ -1,5 +1,4 @@
 import type { Decision, DecisionStatus, Objective } from './types';
-import { revalidatePath } from 'next/cache';
 
 // In a real application, this would be a database.
 // For this demo, we're using a mutable in-memory array.
@@ -10,7 +9,7 @@ const objectives: Objective[] = [
   { id: 'OBJ-004', name: 'Customer Satisfaction', description: 'Improve customer satisfaction score to 95%.' },
 ];
 
-let decisions: Decision[] = [
+export let decisions: Decision[] = [
   {
     id: 'DEC-001',
     title: 'Project Phoenix: Q3 Budget Allocation',
@@ -77,29 +76,6 @@ export async function getDecisionById(id: string): Promise<Decision | undefined>
   // Simulate network latency
   await new Promise(resolve => setTimeout(resolve, 50));
   return decisions.find(d => d.id === id);
-}
-
-export async function addDecision(decision: Omit<Decision, 'id' | 'submittedAt' | 'status'>) {
-    const newDecision: Decision = {
-        ...decision,
-        id: `DEC-${String(decisions.length + 1).padStart(3, '0')}`,
-        submittedAt: new Date().toISOString(),
-        status: 'Submitted',
-    };
-    decisions.unshift(newDecision);
-    revalidatePath('/');
-    revalidatePath(`/review/${newDecision.id}`);
-    return newDecision;
-}
-
-export async function updateDecisionStatus(id: string, status: DecisionStatus) {
-    const decision = await getDecisionById(id);
-    if (decision) {
-        decision.status = status;
-        revalidatePath('/');
-        revalidatePath(`/review/${id}`);
-        revalidatePath('/meeting');
-    }
 }
 
 export async function getObjectives(): Promise<Objective[]> {
