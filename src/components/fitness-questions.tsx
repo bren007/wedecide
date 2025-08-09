@@ -40,7 +40,7 @@ export function FitnessQuestions({ decision }: { decision: Decision }) {
     <Card>
       <CardHeader>
         <CardTitle>Intelligent Vetting</CardTitle>
-        <CardDescription>Generate questions to assess if this proposal is ready for strategic review.</CardDescription>
+        <CardDescription>Generate questions to assess if this proposal is ready for consideration by decision makers.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button onClick={handleGenerateQuestions} disabled={isLoading} className="w-full">

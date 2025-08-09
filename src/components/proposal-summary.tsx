@@ -7,17 +7,30 @@ import { summarizeProposalBackground } from '@/ai/flows/summarize-proposal';
 import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
+import type { Objective } from '@/lib/types';
 
-export function ProposalSummary({ background }: { background: string }) {
+export function ProposalSummary({ background, objective }: { background: string; objective?: Objective }) {
   const [summary, setSummary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSummarize = async () => {
+    if (!objective) {
+        toast({
+            title: 'Error',
+            description: 'An objective must be linked to generate a strategic summary.',
+            variant: 'destructive',
+        });
+        return;
+    }
     setIsLoading(true);
     setSummary('');
     try {
-      const result = await summarizeProposalBackground({ background });
+      const result = await summarizeProposalBackground({
+        background,
+        objectiveName: objective.name,
+        objectiveDescription: objective.description,
+       });
       setSummary(result.summary);
     } catch (error) {
       console.error('Failed to generate summary:', error);
@@ -34,11 +47,11 @@ export function ProposalSummary({ background }: { background: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>AI Summary</CardTitle>
-        <CardDescription>Generate a concise summary of the proposal background.</CardDescription>
+        <CardTitle>Intelligent Summary</CardTitle>
+        <CardDescription>Generate a concise summary of the proposal background and its strategic alignment.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={handleSummarize} disabled={isLoading} className="w-full">
+        <Button onClick={handleSummarize} disabled={isLoading || !objective} className="w-full">
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -55,7 +68,7 @@ export function ProposalSummary({ background }: { background: string }) {
         )}
         {summary && (
           <div className="p-4 bg-muted/50 rounded-md border">
-            <p className="text-sm text-foreground">{summary}</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
           </div>
         )}
       </CardContent>
