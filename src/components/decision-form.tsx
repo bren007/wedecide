@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState } from 'react';
@@ -50,9 +51,9 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="objective">Strategic Objective</Label>
+        <Label htmlFor="objectiveId">Strategic Objective</Label>
         <Select name="objectiveId">
-          <SelectTrigger>
+          <SelectTrigger id="objectiveId">
             <SelectValue placeholder="Select an objective..." />
           </SelectTrigger>
           <SelectContent>
@@ -82,8 +83,8 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
       </div>
 
       <div className="space-y-3">
-        <Label>Type of Decision Sought</Label>
-        <RadioGroup name="decisionType" className="gap-4">
+        <Label id="decisionTypeLabel">Type of Decision Sought</Label>
+        <RadioGroup name="decisionType" className="gap-4" aria-labelledby="decisionTypeLabel">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="Approve" id="approve" />
             <Label htmlFor="approve" className="font-normal">Approve: Seek formal approval for an action or resource allocation.</Label>
