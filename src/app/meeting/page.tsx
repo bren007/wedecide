@@ -1,8 +1,11 @@
-import { getDecisions, getObjectives } from '@/lib/data';
+import { getDecisions, getObjectives, getObjectiveById } from '@/lib/data';
 import { AgendaItem } from '@/components/agenda-item';
-import { IntelligentSupport } from '@/components/intelligent-support';
+import { IntelligentExploration } from '@/components/intelligent-exploration';
 import { Separator } from '@/components/ui/separator';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { ProposalSummary } from '@/components/proposal-summary';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default async function MeetingPage() {
   const allDecisions = await getDecisions();
@@ -22,7 +25,7 @@ export default async function MeetingPage() {
       <div className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
            <h2 className="text-xl font-semibold tracking-tight lg:col-span-2">Scheduled for Decision</h2>
-           <h2 className="text-xl font-semibold tracking-tight hidden lg:block">Intelligent Support</h2>
+           <h2 className="text-xl font-semibold tracking-tight">Decision Support</h2>
         </div>
         <div className="grid gap-8 lg:grid-cols-3 items-start">
           <div className="lg:col-span-2 space-y-6">
@@ -36,8 +39,11 @@ export default async function MeetingPage() {
               </Card>
             )}
           </div>
-          <div className="lg:col-span-1">
-            <IntelligentSupport decisions={scheduledDecisions} />
+          <div className="lg:col-span-1 space-y-6 sticky top-8">
+             <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+                <ProposalSummaries decisions={scheduledDecisions} />
+             </Suspense>
+            <IntelligentExploration decisions={scheduledDecisions} />
           </div>
         </div>
 
@@ -60,4 +66,18 @@ export default async function MeetingPage() {
       </div>
     </div>
   );
+}
+
+async function ProposalSummaries({ decisions }: { decisions: (Awaited<ReturnType<typeof getDecisions>>)}) {
+    const objectives = await Promise.all(decisions.map(d => getObjectiveById(d.objectiveId)));
+    return (
+        <>
+        {decisions.map((decision, i) => (
+            <div key={decision.id} className="hidden">
+                 <ProposalSummary background={decision.background} objective={objectives[i]} />
+            </div>
+        ))}
+        {decisions.length > 0 && <ProposalSummary background={decisions[0].background} objective={objectives[0]} />}
+        </>
+    )
 }

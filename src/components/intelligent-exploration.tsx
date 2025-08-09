@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Decision } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 
-export function IntelligentSupport({ decisions }: { decisions: Decision[] }) {
+export function IntelligentExploration({ decisions }: { decisions: Decision[] }) {
   const [selectedDecisionId, setSelectedDecisionId] = useState<string | undefined>(undefined);
   const [questions, setQuestions] = useState<StrategicQuestions | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,11 +49,11 @@ export function IntelligentSupport({ decisions }: { decisions: Decision[] }) {
   const selectedDecision = decisions.find(d => d.id === selectedDecisionId);
 
   return (
-    <Card className="sticky top-8">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="text-primary" />
-          Intelligent Support
+          Intelligent Exploration
         </CardTitle>
         <CardDescription>Select a proposal and generate targeted questions that assist group exploration and lead to well informed decision making</CardDescription>
       </CardHeader>
