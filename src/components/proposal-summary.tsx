@@ -28,7 +28,7 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
         setObjective(undefined);
     }
     setSummary('');
-  }, [selectedDecision]);
+  }, [selectedDecisionId, selectedDecision]);
 
   const handleSummarize = async () => {
     if (!selectedDecision || !objective) {

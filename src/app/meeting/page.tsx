@@ -11,9 +11,6 @@ export default async function MeetingPage() {
   const allDecisions = await getDecisions();
   const objectives = await getObjectives();
   const scheduledDecisions = allDecisions.filter(d => d.status === 'Scheduled for Meeting');
-  const pastDecisions = allDecisions.filter(d =>
-    ['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(d.status)
-  );
 
   return (
     <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -40,23 +37,6 @@ export default async function MeetingPage() {
             <h2 className="text-xl font-semibold tracking-tight">Decision Support</h2>
             <ProposalSummary decisions={scheduledDecisions} />
             <IntelligentExploration decisions={scheduledDecisions} />
-          </div>
-        </div>
-
-        <Separator />
-
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight mb-6">Past Decisions</h2>
-          <div className="space-y-6">
-            {pastDecisions.length > 0 ? (
-              pastDecisions.map(decision => (
-                <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} />
-              ))
-            ) : (
-              <Card className="flex items-center justify-center h-40">
-                <p className="text-muted-foreground">No past decisions recorded.</p>
-              </Card>
-            )}
           </div>
         </div>
       </div>
