@@ -37,13 +37,15 @@ const prompt = ai.definePrompt({
   name: 'generateFitnessReviewQuestionsPrompt',
   input: {schema: GenerateFitnessReviewQuestionsInputSchema},
   output: {schema: GenerateFitnessReviewQuestionsOutputSchema},
-  prompt: `You are a secretariat member responsible for vetting proposals. Generate a list of questions that will help assess the fitness of the following proposal for review. Focus on questions that highlight relevance, completeness, and potential impact.
+  prompt: `You are a member of a secretariat for a strategic decision-making body. Your role is to vet proposals to ensure they are "decision-ready" before they are presented.
+
+For the following proposal, generate a list of vetting questions. These questions should help determine if the proposal is fully formed, well-considered, and strategically aligned. Focus on questions that probe for clarity, completeness, potential risks, and resource implications to ensure decision-makers receive only high-quality materials.
 
 Proposal Title: {{{title}}}
 Background: {{{background}}}
 Decision Type: {{{decisionType}}}
 
-Questions (as a numbered list):`,
+Vetting Questions:`,
 });
 
 const generateFitnessReviewQuestionsFlow = ai.defineFlow(

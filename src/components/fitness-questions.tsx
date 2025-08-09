@@ -39,8 +39,8 @@ export function FitnessQuestions({ decision }: { decision: Decision }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>AI Fitness Questions</CardTitle>
-        <CardDescription>Generate questions to help vet this proposal.</CardDescription>
+        <CardTitle>Intelligent Vetting</CardTitle>
+        <CardDescription>Generate questions to assess if this proposal is ready for strategic review.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button onClick={handleGenerateQuestions} disabled={isLoading} className="w-full">
