@@ -10,10 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Upload } from 'lucide-react';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { Objective } from '@/lib/types';
+import { Separator } from './ui/separator';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -42,6 +43,20 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
 
   return (
     <form action={dispatch} className="space-y-6">
+      <div>
+        <Button variant="outline" className="w-full" disabled>
+          <Upload className="mr-2 h-4 w-4" />
+          Upload proposal document
+        </Button>
+      </div>
+
+      <div className="flex items-center">
+        <div className="flex-grow border-t border-muted"></div>
+        <span className="mx-4 text-xs uppercase text-muted-foreground">Or</span>
+        <div className="flex-grow border-t border-muted"></div>
+      </div>
+
+
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input id="title" name="title" placeholder="e.g., Project Phoenix Q3 Budget" />
