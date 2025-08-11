@@ -79,7 +79,7 @@ export function AgendaItem({ decision, objective }: { decision: Decision; object
         )}
         <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
       </CardContent>
-      <CardFooter className="flex justify-between items-center">
+      <CardFooter className="flex flex-wrap justify-between items-center gap-2">
         <div>
             <Button variant="outline" size="sm" disabled>
                 <FileText className="mr-2 h-4 w-4"/>
@@ -87,7 +87,7 @@ export function AgendaItem({ decision, objective }: { decision: Decision; object
             </Button>
         </div>
         {!isPastDecision && (
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 flex-wrap">
                 <OutcomeButton decisionId={id} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Approve</OutcomeButton>
                 <OutcomeButton decisionId={id} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
                 <OutcomeButton decisionId={id} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Note</OutcomeButton>
