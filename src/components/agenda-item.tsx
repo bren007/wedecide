@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -79,11 +80,11 @@ export function AgendaItem({ decision, objective }: { decision: Decision; object
         )}
         <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
       </CardContent>
-      <CardFooter className="flex flex-wrap justify-between items-center gap-2">
+      <CardFooter className="flex flex-wrap justify-between items-center gap-4 pt-4">
         <div>
             <Button variant="outline" size="sm" disabled>
                 <FileText className="mr-2 h-4 w-4"/>
-                View Proposal
+                View Proposal Document
             </Button>
         </div>
         {!isPastDecision && (
