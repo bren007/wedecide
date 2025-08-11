@@ -1,13 +1,14 @@
+
 import { getDecisionById, getObjectiveById } from '@/lib/data';
 import { notFound } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { approveForMeeting } from './actions';
 import { ProposalSummary } from '@/components/proposal-summary';
 import { FitnessQuestions } from '@/components/fitness-questions';
-import { CheckCircle2, Target } from 'lucide-react';
+import { CheckCircle2, Target, FileText } from 'lucide-react';
 
 export default async function ReviewPage({ params }: { params: { id: string } }) {
   const decision = await getDecisionById(params.id);
@@ -55,6 +56,12 @@ export default async function ReviewPage({ params }: { params: { id: string } })
               <h3 className="font-semibold mb-2 text-lg">Background</h3>
               <p className="text-muted-foreground whitespace-pre-wrap">{decision.background}</p>
             </CardContent>
+            <CardFooter>
+                 <Button variant="outline" disabled>
+                    <FileText className="mr-2 h-4 w-4"/>
+                    View Proposal Document
+                </Button>
+            </CardFooter>
           </Card>
         </div>
 

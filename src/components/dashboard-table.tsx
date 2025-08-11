@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { FileSearch, FileText } from 'lucide-react';
+import { FileSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
@@ -77,11 +78,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
               <TableCell>
                 <FormattedDate dateString={decision.submittedAt} />
               </TableCell>
-              <TableCell className="text-right space-x-1">
-                <Button variant="outline" size="sm" disabled>
-                    <FileText className="mr-2 h-4 w-4"/>
-                    View
-                </Button>
+              <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={`/review/${decision.id}`}>
                     <FileSearch className="h-4 w-4" />
