@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText } from 'lucide-react';
 import { useTransition } from 'react';
 
 type OutcomeButtonProps = {
@@ -79,14 +79,22 @@ export function AgendaItem({ decision, objective }: { decision: Decision; object
         )}
         <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
       </CardContent>
-      {!isPastDecision && (
-        <CardFooter className="flex justify-end gap-2">
-            <OutcomeButton decisionId={id} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Approve</OutcomeButton>
-            <OutcomeButton decisionId={id} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
-            <OutcomeButton decisionId={id} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Note</OutcomeButton>
-            <OutcomeButton decisionId={id} currentStatus={status} outcome="Not Approved" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
-        </CardFooter>
-      )}
+      <CardFooter className="flex justify-between items-center">
+        <div>
+            <Button variant="outline" size="sm" disabled>
+                <FileText className="mr-2 h-4 w-4"/>
+                View Proposal
+            </Button>
+        </div>
+        {!isPastDecision && (
+            <div className="flex justify-end gap-2">
+                <OutcomeButton decisionId={id} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Approve</OutcomeButton>
+                <OutcomeButton decisionId={id} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
+                <OutcomeButton decisionId={id} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Note</OutcomeButton>
+                <OutcomeButton decisionId={id} currentStatus={status} outcome="Not Approved" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
+            </div>
+        )}
+      </CardFooter>
     </Card>
   );
 }
