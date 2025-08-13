@@ -4,7 +4,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { Decision, DecisionStatus, Objective } from '@/lib/types';
+import type { Decision, DecisionStatus } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { FileSearch } from 'lucide-react';
@@ -56,6 +56,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
             <TableHead>Title</TableHead>
             <TableHead className="w-[150px]">Status</TableHead>
             <TableHead className="w-[200px]">Decision Type</TableHead>
+            <TableHead className="w-[200px]">Governance Level</TableHead>
             <TableHead className="w-[200px]">Submitted</TableHead>
             <TableHead className="w-[150px] text-right">Actions</TableHead>
           </TableRow>
@@ -63,7 +64,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
         <TableBody>
           {decisions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <TableCell colSpan={6} className="h-24 text-center">
                 No decisions submitted yet.
               </TableCell>
             </TableRow>
@@ -75,6 +76,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
                 <StatusBadge status={decision.status} />
               </TableCell>
               <TableCell>{decision.decisionType}</TableCell>
+              <TableCell>{decision.governanceLevel || 'N/A'}</TableCell>
               <TableCell>
                 <FormattedDate dateString={decision.submittedAt} />
               </TableCell>

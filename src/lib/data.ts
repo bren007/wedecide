@@ -1,4 +1,4 @@
-import type { Decision, DecisionStatus, Objective } from './types';
+import type { Decision, DecisionStatus, Objective, GovernanceLevel } from './types';
 
 // In a real application, this would be a database.
 // For this demo, we're using a mutable in-memory array.
@@ -18,6 +18,9 @@ export let decisions: Decision[] = [
     status: 'Scheduled for Meeting',
     submittedAt: new Date('2023-10-15T09:00:00Z').toISOString(),
     objectiveId: 'OBJ-003',
+    relatedDecisionIds: ['DEC-004'],
+    alignmentScore: 85,
+    governanceLevel: 'Project',
   },
   {
     id: 'DEC-002',
@@ -27,6 +30,8 @@ export let decisions: Decision[] = [
     status: 'In Review',
     submittedAt: new Date('2023-10-20T14:30:00Z').toISOString(),
     objectiveId: 'OBJ-002',
+    alignmentScore: 92,
+    governanceLevel: 'Program',
   },
   {
     id: 'DEC-003',
@@ -36,6 +41,7 @@ export let decisions: Decision[] = [
     status: 'Submitted',
     submittedAt: new Date('2023-10-22T11:00:00Z').toISOString(),
     objectiveId: 'OBJ-004',
+    governanceLevel: 'Strategic Board',
   },
   {
     id: 'DEC-004',
@@ -45,6 +51,7 @@ export let decisions: Decision[] = [
     status: 'Approved',
     submittedAt: new Date('2023-09-01T10:00:00Z').toISOString(),
     objectiveId: 'OBJ-004',
+    governanceLevel: 'Strategic Board',
   },
   {
     id: 'DEC-005',
@@ -54,6 +61,7 @@ export let decisions: Decision[] = [
     status: 'Endorsed',
     submittedAt: new Date('2023-09-05T16:00:00Z').toISOString(),
     objectiveId: 'OBJ-001',
+    governanceLevel: 'Program',
   },
   {
     id: 'DEC-006',
@@ -63,6 +71,8 @@ export let decisions: Decision[] = [
     status: 'Noted',
     submittedAt: new Date('2023-09-10T12:00:00Z').toISOString(),
     objectiveId: 'OBJ-001',
+    relatedDecisionIds: ['DEC-001'],
+    governanceLevel: 'Project',
   },
 ];
 

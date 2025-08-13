@@ -1,5 +1,6 @@
 
-import { getDecisionById, getObjectiveById } from '@/lib/data';
+
+import { getDecisionById, getObjectiveById, getDecisions } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { approveForMeeting } from './actions';
 import { ProposalSummary } from '@/components/proposal-summary';
 import { FitnessQuestions } from '@/components/fitness-questions';
-import { CheckCircle2, Target, FileText } from 'lucide-react';
+import { RelatedDecisions } from '@/components/related-decisions';
+import { StrategicAlignment } from '@/components/strategic-alignment';
+import { CheckCircle2, Target, FileText, Download } from 'lucide-react';
 
 export default async function ReviewPage({ params }: { params: { id: string } }) {
   const decision = await getDecisionById(params.id);
@@ -17,6 +20,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
     notFound();
   }
 
+  const allDecisions = await getDecisions();
   const objective = await getObjectiveById(decision.objectiveId);
 
   const canApprove = decision.status === 'Submitted' || decision.status === 'In Review';
@@ -29,15 +33,24 @@ export default async function ReviewPage({ params }: { params: { id: string } })
             <CardHeader>
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <Badge variant="outline" className="mb-2">{decision.decisionType}</Badge>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <Badge variant="outline">{decision.decisionType}</Badge>
+                    {decision.governanceLevel && <Badge variant="secondary">{decision.governanceLevel}</Badge>}
+                  </div>
                   <CardTitle className="text-2xl">{decision.title}</CardTitle>
                 </div>
-                <form action={approveForMeeting.bind(null, decision.id)}>
-                    <Button type="submit" disabled={!canApprove}>
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Approve for Meeting
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="outline" disabled>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export Decision
                     </Button>
-                </form>
+                    <form action={approveForMeeting.bind(null, decision.id)}>
+                        <Button type="submit" disabled={!canApprove} className="w-full">
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Approve for Meeting
+                        </Button>
+                    </form>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -46,10 +59,11 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                   <h3 className="font-semibold mb-2 text-lg">Strategic Objective</h3>
                   <div className="flex items-start gap-3 text-muted-foreground p-4 bg-muted/50 rounded-lg">
                     <Target className="h-5 w-5 mt-1 shrink-0 text-primary" />
-                    <div>
+                    <div className="flex-1">
                       <p className="font-semibold text-foreground">{objective.name}</p>
                       <p className="text-sm">{objective.description}</p>
                     </div>
+                    {decision.alignmentScore && <StrategicAlignment score={decision.alignmentScore} />}
                   </div>
                 </div>
               )}
@@ -68,6 +82,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
         <div className="lg:col-span-1 space-y-6">
             <ProposalSummary decisions={[decision]} />
             <FitnessQuestions decision={decision} />
+            <RelatedDecisions decision={decision} allDecisions={allDecisions} />
         </div>
       </div>
     </div>

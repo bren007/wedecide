@@ -12,7 +12,12 @@ export type Decision = {
   status: DecisionStatus;
   submittedAt: string;
   objectiveId: string;
+  relatedDecisionIds?: string[];
+  alignmentScore?: number;
+  governanceLevel?: GovernanceLevel;
 };
+
+export type GovernanceLevel = 'Project' | 'Program' | 'Strategic Board';
 
 export type DecisionStatus = 
   | 'Submitted'

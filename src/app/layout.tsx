@@ -1,19 +1,20 @@
-import type { Metadata } from 'next';
+
+'use client';
+
 import './globals.css';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
-
-export const metadata: Metadata = {
-  title: 'WeDecide',
-  description: 'Streamline your decision-making process.',
-};
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [meetingMode, setMeetingMode] = useState(false);
+
   return (
     <html lang="en" className="h-full">
       <head>
@@ -23,11 +24,14 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased h-full">
         <SidebarProvider>
-          <Sidebar>
-            <AppSidebar />
-          </Sidebar>
+          <div className={cn(meetingMode && 'hidden')}>
+            <Sidebar>
+              <AppSidebar />
+            </Sidebar>
+          </div>
           <SidebarInset>
-            {children}
+            {/* By passing a function as a children, we can pass the state to the meeting page */}
+            {typeof children === 'function' ? children({ meetingMode, setMeetingMode }) : children}
           </SidebarInset>
         </SidebarProvider>
         <Toaster />

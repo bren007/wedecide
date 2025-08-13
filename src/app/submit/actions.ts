@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { decisions } from '@/lib/data';
-import type { Decision } from '@/lib/types';
+import type { Decision, GovernanceLevel } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -13,6 +13,9 @@ const DecisionSchema = z.object({
     errorMap: () => ({ message: 'Please select a decision type.' }),
   }),
   objectiveId: z.string().min(1, 'Please select an objective.'),
+  governanceLevel: z.enum(['Project', 'Program', 'Strategic Board'], {
+    errorMap: () => ({ message: 'Please select a governance level.' }),
+  }),
 });
 
 export type FormState = {
@@ -21,6 +24,7 @@ export type FormState = {
     background?: string[];
     decisionType?: string[];
     objectiveId?: string[];
+    governanceLevel?: string[];
   };
   message?: string;
 };
@@ -31,6 +35,7 @@ async function addDecision(decision: Omit<Decision, 'id' | 'submittedAt' | 'stat
         id: `DEC-${String(decisions.length + 1).padStart(3, '0')}`,
         submittedAt: new Date().toISOString(),
         status: 'Submitted',
+        alignmentScore: Math.floor(Math.random() * 30) + 70, // Simulate score
     };
     decisions.unshift(newDecision);
     return newDecision;
@@ -42,6 +47,7 @@ export async function createDecision(prevState: FormState, formData: FormData) {
     background: formData.get('background'),
     decisionType: formData.get('decisionType'),
     objectiveId: formData.get('objectiveId'),
+    governanceLevel: formData.get('governanceLevel'),
   });
 
   if (!validatedFields.success) {

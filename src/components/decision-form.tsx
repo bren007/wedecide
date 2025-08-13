@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Send, Loader2, Upload } from 'lucide-react';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import type { Objective } from '@/lib/types';
+import type { Objective, GovernanceLevel } from '@/lib/types';
 import { Separator } from './ui/separator';
 
 function SubmitButton() {
@@ -25,6 +25,8 @@ function SubmitButton() {
     </Button>
   );
 }
+
+const governanceLevels: GovernanceLevel[] = ['Project', 'Program', 'Strategic Board'];
 
 export function DecisionForm({ objectives }: { objectives: Objective[] }) {
   const initialState: FormState = {};
@@ -65,23 +67,43 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="objectiveId">Strategic Objective</Label>
-        <Select name="objectiveId">
-          <SelectTrigger id="objectiveId">
-            <SelectValue placeholder="Select an objective..." />
-          </SelectTrigger>
-          <SelectContent>
-            {objectives.map(objective => (
-              <SelectItem key={objective.id} value={objective.id}>
-                {objective.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {state.errors?.objectiveId && (
-          <p className="text-sm text-destructive">{state.errors.objectiveId.join(', ')}</p>
-        )}
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+            <Label htmlFor="objectiveId">Strategic Objective</Label>
+            <Select name="objectiveId">
+            <SelectTrigger id="objectiveId">
+                <SelectValue placeholder="Select an objective..." />
+            </SelectTrigger>
+            <SelectContent>
+                {objectives.map(objective => (
+                <SelectItem key={objective.id} value={objective.id}>
+                    {objective.name}
+                </SelectItem>
+                ))}
+            </SelectContent>
+            </Select>
+            {state.errors?.objectiveId && (
+            <p className="text-sm text-destructive">{state.errors.objectiveId.join(', ')}</p>
+            )}
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="governanceLevel">Governance Level</Label>
+            <Select name="governanceLevel">
+                <SelectTrigger id="governanceLevel">
+                    <SelectValue placeholder="Select a level..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {governanceLevels.map(level => (
+                    <SelectItem key={level} value={level}>
+                        {level}
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            {state.errors?.governanceLevel && (
+                <p className="text-sm text-destructive">{state.errors.governanceLevel.join(', ')}</p>
+            )}
+        </div>
       </div>
 
       <div className="space-y-2">
