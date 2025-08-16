@@ -25,15 +25,17 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased h-full">
         <SidebarProvider>
-          <div className={cn(meetingMode && 'hidden')}>
-            <Sidebar>
-              <AppSidebar />
-            </Sidebar>
+          <div className={cn("flex w-full", meetingMode && "block")}>
+            <div className={cn(meetingMode && 'hidden')}>
+              <Sidebar>
+                <AppSidebar />
+              </Sidebar>
+            </div>
+            <SidebarInset className={cn(meetingMode && "ml-0")}>
+              {/* By passing a function as a children, we can pass the state to the meeting page */}
+              {typeof children === 'function' ? children({ meetingMode, setMeetingMode }) : children}
+            </SidebarInset>
           </div>
-          <SidebarInset>
-            {/* By passing a function as a children, we can pass the state to the meeting page */}
-            {typeof children === 'function' ? children({ meetingMode, setMeetingMode }) : children}
-          </SidebarInset>
         </SidebarProvider>
         <Toaster />
       </body>
