@@ -2,20 +2,16 @@
 'use client';
 
 import './globals.css';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/toaster';
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { LayoutProps } from 'next/dist/lib/metadata/types/extra-types';
 
 export default function RootLayout({
   children,
 }: {
-  children: (props: { meetingMode: boolean; setMeetingMode: (mode: boolean) => void; }) => React.ReactNode;
+  children: React.ReactNode;
 }) {
-  const [meetingMode, setMeetingMode] = useState(false);
-
   return (
     <html lang="en" className="h-full">
       <head>
@@ -25,16 +21,8 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased h-full">
         <SidebarProvider>
-          <div className={cn("flex w-full", meetingMode && "block")}>
-            <div className={cn(meetingMode && 'hidden')}>
-              <Sidebar>
-                <AppSidebar />
-              </Sidebar>
-            </div>
-            <SidebarInset className={cn(meetingMode && "ml-0")}>
-              {/* By passing a function as a children, we can pass the state to the meeting page */}
-              {typeof children === 'function' ? children({ meetingMode, setMeetingMode }) : children}
-            </SidebarInset>
+          <div className={"flex w-full"}>
+            {children}
           </div>
         </SidebarProvider>
         <Toaster />
