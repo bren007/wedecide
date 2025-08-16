@@ -183,6 +183,9 @@ const Sidebar = React.forwardRef<
         setIsMounted(true);
     }, []);
 
+    if (!isMounted) {
+      return null;
+    }
 
     if (collapsible === "none") {
       return (
@@ -199,7 +202,7 @@ const Sidebar = React.forwardRef<
       )
     }
 
-    if (isMobile && isMounted) {
+    if (isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
@@ -768,5 +771,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
