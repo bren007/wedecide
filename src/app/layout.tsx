@@ -7,12 +7,13 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import type { LayoutProps } from 'next/dist/lib/metadata/types/extra-types';
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: (props: { meetingMode: boolean; setMeetingMode: (mode: boolean) => void; }) => React.ReactNode;
+}) {
   const [meetingMode, setMeetingMode] = useState(false);
 
   return (

@@ -4,7 +4,6 @@ import { getDecisionById, getObjectiveById, getDecisions } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { approveForMeeting } from './actions';
 import { ProposalSummary } from '@/components/proposal-summary';
@@ -40,10 +39,6 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                   <CardTitle className="text-2xl">{decision.title}</CardTitle>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" disabled>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Decision
-                    </Button>
                     <form action={approveForMeeting.bind(null, decision.id)}>
                         <Button type="submit" disabled={!canApprove} className="w-full">
                             <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -70,10 +65,14 @@ export default async function ReviewPage({ params }: { params: { id: string } })
               <h3 className="font-semibold mb-2 text-lg">Background</h3>
               <p className="text-muted-foreground whitespace-pre-wrap">{decision.background}</p>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="gap-2">
                  <Button variant="outline" disabled>
                     <FileText className="mr-2 h-4 w-4"/>
                     View Proposal Document
+                </Button>
+                <Button variant="outline" disabled>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Decision
                 </Button>
             </CardFooter>
           </Card>

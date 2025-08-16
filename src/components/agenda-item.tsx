@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download } from 'lucide-react';
 import { useTransition } from 'react';
+import { StrategicAlignment } from './strategic-alignment';
 
 type OutcomeButtonProps = {
   decisionId: string;
@@ -72,20 +73,27 @@ export function AgendaItem({ decision, objective }: { decision: Decision; object
         {objective && (
           <div className="flex items-start gap-3 text-muted-foreground p-3 bg-muted/50 rounded-lg text-sm">
             <Target className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-            <div>
+            <div className="flex-1">
               <p className="font-semibold text-foreground">{objective.name}</p>
               <p>{objective.description}</p>
             </div>
+             {decision.alignmentScore && <StrategicAlignment score={decision.alignmentScore} />}
           </div>
         )}
         <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
       </CardContent>
       <CardFooter className="flex flex-wrap justify-between items-center gap-4 pt-4">
-        <div>
+        <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled>
                 <FileText className="mr-2 h-4 w-4"/>
                 View Proposal Document
             </Button>
+            {isPastDecision && (
+                <Button variant="outline" size="sm" disabled>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Decision
+                </Button>
+            )}
         </div>
         {!isPastDecision && (
             <div className="flex justify-end gap-2 flex-wrap">
