@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -51,8 +52,7 @@ export function IntelligentExploration({ decisions }: { decisions: Decision[] })
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="text-primary" />
+        <CardTitle>
           Intelligent Exploration
         </CardTitle>
         <CardDescription>Select a proposal and generate targeted questions that assist group exploration and lead to well informed decision making</CardDescription>
