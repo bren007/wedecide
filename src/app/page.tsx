@@ -23,12 +23,6 @@ export default async function DashboardPage() {
               <h1 className="text-2xl font-semibold tracking-tight">Secretariat Dashboard</h1>
               <p className="text-muted-foreground">Review and manage all submitted decisions.</p>
             </div>
-            <Button asChild>
-              <Link href="/submit">
-                <FilePlus2 className="mr-2 h-4 w-4" />
-                Submit Decision
-              </Link>
-            </Button>
           </div>
 
           <Card>
