@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -25,15 +26,15 @@ const DecisionSchema = z.object({
   governanceLevel: z.enum(['Project', 'Program', 'Strategic Board']).optional(),
 });
 
-export const GenerateMeetingSummaryInputSchema = z.object({
+const GenerateMeetingSummaryInputSchema = z.object({
   decisions: z.array(DecisionSchema).describe('The list of decisions that were discussed in the meeting.'),
 });
-export type GenerateMeetingSummaryInput = z.infer<typeof GenerateMeetingSummaryInputSchema>;
+type GenerateMeetingSummaryInput = z.infer<typeof GenerateMeetingSummaryInputSchema>;
 
-export const GenerateMeetingSummaryOutputSchema = z.object({
+const GenerateMeetingSummaryOutputSchema = z.object({
   summary: z.string().describe('A concise summary of the meeting outcomes.'),
 });
-export type GenerateMeetingSummaryOutput = z.infer<typeof GenerateMeetingSummaryOutputSchema>;
+type GenerateMeetingSummaryOutput = z.infer<typeof GenerateMeetingSummaryOutputSchema>;
 
 
 export async function generateMeetingSummary(input: GenerateMeetingSummaryInput): Promise<GenerateMeetingSummaryOutput> {
