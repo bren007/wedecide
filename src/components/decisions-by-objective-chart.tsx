@@ -11,7 +11,7 @@ export function DecisionsByObjectiveChart({ decisions, objectives }: { decisions
   const data = objectives.map(objective => ({
     name: objective.name,
     total: decisions.filter(d => d.objectiveId === objective.id).length,
-  }));
+  })).filter(item => item.total > 0); // Only show objectives with decisions
 
   const chartConfig = {
     total: {
@@ -32,7 +32,11 @@ export function DecisionsByObjectiveChart({ decisions, objectives }: { decisions
       <CardContent>
         <ChartContainer config={chartConfig} className="min-h-64 w-full">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data} layout="vertical" margin={{ left: 120, right: 20, top: 20, bottom: 20 }}>
+              <BarChart 
+                data={data} 
+                layout="vertical" 
+                margin={{ left: 120, right: 20, top: 20, bottom: 20 }}
+              >
                 <CartesianGrid horizontal={false} />
                  <XAxis type="number" hide />
                  <YAxis
