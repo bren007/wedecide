@@ -13,8 +13,9 @@ import type { Decision, Objective } from '@/lib/types';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { cn } from '@/lib/utils';
-import { Calendar, Clock, Users, User } from 'lucide-react';
+import { Calendar, Clock, Users, User, FileSignature } from 'lucide-react';
 import { MeetingSummary } from '@/components/meeting-summary';
+import { Separator } from '@/components/ui/separator';
 
 
 export default function MeetingPage() {
@@ -122,9 +123,19 @@ export default function MeetingPage() {
                 <h2 className="text-xl font-semibold tracking-tight">Decision Support</h2>
                 <ProposalSummary decisions={scheduledDecisions} />
                 <IntelligentExploration decisions={scheduledDecisions} />
-                <MeetingSummary decisions={pastDecisions} />
               </div>
             </div>
+
+            {pastDecisions.length > 0 && (
+                <div className="space-y-6">
+                    <Separator />
+                    <div className="flex items-center gap-2">
+                        <FileSignature className="h-6 w-6" />
+                        <h2 className="text-xl font-semibold tracking-tight">Meeting Record</h2>
+                    </div>
+                    <MeetingSummary decisions={pastDecisions} />
+                </div>
+            )}
           </div>
         </div>
       </SidebarInset>

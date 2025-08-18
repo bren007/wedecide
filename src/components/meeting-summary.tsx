@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { generateMeetingSummary } from '@/ai/flows/generate-meeting-summary';
-import { Loader2, Sparkles, Clipboard } from 'lucide-react';
+import { Loader2, Sparkles, Clipboard, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Decision } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
@@ -13,11 +14,13 @@ import { Textarea } from './ui/textarea';
 export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   const [summary, setSummary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
   const { toast } = useToast();
 
   const handleGenerateSummary = async () => {
     setIsLoading(true);
     setSummary('');
+    setIsApproved(false);
     try {
       const result = await generateMeetingSummary({ decisions });
       setSummary(result.summary);
@@ -40,22 +43,44 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
         description: "The meeting summary has been copied.",
     })
   }
+  
+  const handleApprove = () => {
+    setIsApproved(true);
+    toast({
+        title: "Summary Approved",
+        description: "The meeting summary has been approved and circulated.",
+        variant: 'default'
+    });
+  }
+
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Meeting Summary</CardTitle>
-        <CardDescription>Generate an AI summary of all decisions made in this meeting for your records.</CardDescription>
+        <CardTitle>AI-Generated Meeting Summary</CardTitle>
+        <CardDescription>Generate an AI summary of all decisions made in this meeting for your records. Once approved by the chair, the summary is locked and circulated.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={handleGenerateSummary} disabled={isLoading || decisions.length === 0} className="w-full">
-          {isLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Sparkles className="mr-2 h-4 w-4" />
-          )}
-          Generate AI Summary of Outcomes
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={handleGenerateSummary} disabled={isLoading || decisions.length === 0} className="w-full sm:w-auto">
+            {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            Generate AI Summary
+            </Button>
+             <Button
+                onClick={handleApprove}
+                disabled={!summary || isApproved}
+                className="w-full sm:w-auto"
+                variant="default"
+             >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                {isApproved ? 'Approved & Circulated' : 'Approve & Circulate Summary'}
+            </Button>
+        </div>
+
         {isLoading && (
           <div className="space-y-2 pt-2">
             <Skeleton className="h-4 w-full" />
