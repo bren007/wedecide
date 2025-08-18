@@ -5,7 +5,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { DecisionsByObjectiveChart } from '@/components/decisions-by-objective-chart';
-import { FileCheck, ThumbsUp, Bookmark, FileX } from 'lucide-react';
+import { FileCheck, ThumbsUp, Bookmark, FileX, TrendingUp, Target, ListChecks } from 'lucide-react';
+import type { Objective } from '@/lib/types';
+
+async function getMostFrequentObjective(decisions: Awaited<ReturnType<typeof getDecisions>>, objectives: Objective[]): Promise<Objective | null> {
+  if (decisions.length === 0) {
+    return null;
+  }
+
+  const objectiveCounts = decisions.reduce((acc, decision) => {
+    acc[decision.objectiveId] = (acc[decision.objectiveId] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const mostFrequentId = Object.keys(objectiveCounts).reduce((a, b) =>
+    objectiveCounts[a] > objectiveCounts[b] ? a : b
+  );
+  
+  return objectives.find(o => o.id === mostFrequentId) || null;
+}
+
+function getAverageAlignmentScore(decisions: Awaited<ReturnType<typeof getDecisions>>): number {
+    if (decisions.length === 0) return 0;
+    const decisionsWithScores = decisions.filter(d => typeof d.alignmentScore === 'number');
+    if (decisionsWithScores.length === 0) return 0;
+
+    const totalScore = decisionsWithScores.reduce((acc, d) => acc + (d.alignmentScore || 0), 0);
+    return Math.round(totalScore / decisionsWithScores.length);
+}
+
 
 export default async function PastDecisionsPage() {
   const allDecisions = await getDecisions();
@@ -13,11 +41,9 @@ export default async function PastDecisionsPage() {
   const pastDecisions = allDecisions.filter(d =>
     ['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(d.status)
   );
-
-  const stats = pastDecisions.reduce((acc, decision) => {
-    acc[decision.status] = (acc[decision.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  
+  const mostFrequentObjective = await getMostFrequentObjective(pastDecisions, objectives);
+  const averageAlignmentScore = getAverageAlignmentScore(pastDecisions);
 
   return (
     <>
@@ -28,46 +54,52 @@ export default async function PastDecisionsPage() {
         <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Past Decisions</h1>
-            <p className="text-muted-foreground">A record of all previously considered decisions.</p>
+            <p className="text-muted-foreground">A record of all previously considered decisions and their strategic impact.</p>
           </div>
+          
+           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Decisions Recorded
+                </CardTitle>
+                <ListChecks className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{pastDecisions.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  A complete archive of all past decisions
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Strategic Hotspot</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-base font-bold truncate">{mostFrequentObjective?.name || 'N/A'}</div>
+                <p className="text-xs text-muted-foreground">
+                  Most frequently targeted objective
+                </p>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg. Alignment Score</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{averageAlignmentScore}</div>
+                 <p className="text-xs text-muted-foreground">
+                  Average alignment with strategic goals
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
              <div className="lg:col-span-1 space-y-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Decision Outcomes</CardTitle>
-                        <CardDescription>A summary of all recorded decisions.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                            <FileCheck className="h-6 w-6 text-green-600" />
-                            <div>
-                                <p className="text-2xl font-bold">{stats['Approved'] || 0}</p>
-                                <p className="text-sm text-muted-foreground">Approved</p>
-                            </div>
-                        </div>
-                         <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                            <ThumbsUp className="h-6 w-6 text-blue-600" />
-                            <div>
-                                <p className="text-2xl font-bold">{stats['Endorsed'] || 0}</p>
-                                <p className="text-sm text-muted-foreground">Endorsed</p>
-                            </div>
-                        </div>
-                         <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                            <Bookmark className="h-6 w-6 text-slate-600" />
-                            <div>
-                                <p className="text-2xl font-bold">{stats['Noted'] || 0}</p>
-                                <p className="text-sm text-muted-foreground">Noted</p>
-                            </div>
-                        </div>
-                         <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                            <FileX className="h-6 w-6 text-red-600" />
-                            <div>
-                                <p className="text-2xl font-bold">{stats['Not Approved'] || 0}</p>
-                                <p className="text-sm text-muted-foreground">Not Approved</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                 </Card>
                 <DecisionsByObjectiveChart decisions={pastDecisions} objectives={objectives} />
             </div>
             <div className="lg:col-span-2 space-y-6">
