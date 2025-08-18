@@ -14,6 +14,7 @@ import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { cn } from '@/lib/utils';
 import { Calendar, Clock, Users, User } from 'lucide-react';
+import { MeetingSummary } from '@/components/meeting-summary';
 
 
 export default function MeetingPage() {
@@ -36,6 +37,7 @@ export default function MeetingPage() {
   }, []);
 
   const scheduledDecisions = decisions.filter(d => d.status === 'Scheduled for Meeting');
+  const pastDecisions = decisions.filter(d => ['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(d.status));
 
   if (loading) {
     return (
@@ -120,6 +122,7 @@ export default function MeetingPage() {
                 <h2 className="text-xl font-semibold tracking-tight">Decision Support</h2>
                 <ProposalSummary decisions={scheduledDecisions} />
                 <IntelligentExploration decisions={scheduledDecisions} />
+                <MeetingSummary decisions={pastDecisions} />
               </div>
             </div>
           </div>

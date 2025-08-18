@@ -1,0 +1,71 @@
+'use server';
+
+/**
+ * @fileOverview A Genkit flow for generating a summary of meeting outcomes.
+ *
+ * - generateMeetingSummary - A function that triggers the summary generation flow.
+ * - GenerateMeetingSummaryInput - The input type for the generateMeetingSummary function.
+ * - GenerateMeetingSummaryOutput - The return type for the generateMeetingSummary function.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import type { Decision } from '@/lib/types';
+
+const DecisionSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  background: z.string(),
+  decisionType: z.enum(['Approve', 'Endorse', 'Note']),
+  status: z.enum(['Submitted', 'In Review', 'Scheduled for Meeting', 'Approved', 'Endorsed', 'Noted', 'Not Approved']),
+  submittedAt: z.string(),
+  objectiveId: z.string(),
+  relatedDecisionIds: z.array(z.string()).optional(),
+  alignmentScore: z.number().optional(),
+  governanceLevel: z.enum(['Project', 'Program', 'Strategic Board']).optional(),
+});
+
+export const GenerateMeetingSummaryInputSchema = z.object({
+  decisions: z.array(DecisionSchema).describe('The list of decisions that were discussed in the meeting.'),
+});
+export type GenerateMeetingSummaryInput = z.infer<typeof GenerateMeetingSummaryInputSchema>;
+
+export const GenerateMeetingSummaryOutputSchema = z.object({
+  summary: z.string().describe('A concise summary of the meeting outcomes.'),
+});
+export type GenerateMeetingSummaryOutput = z.infer<typeof GenerateMeetingSummaryOutputSchema>;
+
+
+export async function generateMeetingSummary(input: GenerateMeetingSummaryInput): Promise<GenerateMeetingSummaryOutput> {
+  return generateMeetingSummaryFlow(input);
+}
+
+const prompt = ai.definePrompt({
+  name: 'generateMeetingSummaryPrompt',
+  input: { schema: GenerateMeetingSummaryInputSchema },
+  output: { schema: GenerateMeetingSummaryOutputSchema },
+  prompt: `You are a professional secretariat responsible for drafting minutes. Based on the list of decisions provided below, generate a concise summary of the meeting's key outcomes.
+
+For each decision, clearly state the title and its final outcome (e.g., Approved, Endorsed, Noted, Not Approved). Group the outcomes logically.
+
+The summary should be written in a professional, neutral tone suitable for official records.
+
+**Decisions:**
+{{#each decisions}}
+- **Title:** {{{title}}}
+  - **Outcome:** {{{status}}}
+{{/each}}
+`,
+});
+
+const generateMeetingSummaryFlow = ai.defineFlow(
+  {
+    name: 'generateMeetingSummaryFlow',
+    inputSchema: GenerateMeetingSummaryInputSchema,
+    outputSchema: GenerateMeetingSummaryOutputSchema,
+  },
+  async (input) => {
+    const { output } = await prompt(input);
+    return output!;
+  }
+);
