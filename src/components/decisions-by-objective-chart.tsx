@@ -32,17 +32,17 @@ export function DecisionsByObjectiveChart({ decisions, objectives }: { decisions
       <CardContent>
         <ChartContainer config={chartConfig} className="min-h-64 w-full">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data} layout="vertical" margin={{ left: 20, right: 20, top: 20, bottom: 20 }}>
+              <BarChart data={data} layout="vertical" margin={{ left: 100, right: 20, top: 20, bottom: 20 }}>
                 <CartesianGrid horizontal={false} />
                  <XAxis type="number" hide />
-                 <YAxis 
-                    dataKey="name" 
+                 <YAxis
+                    dataKey="name"
                     type="category"
                     tickLine={false}
                     axisLine={false}
                     tick={{
                         fontSize: 12,
-                        width: 150, 
+                        width: 150,
                         textAnchor: 'start',
                     }}
                     width={120}
