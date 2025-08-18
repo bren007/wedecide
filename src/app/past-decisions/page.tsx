@@ -5,10 +5,10 @@ import { AgendaItem } from '@/components/agenda-item';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
-import { FileCheck, ThumbsUp, Bookmark, FileX, TrendingUp, Target, ListChecks, Filter, Calendar as CalendarIcon } from 'lucide-react';
-import type { Objective } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ListChecks, TrendingUp, Target } from 'lucide-react';
+import type { Decision, Objective } from '@/lib/types';
+import { PastDecisionsFilterBar } from '@/components/past-decisions-filter-bar';
+
 
 async function getMostFrequentObjective(decisions: Awaited<ReturnType<typeof getDecisions>>, objectives: Objective[]): Promise<Objective | null> {
   if (decisions.length === 0) {
@@ -46,7 +46,6 @@ export default async function PastDecisionsPage() {
   
   const mostFrequentObjective = await getMostFrequentObjective(pastDecisions, objectives);
   const averageAlignmentScore = getAverageAlignmentScore(pastDecisions);
-  const decisionTypes = ['Approve', 'Endorse', 'Note', 'Not Approved'];
 
   return (
     <>
@@ -102,35 +101,13 @@ export default async function PastDecisionsPage() {
           </div>
           
           <Card>
-            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <CardTitle>Decision Archive</CardTitle>
-                <CardDescription>Filter and search through all past decisions.</CardDescription>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-                 <Select>
-                    <SelectTrigger className="w-full md:w-[200px]">
-                      <SelectValue placeholder="Filter by objective..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {objectives.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select>
-                    <SelectTrigger className="w-full md:w-[180px]">
-                      <SelectValue placeholder="Filter by type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {decisionTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                   <Button variant="outline" className="w-full md:w-auto" disabled>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      Filter by date
-                    </Button>
-              </div>
+            <CardHeader>
+              <CardTitle>Decision Archive</CardTitle>
+              <CardDescription>Filter and search through all past decisions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+               <PastDecisionsFilterBar objectives={objectives} />
+               <div className="space-y-4">
                 {pastDecisions.length > 0 ? (
                 pastDecisions.map(decision => (
                     <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} />
@@ -140,6 +117,7 @@ export default async function PastDecisionsPage() {
                     <p className="text-muted-foreground">No past decisions recorded.</p>
                 </Card>
                 )}
+              </div>
             </CardContent>
           </Card>
         </div>
