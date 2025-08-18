@@ -58,7 +58,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
     <Card>
       <CardHeader>
         <CardTitle>AI-Generated Meeting Summary</CardTitle>
-        <CardDescription>Generate an AI summary of all decisions made in this meeting for your records. Once approved by the chair, the summary is locked and circulated.</CardDescription>
+        <CardDescription>Generate an AI summary from a meeting recording or from the decision data below. The AI will transcribe and summarize the key outcomes for your records. Once approved by the chair, the summary is locked and circulated.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-2">
