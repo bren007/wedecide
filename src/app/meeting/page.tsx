@@ -4,7 +4,7 @@
 import { getDecisions, getObjectives } from '@/lib/data';
 import { AgendaItem } from '@/components/agenda-item';
 import { IntelligentExploration } from '@/components/intelligent-exploration';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProposalSummary } from '@/components/proposal-summary';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,7 @@ import type { Decision, Objective } from '@/lib/types';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { cn } from '@/lib/utils';
+import { Calendar, Clock, Users, User } from 'lucide-react';
 
 
 export default function MeetingPage() {
@@ -67,6 +68,39 @@ export default function MeetingPage() {
             </div>
             <MeetingModeToggle isEnabled={meetingMode} onToggle={setMeetingMode} />
           </div>
+
+          <Card>
+            <CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <div>
+                        <p className="font-semibold">Strategic Board</p>
+                        <p className="text-muted-foreground">Group</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <div>
+                        <p className="font-semibold">October 26, 2023</p>
+                        <p className="text-muted-foreground">Date</p>
+                    </div>
+                </div>
+                 <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                    <div>
+                        <p className="font-semibold">10:00 AM - 12:00 PM</p>
+                        <p className="text-muted-foreground">Time</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    <div>
+                        <p className="font-semibold">Jane Doe (Chair)</p>
+                        <p className="text-muted-foreground">Attendees</p>
+                    </div>
+                </div>
+            </CardContent>
+          </Card>
 
           <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
