@@ -131,6 +131,14 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
             <Label htmlFor="endorse" className="font-normal">Endorse: Seek support or backing for a proposal or initiative.</Label>
           </div>
           <div className="flex items-center space-x-2">
+            <RadioGroupItem value="Agree" id="agree" />
+            <Label htmlFor="agree" className="font-normal">Agree: Seek agreement on a course of action or statement.</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="Direct" id="direct" />
+            <Label htmlFor="direct" className="font-normal">Direct: Seek a formal instruction to undertake a specific task.</Label>
+          </div>
+          <div className="flex items-center space-x-2">
             <RadioGroupItem value="Note" id="note" />
             <Label htmlFor="note" className="font-normal">Note: For information purposes; no formal decision required.</Label>
           </div>

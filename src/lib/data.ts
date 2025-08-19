@@ -78,7 +78,7 @@ export let decisions: Decision[] = [
     id: 'DEC-007',
     title: 'IT Infrastructure Overhaul Phase 1',
     background: 'The initial phase of the IT infrastructure overhaul requires approval. This includes server upgrades and migrating to a new cloud provider. The attached document has the full cost-benefit analysis and risk assessment. The proposal has been reviewed by the finance team but requires further clarification on vendor selection before proceeding.',
-    decisionType: 'Approve',
+    decisionType: 'Agree',
     status: 'Awaiting Update',
     submittedAt: new Date('2023-10-21T18:00:00Z').toISOString(),
     objectiveId: 'OBJ-002',

@@ -14,7 +14,7 @@ import {z} from 'genkit';
 const GenerateStrategicQuestionsInputSchema = z.object({
   title: z.string().describe('The title of the proposal.'),
   background: z.string().describe('The background information of the proposal.'),
-  decisionType: z.enum(['Approve', 'Endorse', 'Note']).describe('The type of decision being sought.'),
+  decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct']).describe('The type of decision being sought.'),
 });
 export type GenerateStrategicQuestionsInput = z.infer<
   typeof GenerateStrategicQuestionsInputSchema

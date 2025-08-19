@@ -8,7 +8,7 @@ export type Decision = {
   id: string;
   title: string;
   background: string;
-  decisionType: 'Approve' | 'Endorse' | 'Note';
+  decisionType: 'Approve' | 'Endorse' | 'Note' | 'Agree' | 'Direct';
   status: DecisionStatus;
   submittedAt: string;
   objectiveId: string;

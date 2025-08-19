@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 const DecisionSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters long.'),
   background: z.string().min(20, 'Background must be at least 20 characters long.'),
-  decisionType: z.enum(['Approve', 'Endorse', 'Note'], {
+  decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct'], {
     errorMap: () => ({ message: 'Please select a decision type.' }),
   }),
   objectiveId: z.string().min(1, 'Please select an objective.'),

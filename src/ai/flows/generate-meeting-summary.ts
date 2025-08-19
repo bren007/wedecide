@@ -17,7 +17,7 @@ const DecisionSchema = z.object({
   id: z.string(),
   title: z.string(),
   background: z.string(),
-  decisionType: z.enum(['Approve', 'Endorse', 'Note']),
+  decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct']),
   status: z.enum(['Submitted', 'In Review', 'Scheduled for Meeting', 'Approved', 'Endorsed', 'Noted', 'Not Approved']),
   submittedAt: z.string(),
   objectiveId: z.string(),
