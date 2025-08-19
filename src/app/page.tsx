@@ -70,7 +70,7 @@ export default async function DashboardPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{awaitingUpdateCount}</div>
                 <p className="text-xs text-muted-foreground">
-                  Proposals awaiting submitter feedback
+                  Proposals awaiting submitter changes
                 </p>
               </CardContent>
             </Card>
