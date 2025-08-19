@@ -26,4 +26,5 @@ export type DecisionStatus =
   | 'Approved'
   | 'Endorsed'
   | 'Noted'
-  | 'Not Approved';
+  | 'Not Approved'
+  | 'Awaiting Update';

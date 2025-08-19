@@ -38,7 +38,7 @@ export let decisions: Decision[] = [
     title: 'Updated Work-From-Home Policy',
     background: 'This document provides an overview of the proposed changes to the company\'s work-from-home policy. The key changes include a hybrid model requiring employees to be in the office three days a week and new guidelines for home office setup and security. This is for noting purposes, and feedback will be collected in a separate forum.',
     decisionType: 'Note',
-    status: 'Submitted',
+    status: 'Awaiting Update',
     submittedAt: new Date('2023-10-22T11:00:00Z').toISOString(),
     objectiveId: 'OBJ-004',
     governanceLevel: 'Strategic Board',
@@ -73,6 +73,16 @@ export let decisions: Decision[] = [
     objectiveId: 'OBJ-001',
     relatedDecisionIds: ['DEC-001'],
     governanceLevel: 'Project',
+  },
+   {
+    id: 'DEC-007',
+    title: 'IT Infrastructure Overhaul Phase 1',
+    background: 'The initial phase of the IT infrastructure overhaul requires approval. This includes server upgrades and migrating to a new cloud provider. The attached document has the full cost-benefit analysis and risk assessment. The proposal has been reviewed by the finance team but requires further clarification on vendor selection before proceeding.',
+    decisionType: 'Approve',
+    status: 'Awaiting Update',
+    submittedAt: new Date('2023-10-21T18:00:00Z').toISOString(),
+    objectiveId: 'OBJ-002',
+    governanceLevel: 'Program',
   },
 ];
 

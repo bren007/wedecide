@@ -15,6 +15,7 @@ type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 const statusStyles: Record<DecisionStatus, { text: string; variant: StatusVariant }> = {
   Submitted: { text: 'Submitted', variant: 'outline' },
   'In Review': { text: 'In Review', variant: 'secondary' },
+  'Awaiting Update': { text: 'Awaiting Update', variant: 'outline' },
   'Scheduled for Meeting': { text: 'Scheduled', variant: 'default' },
   Approved: { text: 'Approved', variant: 'default' },
   Endorsed: { text: 'Endorsed', variant: 'default' },
@@ -25,7 +26,13 @@ const statusStyles: Record<DecisionStatus, { text: string; variant: StatusVarian
 function StatusBadge({ status }: { status: DecisionStatus }) {
   const { text, variant } = statusStyles[status] || { text: 'Unknown', variant: 'secondary' };
   
-  const badgeClass = variant === 'default' ? 'bg-primary/80 text-primary-foreground' : '';
+  let badgeClass = '';
+  if (variant === 'default') {
+      badgeClass = 'bg-primary/80 text-primary-foreground';
+  } else if (status === 'Awaiting Update') {
+      badgeClass = 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800';
+  }
+
 
   return <Badge variant={variant} className={badgeClass}>{text}</Badge>;
 }
