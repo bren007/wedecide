@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { LayoutDashboard, FilePlus2, ClipboardList, History } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, ClipboardList, History, Landmark } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -68,8 +68,8 @@ function NavLinks() {
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/past-decisions')}>
           <Link href="/past-decisions">
-            <History />
-            <span>Past Decisions</span>
+            <Landmark />
+            <span>Decision Bank</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

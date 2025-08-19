@@ -5,7 +5,7 @@ import { AgendaItem } from '@/components/agenda-item';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
-import { Clock, TrendingUp, Target } from 'lucide-react';
+import { Clock, TrendingUp, Target, BarChart } from 'lucide-react';
 import type { Decision, Objective } from '@/lib/types';
 import { PastDecisionsFilterBar } from '@/components/past-decisions-filter-bar';
 import { differenceInBusinessDays } from 'date-fns';
@@ -52,6 +52,16 @@ function getAverageDecisionCycleTime(decisions: Decision[]): number {
   return Math.round(totalDays / decisionsWithDates.length);
 }
 
+function getDecisionRate(decisions: Decision[]): number {
+    if (decisions.length === 0) {
+        return 0;
+    }
+    const actionStatuses: (typeof decisions[0]['status'])[] = ['Approved', 'Endorsed', 'Not Approved'];
+    const actionDecisions = decisions.filter(d => actionStatuses.includes(d.status));
+
+    return Math.round((actionDecisions.length / decisions.length) * 100);
+}
+
 
 export default async function PastDecisionsPage() {
   const allDecisions = await getDecisions();
@@ -63,6 +73,7 @@ export default async function PastDecisionsPage() {
   const mostFrequentObjective = await getMostFrequentObjective(pastDecisions, objectives);
   const averageAlignmentScore = getAverageAlignmentScore(pastDecisions);
   const averageCycleTime = getAverageDecisionCycleTime(pastDecisions);
+  const decisionRate = getDecisionRate(pastDecisions);
 
   return (
     <>
@@ -72,11 +83,11 @@ export default async function PastDecisionsPage() {
       <SidebarInset>
         <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Past Decisions</h1>
-            <p className="text-muted-foreground">A record of all previously considered decisions and their strategic impact.</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Decision Bank</h1>
+            <p className="text-muted-foreground">An auditable record of all decisions, providing insights into organizational performance.</p>
           </div>
           
-           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -112,6 +123,18 @@ export default async function PastDecisionsPage() {
                 <div className="text-2xl font-bold">{averageAlignmentScore}</div>
                  <p className="text-xs text-muted-foreground">
                   Average alignment with strategic goals
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Decision Rate</CardTitle>
+                <BarChart className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{decisionRate}%</div>
+                 <p className="text-xs text-muted-foreground">
+                  Ratio of actions vs. notes
                 </p>
               </CardContent>
             </Card>
