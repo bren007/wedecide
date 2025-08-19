@@ -11,6 +11,7 @@ export type Decision = {
   decisionType: 'Approve' | 'Endorse' | 'Note' | 'Agree' | 'Direct';
   status: DecisionStatus;
   submittedAt: string;
+  decidedAt?: string;
   objectiveId: string;
   relatedDecisionIds?: string[];
   alignmentScore?: number;

@@ -5,9 +5,10 @@ import { AgendaItem } from '@/components/agenda-item';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
-import { ListChecks, TrendingUp, Target } from 'lucide-react';
+import { Clock, TrendingUp, Target } from 'lucide-react';
 import type { Decision, Objective } from '@/lib/types';
 import { PastDecisionsFilterBar } from '@/components/past-decisions-filter-bar';
+import { differenceInBusinessDays } from 'date-fns';
 
 
 async function getMostFrequentObjective(decisions: Awaited<ReturnType<typeof getDecisions>>, objectives: Objective[]): Promise<Objective | null> {
@@ -36,6 +37,21 @@ function getAverageAlignmentScore(decisions: Awaited<ReturnType<typeof getDecisi
     return Math.round(totalScore / decisionsWithScores.length);
 }
 
+function getAverageDecisionCycleTime(decisions: Decision[]): number {
+  const decisionsWithDates = decisions.filter(d => d.submittedAt && d.decidedAt);
+  if (decisionsWithDates.length === 0) {
+    return 0;
+  }
+
+  const totalDays = decisionsWithDates.reduce((acc, decision) => {
+    const submitted = new Date(decision.submittedAt);
+    const decided = new Date(decision.decidedAt!);
+    return acc + differenceInBusinessDays(decided, submitted);
+  }, 0);
+
+  return Math.round(totalDays / decisionsWithDates.length);
+}
+
 
 export default async function PastDecisionsPage() {
   const allDecisions = await getDecisions();
@@ -46,6 +62,7 @@ export default async function PastDecisionsPage() {
   
   const mostFrequentObjective = await getMostFrequentObjective(pastDecisions, objectives);
   const averageAlignmentScore = getAverageAlignmentScore(pastDecisions);
+  const averageCycleTime = getAverageDecisionCycleTime(pastDecisions);
 
   return (
     <>
@@ -63,14 +80,14 @@ export default async function PastDecisionsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Decisions Recorded
+                  Decision Cycle Time
                 </CardTitle>
-                <ListChecks className="h-4 w-4 text-muted-foreground" />
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{pastDecisions.length}</div>
+                <div className="text-2xl font-bold">{averageCycleTime} days</div>
                 <p className="text-xs text-muted-foreground">
-                  A complete archive of all past decisions
+                  Average time from submission to decision
                 </p>
               </CardContent>
             </Card>
@@ -104,7 +121,7 @@ export default async function PastDecisionsPage() {
             <CardHeader>
               <CardTitle>Decision Archive</CardTitle>
               <CardDescription>Filter and search through all past decisions.</CardDescription>
-            </CardHeader>
+            </d  </CardHeader>
             <CardContent className="space-y-6">
                <PastDecisionsFilterBar objectives={objectives} />
                <div className="space-y-4">

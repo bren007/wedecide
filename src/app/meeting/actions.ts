@@ -9,6 +9,10 @@ async function updateDecisionStatus(id: string, status: DecisionStatus) {
   const decision = await getDecisionById(id);
   if (decision) {
       decision.status = status;
+      // Set the decidedAt timestamp when a final decision is made
+      if (['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(status)) {
+        decision.decidedAt = new Date().toISOString();
+      }
       return decision;
   }
   return undefined;
@@ -19,6 +23,7 @@ export async function setDecisionOutcome(id: string, outcome: DecisionStatus): P
   if (validOutcomes.includes(outcome)) {
     const updatedDecision = await updateDecisionStatus(id, outcome);
     revalidatePath('/meeting');
+    revalidatePath('/past-decisions');
     return updatedDecision;
   } else {
     console.error('Invalid outcome status:', outcome);
