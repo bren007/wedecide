@@ -62,18 +62,6 @@ export default async function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
-             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Scheduled for Meeting</CardTitle>
-                <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{scheduledCount}</div>
-                 <p className="text-xs text-muted-foreground">
-                  Decisions ready for a meeting
-                </p>
-              </CardContent>
-            </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Awaiting Update</CardTitle>
@@ -83,6 +71,18 @@ export default async function DashboardPage() {
                 <div className="text-2xl font-bold">{awaitingUpdateCount}</div>
                 <p className="text-xs text-muted-foreground">
                   Proposals awaiting submitter feedback
+                </p>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Scheduled for Meeting</CardTitle>
+                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{scheduledCount}</div>
+                 <p className="text-xs text-muted-foreground">
+                  Decisions ready for a meeting
                 </p>
               </CardContent>
             </Card>
