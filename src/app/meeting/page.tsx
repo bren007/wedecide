@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { Calendar, Clock, Users, User, FileSignature } from 'lucide-react';
 import { MeetingSummary } from '@/components/meeting-summary';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 
 export default function MeetingPage() {
@@ -23,6 +24,7 @@ export default function MeetingPage() {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [meetingMode, setMeetingMode] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchData() {
@@ -36,6 +38,16 @@ export default function MeetingPage() {
     }
     fetchData();
   }, []);
+  
+  const handleDecisionUpdate = (updatedDecision: Decision) => {
+    setDecisions(prevDecisions => 
+      prevDecisions.map(d => d.id === updatedDecision.id ? updatedDecision : d)
+    );
+     toast({
+        title: "Decision Recorded",
+        description: `The outcome for "${updatedDecision.title}" has been set to ${updatedDecision.status}.`,
+    });
+  };
 
   const scheduledDecisions = decisions.filter(d => d.status === 'Scheduled for Meeting');
   const pastDecisions = decisions.filter(d => ['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(d.status));
@@ -111,7 +123,7 @@ export default function MeetingPage() {
                 <h2 className="text-xl font-semibold tracking-tight">Scheduled for Decision</h2>
                 {scheduledDecisions.length > 0 ? (
                   scheduledDecisions.map(decision => (
-                    <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} />
+                    <AgendaItem key={decision.id} decision={decision} objective={objectives.find(o => o.id === decision.objectiveId)} onDecisionUpdate={handleDecisionUpdate} />
                   ))
                 ) : (
                   <Card className="flex items-center justify-center h-40">

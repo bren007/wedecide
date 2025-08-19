@@ -11,19 +11,23 @@ import { useTransition } from 'react';
 import { StrategicAlignment } from './strategic-alignment';
 
 type OutcomeButtonProps = {
-  decisionId: string;
+  decision: Decision;
   outcome: DecisionStatus;
   currentStatus: DecisionStatus;
   children: React.ReactNode;
   variant?: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link" | null | undefined;
+  onDecisionUpdate: (decision: Decision) => void;
 }
 
-function OutcomeButton({ decisionId, outcome, currentStatus, children, variant = 'outline' }: OutcomeButtonProps) {
+function OutcomeButton({ decision, outcome, currentStatus, children, variant = 'outline', onDecisionUpdate }: OutcomeButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   const handleSetOutcome = async () => {
-    startTransition(() => {
-      setDecisionOutcome(decisionId, outcome);
+    startTransition(async () => {
+      const updatedDecision = await setDecisionOutcome(decision.id, outcome);
+      if (updatedDecision) {
+        onDecisionUpdate(updatedDecision);
+      }
     });
   };
   
@@ -47,11 +51,13 @@ const statusConfig = {
 };
 
 
-export function AgendaItem({ decision, objective }: { decision: Decision; objective?: Objective }) {
+export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision: Decision; objective?: Objective; onDecisionUpdate?: (decision: Decision) => void }) {
   const { title, background, decisionType, status, id } = decision;
   const isPastDecision = status !== 'Scheduled for Meeting';
   const config = statusConfig[status] || {};
   const Icon = config.icon;
+  
+  const handleUpdate = onDecisionUpdate || (() => {});
 
   return (
     <Card>
@@ -97,10 +103,10 @@ export function AgendaItem({ decision, objective }: { decision: Decision; object
         </div>
         {!isPastDecision && (
             <div className="flex justify-end gap-2 flex-wrap">
-                <OutcomeButton decisionId={id} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Approve</OutcomeButton>
-                <OutcomeButton decisionId={id} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
-                <OutcomeButton decisionId={id} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Note</OutcomeButton>
-                <OutcomeButton decisionId={id} currentStatus={status} outcome="Not Approved" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
+                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Approve</OutcomeButton>
+                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
+                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Note</OutcomeButton>
+                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Approved" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
             </div>
         )}
       </CardFooter>
