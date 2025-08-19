@@ -121,7 +121,7 @@ export default async function PastDecisionsPage() {
             <CardHeader>
               <CardTitle>Decision Archive</CardTitle>
               <CardDescription>Filter and search through all past decisions.</CardDescription>
-            </d  </CardHeader>
+            </CardHeader>
             <CardContent className="space-y-6">
                <PastDecisionsFilterBar objectives={objectives} />
                <div className="space-y-4">
