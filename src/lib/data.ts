@@ -52,6 +52,7 @@ export let decisions: Decision[] = [
     submittedAt: new Date('2023-09-01T10:00:00Z').toISOString(),
     decidedAt: new Date('2023-09-08T10:00:00Z').toISOString(),
     objectiveId: 'OBJ-004',
+    alignmentScore: 78,
     governanceLevel: 'Strategic Board',
   },
   {
@@ -63,6 +64,7 @@ export let decisions: Decision[] = [
     submittedAt: new Date('2023-09-05T16:00:00Z').toISOString(),
     decidedAt: new Date('2023-09-15T16:00:00Z').toISOString(),
     objectiveId: 'OBJ-001',
+    alignmentScore: 95,
     governanceLevel: 'Program',
   },
   {
@@ -74,6 +76,7 @@ export let decisions: Decision[] = [
     submittedAt: new Date('2023-09-10T12:00:00Z').toISOString(),
     decidedAt: new Date('2023-09-12T12:00:00Z').toISOString(),
     objectiveId: 'OBJ-001',
+    alignmentScore: 88,
     relatedDecisionIds: ['DEC-001'],
     governanceLevel: 'Project',
   },
