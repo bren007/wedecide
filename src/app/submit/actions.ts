@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -12,7 +13,7 @@ const DecisionSchema = z.object({
   decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct'], {
     errorMap: () => ({ message: 'Please select a decision type.' }),
   }),
-  objectiveId: z.string().min(1, 'Please select an objective.'),
+  objectiveId: z.string().min(1, 'Please select a strategic objective.'),
   governanceLevel: z.enum(['Project', 'Program', 'Strategic Board'], {
     errorMap: () => ({ message: 'Please select a governance level.' }),
   }),

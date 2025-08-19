@@ -13,10 +13,10 @@ export default async function SubmitPage() {
         <AppSidebar />
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-1 items-center justify-center p-4 md:p-6 lg:p-8">
-          <Card className="w-full max-w-2xl">
+        <div className="flex flex-1 items-start justify-center p-4 md:p-6 lg:p-8">
+          <Card className="w-full max-w-4xl">
             <CardHeader>
-              <CardTitle>Submit a New Decision</CardTitle>
+              <CardTitle>Decision Preparation</CardTitle>
               <CardDescription>
                 Fill out the form below to submit a proposal for review by the secretariat.
               </CardDescription>

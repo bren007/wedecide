@@ -10,11 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Send, Loader2, Upload } from 'lucide-react';
-import { useEffect } from 'react';
+import { Send, Loader2, Upload, Target } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { Objective, GovernanceLevel } from '@/lib/types';
-import { Separator } from './ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Progress } from './ui/progress';
+import { cn } from '@/lib/utils';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -32,6 +34,7 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
   const initialState: FormState = {};
   const [state, dispatch] = useActionState(createDecision, initialState);
   const { toast } = useToast();
+  const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
 
   useEffect(() => {
     if (state.message) {
@@ -58,7 +61,6 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         <div className="flex-grow border-t border-muted"></div>
       </div>
 
-
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input id="title" name="title" placeholder="e.g., Project Phoenix Q3 Budget" />
@@ -66,27 +68,45 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
           <p className="text-sm text-destructive">{state.errors.title.join(', ')}</p>
         )}
       </div>
-
-       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-            <Label htmlFor="objectiveId">Strategic Objective</Label>
-            <Select name="objectiveId">
-            <SelectTrigger id="objectiveId">
-                <SelectValue placeholder="Select an objective..." />
-            </SelectTrigger>
-            <SelectContent>
-                {objectives.map(objective => (
-                <SelectItem key={objective.id} value={objective.id}>
-                    {objective.name}
-                </SelectItem>
-                ))}
-            </SelectContent>
-            </Select>
-            {state.errors?.objectiveId && (
+      
+      <div className="space-y-3">
+        <Label id="objectiveLabel">Strategic Objective</Label>
+        <RadioGroup 
+            name="objectiveId" 
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4" 
+            aria-labelledby="objectiveLabel"
+            value={selectedObjective || ''}
+            onValueChange={setSelectedObjective}
+        >
+          {objectives.map((objective, index) => (
+            <Label 
+                htmlFor={objective.id} 
+                key={objective.id}
+                className={cn(
+                    "block rounded-lg border bg-card text-card-foreground shadow-sm transition-all cursor-pointer",
+                    "hover:border-primary/80",
+                    selectedObjective === objective.id && "border-primary ring-2 ring-primary/50"
+                )}
+            >
+              <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-3">
+                <RadioGroupItem value={objective.id} id={objective.id} className="mt-1" />
+                <div className="flex-1 space-y-1">
+                  <CardTitle className="text-base">{objective.name}</CardTitle>
+                  <CardDescription className="text-xs leading-snug">{objective.description}</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Progress value={(index + 1) * 25} className="h-2" />
+              </CardContent>
+            </Label>
+          ))}
+        </RadioGroup>
+        {state.errors?.objectiveId && (
             <p className="text-sm text-destructive">{state.errors.objectiveId.join(', ')}</p>
-            )}
-        </div>
-        <div className="space-y-2">
+        )}
+      </div>
+      
+      <div className="space-y-2">
             <Label htmlFor="governanceLevel">Governance Level</Label>
             <Select name="governanceLevel">
                 <SelectTrigger id="governanceLevel">
@@ -103,7 +123,6 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
             {state.errors?.governanceLevel && (
                 <p className="text-sm text-destructive">{state.errors.governanceLevel.join(', ')}</p>
             )}
-        </div>
       </div>
 
       <div className="space-y-2">

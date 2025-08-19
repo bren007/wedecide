@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -53,7 +54,7 @@ function NavLinks() {
         <SidebarMenuButton asChild isActive={isActive('/submit')}>
           <Link href="/submit">
             <FilePlus2 />
-            <span>Submit Decision</span>
+            <span>Decision Preparation</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
