@@ -62,7 +62,7 @@ function NavLinks() {
         <SidebarMenuButton asChild isActive={isActive('/meeting')}>
           <Link href="/meeting">
             <ClipboardList />
-            <span>Meeting Agenda</span>
+            <span>Decision Making</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
