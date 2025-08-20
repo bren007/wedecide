@@ -6,23 +6,25 @@ This is a Next.js starter project for "WeDecide," a prototype application design
 
 The prototype is designed to validate a core workflow for structured decision-making, enhanced by AI-powered support tools. The primary user flow is as follows:
 
-1.  **Submission:** A user submits a decision proposal through a structured form. They provide a title, background information, the type of decision sought (Approve, Endorse, Note), and link it to a predefined strategic objective. The prototype also signals the future capability to upload a source document directly.
+1.  **Decision Preparation:** A user prepares a decision proposal through a structured form. They provide a title, background information, and select the type of decision sought (Approve, Endorse, Note, Agree, Direct). Crucially, they link the proposal to a strategic objective by selecting from a visual gallery of organizational goals, which immediately grounds the proposal in a strategic context.
 
-2.  **Secretariat Review (Vetting):** The submitted proposal appears on the Secretariat Dashboard. A secretariat member can then navigate to a dedicated review page for that proposal.
+2.  **Secretariat Review (Vetting):** The submitted proposal appears on the Secretariat Dashboard. A key metric on this dashboard is "Awaiting Update," which shows how many proposals have been sent back to submitters for improvement, highlighting the secretariat's quality control function.
 
-3.  **AI-Powered Vetting:** On the review page, the secretariat has access to "Intelligent Vetting" tools. These AI-driven features can generate a list of targeted questions to assess the proposal's completeness, clarity, and strategic alignment, ensuring it is "decision-ready."
+3.  **AI-Powered Vetting:** On the review page for a specific proposal, the secretariat has access to "Intelligent Vetting" tools. This AI-driven feature can generate a list of targeted questions to assess the proposal's completeness, clarity, and strategic alignment, ensuring it is "decision-ready."
 
 4.  **Scheduling:** Once the proposal is deemed ready, the secretariat can approve it for a meeting, which changes its status to "Scheduled for Meeting."
 
-5.  **Meeting Agenda:** All scheduled proposals appear on the "Meeting Agenda" page. This view is the central hub for decision-makers during a meeting.
+5.  **Decision Making:** All scheduled proposals appear on the "Decision Making" page, which serves as the central hub for decision-makers during a meeting.
 
 6.  **AI-Powered Decision Support:** During the meeting, decision-makers can use "Decision Support" tools:
     *   **Intelligent Summary:** Generates a concise summary of the proposal's background and its alignment with strategic objectives.
     *   **Intelligent Exploration:** Generates strategic questions (e.g., "What if?", "So What?") to facilitate a deep and robust discussion, uncovering risks, assumptions, and next steps.
 
-7.  **Decision & Recording:** The decision outcome (e.g., Approved, Endorsed, Not Approved) is recorded directly on the agenda item.
+7.  **Decision & Recording:** The decision outcome (e.g., Approved, Endorsed, Not Approved) is recorded directly on the agenda item. The prototype also alludes to a workflow where a meeting can be recorded, transcribed via speech-to-text, and then summarized by the AI into editable meeting notes before being formally approved.
 
-8.  **Archive:** Once a decision is made, it moves from the active agenda to the "Past Decisions" page, creating a persistent, auditable record.
+8.  **Decision Bank:** Once a decision is made, it moves from the active agenda to the "Decision Bank." This is more than a static archive; it's a dynamic repository of organizational knowledge, featuring key performance indicators like:
+    *   **Decision Cycle Time:** The average number of business days from submission to final decision.
+    *   **Decision Rate:** The ratio of action-oriented decisions to passive notes, highlighting the organization's bias towards action.
 
 ## Technical Architecture
 
