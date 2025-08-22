@@ -143,7 +143,7 @@ export default function MeetingPage() {
                     <Separator />
                     <div className="flex items-center gap-2">
                         <FileSignature className="h-6 w-6" />
-                        <h2 className="text-xl font-semibold tracking-tight">Meeting Record</h2>
+                        <h2 className="text-xl font-semibold tracking-tight">Meeting Minutes</h2>
                     </div>
                     <MeetingSummary decisions={pastDecisions} />
                 </div>

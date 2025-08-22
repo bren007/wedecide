@@ -57,9 +57,9 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>AI-Generated Meeting Summary</CardTitle>
+        <CardTitle>AI-Generated Meeting Minutes</CardTitle>
         <CardDescription>
-            Generate the meeting notes from a voice transcription taken during the meeting. This can be edited by the secretariat before approval is given by the chair and the meeting notes become an official record.
+            Use speech-to-text to record the meeting, then generate structured minutes with a targeted prompt. The output includes decisions made (noting if they were re-expressed), key comments, and actions agreed. The secretariat can edit the draft before the chair gives final approval, which formally updates the decisions in the Decision Bank.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
