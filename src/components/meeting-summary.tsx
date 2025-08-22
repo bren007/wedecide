@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Decision } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 import { Textarea } from './ui/textarea';
+import { Label } from '@/components/ui/label';
 
 export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   const [summary, setSummary] = useState('');
