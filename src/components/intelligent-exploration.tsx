@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,10 +13,18 @@ import type { Decision } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 
 export function IntelligentExploration({ decisions }: { decisions: Decision[] }) {
-  const [selectedDecisionId, setSelectedDecisionId] = useState<string | undefined>(undefined);
+  const [selectedDecisionId, setSelectedDecisionId] = useState<string | undefined>(decisions.length > 0 ? decisions[0].id : undefined);
   const [questions, setQuestions] = useState<StrategicQuestions | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (decisions.length > 0 && !selectedDecisionId) {
+        setSelectedDecisionId(decisions[0].id);
+    }
+    setQuestions(null);
+  }, [selectedDecisionId, decisions]);
+
 
   const handleGenerateQuestions = async () => {
     if (!selectedDecisionId) {
