@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { generateMeetingSummary } from '@/ai/flows/generate-meeting-summary';
-import { Loader2, Sparkles, Clipboard, CheckCircle, Mic } from 'lucide-react';
+import { Loader2, Sparkles, Clipboard, CheckCircle, Mic, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Decision } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
@@ -58,7 +58,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>AI-Generated Meeting Minutes</CardTitle>
+        <CardTitle>Generate Meeting Minutes</CardTitle>
         <CardDescription>
             Use speech-to-text to record the meeting, then generate structured minutes. The secretariat can edit the draft before the chair gives final approval.
         </CardDescription>
@@ -75,7 +75,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
             ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
             )}
-            Generate AI Summary
+            Generate Summary
             </Button>
         </div>
 
@@ -107,15 +107,21 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
                     <span className="sr-only">Copy to clipboard</span>
                 </Button>
             </div>
-             <Button
-                onClick={handleApprove}
-                disabled={!summary || isApproved}
-                className="w-full sm:w-auto"
-                variant="default"
-             >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                {isApproved ? 'Approved & Circulated' : 'Approve & Circulate Minutes'}
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Button
+                    onClick={handleApprove}
+                    disabled={!summary || isApproved}
+                    className="w-full sm:w-auto"
+                    variant="default"
+                >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    {isApproved ? 'Approved & Circulated' : 'Approve Minutes'}
+                </Button>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <UserCheck className="h-4 w-4" />
+                    <span>Chair action only</span>
+                </div>
+            </div>
           </div>
         )}
       </CardContent>

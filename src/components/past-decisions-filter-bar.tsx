@@ -3,11 +3,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Objective } from '@/lib/types';
+import type { Objective, GovernanceLevel } from '@/lib/types';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
 export function PastDecisionsFilterBar({ objectives }: { objectives: Objective[] }) {
     const decisionTypes = ['Approved', 'Endorsed', 'Noted', 'Not Approved'];
+    const governanceLevels: GovernanceLevel[] = ['Project', 'Program', 'Strategic Board'];
 
     return (
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
@@ -25,6 +26,14 @@ export function PastDecisionsFilterBar({ objectives }: { objectives: Objective[]
                 </SelectTrigger>
                 <SelectContent>
                     {decisionTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select disabled>
+                <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Filter by level..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {governanceLevels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                 </SelectContent>
             </Select>
             <Button variant="outline" className="w-full md:w-auto" disabled>
