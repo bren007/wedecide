@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
 import { useTransition } from 'react';
 import { StrategicAlignment } from './strategic-alignment';
 
@@ -134,10 +134,16 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
                 View Proposal Document
             </Button>
             {isPastDecision && (
-                <Button variant="outline" size="sm" disabled>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Decision
-                </Button>
+                <>
+                    <Button variant="outline" size="sm" disabled>
+                        <ClipboardList className="mr-2 h-4 w-4" />
+                        View Approved Minutes
+                    </Button>
+                    <Button variant="outline" size="sm" disabled>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export Decision
+                    </Button>
+                </>
             )}
         </div>
         {!isPastDecision && (

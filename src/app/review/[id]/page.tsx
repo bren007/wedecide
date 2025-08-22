@@ -1,6 +1,5 @@
 
 
-
 import { getDecisionById, getObjectiveById, getDecisions } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { ProposalSummary } from '@/components/proposal-summary';
 import { FitnessQuestions } from '@/components/fitness-questions';
 import { RelatedDecisions } from '@/components/related-decisions';
 import { StrategicAlignment } from '@/components/strategic-alignment';
-import { CheckCircle2, Target, FileText, Download } from 'lucide-react';
+import { CheckCircle2, Target, FileText, Download, ClipboardList } from 'lucide-react';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 
@@ -26,6 +25,8 @@ export default async function ReviewPage({ params }: { params: { id: string } })
   const objective = await getObjectiveById(decision.objectiveId);
 
   const canApprove = decision.status === 'Submitted' || decision.status === 'In Review';
+  const isPastDecision = ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(decision.status);
+
 
   return (
     <>
@@ -73,11 +74,17 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                   <h3 className="font-semibold mb-2 text-lg">Background</h3>
                   <p className="text-muted-foreground whitespace-pre-wrap">{decision.background}</p>
                 </CardContent>
-                <CardFooter className="gap-2">
+                <CardFooter className="gap-2 flex-wrap">
                      <Button variant="outline" disabled>
                         <FileText className="mr-2 h-4 w-4"/>
                         View Proposal Document
                     </Button>
+                    {isPastDecision && (
+                         <Button variant="outline" disabled>
+                            <ClipboardList className="mr-2 h-4 w-4" />
+                            View Approved Minutes
+                        </Button>
+                    )}
                     <Button variant="outline" disabled>
                         <Download className="mr-2 h-4 w-4" />
                         Export Decision
