@@ -59,7 +59,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
       <CardHeader>
         <CardTitle>AI-Generated Meeting Minutes</CardTitle>
         <CardDescription>
-            Use speech-to-text to record the meeting, then generate structured minutes with a targeted prompt. The secretariat can edit the draft before the chair gives final approval, which formally updates the decisions in the Decision Bank.
+            Use speech-to-text to record the meeting, then generate structured minutes. The secretariat can edit the draft before the chair gives final approval.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -76,15 +76,6 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
             )}
             Generate AI Summary
             </Button>
-             <Button
-                onClick={handleApprove}
-                disabled={!summary || isApproved}
-                className="w-full sm:w-auto"
-                variant="default"
-             >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                {isApproved ? 'Approved & Circulated' : 'Approve & Circulate Summary'}
-            </Button>
         </div>
 
         {isLoading && (
@@ -95,21 +86,34 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
           </div>
         )}
         {summary && (
-          <div className="relative">
-            <Textarea
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              className="pr-10 h-48"
-              aria-label="Meeting Summary"
-            />
-            <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 h-7 w-7"
-                onClick={handleCopyToClipboard}
-            >
-                <Clipboard className="h-4 w-4" />
-                <span className="sr-only">Copy to clipboard</span>
+          <div className="space-y-4">
+            <div className="relative">
+                <Label htmlFor="meeting-minutes-textarea" className="text-sm font-medium">Editable Minutes Draft</Label>
+                <Textarea
+                id="meeting-minutes-textarea"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                className="pr-10 h-48 mt-2"
+                aria-label="Meeting Summary"
+                />
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-8 right-2 h-7 w-7"
+                    onClick={handleCopyToClipboard}
+                >
+                    <Clipboard className="h-4 w-4" />
+                    <span className="sr-only">Copy to clipboard</span>
+                </Button>
+            </div>
+             <Button
+                onClick={handleApprove}
+                disabled={!summary || isApproved}
+                className="w-full sm:w-auto"
+                variant="default"
+             >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                {isApproved ? 'Approved & Circulated' : 'Approve & Circulate Minutes'}
             </Button>
           </div>
         )}
