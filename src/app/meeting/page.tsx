@@ -50,7 +50,7 @@ export default function MeetingPage() {
   };
 
   const scheduledDecisions = decisions.filter(d => d.status === 'Scheduled for Meeting');
-  const pastDecisions = decisions.filter(d => ['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(d.status));
+  const pastDecisions = decisions.filter(d => ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(d.status));
 
   if (loading) {
     return (
@@ -86,32 +86,32 @@ export default function MeetingPage() {
 
           <Card>
             <CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
+                <div className="flex items-center gap-3 p-2">
+                    <Users className="h-6 w-6 text-primary" />
                     <div>
+                        <p className="text-xs text-muted-foreground">Decision Group</p>
                         <p className="font-semibold">Strategic Board</p>
-                        <p className="text-muted-foreground">Group</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
+                <div className="flex items-center gap-3 p-2">
+                    <Calendar className="h-6 w-6 text-primary" />
                     <div>
+                        <p className="text-xs text-muted-foreground">Meeting Date</p>
                         <p className="font-semibold">October 26, 2023</p>
-                        <p className="text-muted-foreground">Date</p>
                     </div>
                 </div>
-                 <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
+                 <div className="flex items-center gap-3 p-2">
+                    <Clock className="h-6 w-6 text-primary" />
                     <div>
+                        <p className="text-xs text-muted-foreground">Meeting Time</p>
                         <p className="font-semibold">10:00 AM - 12:00 PM</p>
-                        <p className="text-muted-foreground">Time</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
+                <div className="flex items-center gap-3 p-2">
+                    <User className="h-6 w-6 text-primary" />
                     <div>
+                        <p className="text-xs text-muted-foreground">Attendees</p>
                         <p className="font-semibold">Jane Doe (Chair)</p>
-                        <p className="text-muted-foreground">Attendees</p>
                     </div>
                 </div>
             </CardContent>
