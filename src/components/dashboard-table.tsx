@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import type { Decision, DecisionStatus } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { FileSearch } from 'lucide-react';
+import { FileSearch, Filter } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
@@ -60,11 +60,31 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead className="w-[150px]">Status</TableHead>
-            <TableHead className="w-[200px]">Decision Type</TableHead>
-            <TableHead className="w-[200px]">Governance Level</TableHead>
-            <TableHead className="w-[200px]">Submitted</TableHead>
+            <TableHead>
+                <div className="flex items-center gap-2">
+                    Title <Filter className="h-3 w-3" />
+                </div>
+            </TableHead>
+            <TableHead className="w-[150px]">
+                <div className="flex items-center gap-2">
+                    Status <Filter className="h-3 w-3" />
+                </div>
+            </TableHead>
+            <TableHead className="w-[200px]">
+                <div className="flex items-center gap-2">
+                    Decision Type <Filter className="h-3 w-3" />
+                </div>
+            </TableHead>
+            <TableHead className="w-[200px]">
+                <div className="flex items-center gap-2">
+                    Governance Level <Filter className="h-3 w-3" />
+                </div>
+            </TableHead>
+            <TableHead className="w-[200px]">
+                <div className="flex items-center gap-2">
+                    Submitted <Filter className="h-3 w-3" />
+                </div>
+            </TableHead>
             <TableHead className="w-[150px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
