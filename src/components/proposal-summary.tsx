@@ -71,22 +71,20 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
         <CardDescription>Generate a concise summary of the proposal background and its strategic alignment.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {decisions.length > 1 && (
-            <div className="space-y-2">
-                <Select onValueChange={setSelectedDecisionId} value={selectedDecisionId}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Select a decision to summarize..." />
-                </SelectTrigger>
-                <SelectContent>
-                    {decisions.map(decision => (
-                    <SelectItem key={decision.id} value={decision.id}>
-                        {decision.title}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-            </div>
-        )}
+        <div className="space-y-2">
+            <Select onValueChange={setSelectedDecisionId} value={selectedDecisionId}>
+            <SelectTrigger>
+                <SelectValue placeholder="Select a decision to summarize..." />
+            </SelectTrigger>
+            <SelectContent>
+                {decisions.map(decision => (
+                <SelectItem key={decision.id} value={decision.id}>
+                    {decision.title}
+                </SelectItem>
+                ))}
+            </SelectContent>
+            </Select>
+        </div>
         <Button onClick={handleSummarize} disabled={isLoading || !selectedDecision || !objective} className="w-full">
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
