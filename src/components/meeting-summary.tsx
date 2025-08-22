@@ -59,7 +59,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
       <CardHeader>
         <CardTitle>AI-Generated Meeting Minutes</CardTitle>
         <CardDescription>
-            Use speech-to-text to record the meeting, then generate structured minutes with a targeted prompt. The output includes decisions made (noting if they were re-expressed), key comments, and actions agreed. The secretariat can edit the draft before the chair gives final approval, which formally updates the decisions in the Decision Bank.
+            Use speech-to-text to record the meeting, then generate structured minutes with a targeted prompt. The secretariat can edit the draft before the chair gives final approval, which formally updates the decisions in the Decision Bank.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
