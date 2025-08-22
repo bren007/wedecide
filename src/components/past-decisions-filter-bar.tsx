@@ -11,7 +11,7 @@ export function PastDecisionsFilterBar({ objectives }: { objectives: Objective[]
 
     return (
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
-            <Select>
+            <Select disabled>
                 <SelectTrigger className="w-full md:w-[200px]">
                     <SelectValue placeholder="Filter by objective..." />
                 </SelectTrigger>
@@ -19,7 +19,7 @@ export function PastDecisionsFilterBar({ objectives }: { objectives: Objective[]
                     {objectives.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
                 </SelectContent>
             </Select>
-            <Select>
+            <Select disabled>
                 <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder="Filter by type..." />
                 </SelectTrigger>
