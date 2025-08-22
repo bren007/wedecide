@@ -1,6 +1,6 @@
 # WeDecide - The Decision Intelligence Platform
 
-This is a Next.js prototype for "WeDecide," a **Decision Intelligence Platform** designed to enhance the rigor, transparency, and strategic alignment of decision-making processes within **Public Sector and Multilateral Organizations.**
+This is a Next.js prototype for "WeDecide," which is aiming to become the **Decision Intelligence Platform** for **Public Sector and Multilateral Organizations.**
 
 ## Functional Architecture & Core Decision Flow
 

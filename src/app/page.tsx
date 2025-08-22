@@ -8,7 +8,7 @@ import { DashboardTable } from '@/components/dashboard-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
-import type { Objective } from '@/lib/types';
+import type { Objective, DecisionStatus } from '@/lib/types';
 
 export default async function DashboardPage() {
   const decisions = await getDecisions();
@@ -18,6 +18,9 @@ export default async function DashboardPage() {
   const inReviewCount = decisions.filter(d => d.status === 'In Review').length;
   const scheduledCount = decisions.filter(d => d.status === 'Scheduled for Meeting').length;
   const awaitingUpdateCount = decisions.filter(d => d.status === 'Awaiting Update').length;
+  
+  const activeStatuses: DecisionStatus[] = ['Submitted', 'In Review', 'Awaiting Update', 'Scheduled for Meeting'];
+  const activeDecisions = decisions.filter(d => activeStatuses.includes(d.status));
 
   return (
     <>
@@ -94,7 +97,7 @@ export default async function DashboardPage() {
               <CardDescription>A list of all proposals in the decision pipeline.</CardDescription>
             </CardHeader>
             <CardContent>
-              <DashboardTable decisions={decisions} />
+              <DashboardTable decisions={activeDecisions} />
             </CardContent>
           </Card>
         </div>
