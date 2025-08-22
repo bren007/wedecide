@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,13 +23,16 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
   const [objective, setObjective] = useState<Objective | undefined>(undefined);
 
   useEffect(() => {
+    if (decisions.length > 0 && !selectedDecisionId) {
+        setSelectedDecisionId(decisions[0].id);
+    }
     if (selectedDecision) {
         getObjectiveById(selectedDecision.objectiveId).then(setObjective);
     } else {
         setObjective(undefined);
     }
     setSummary('');
-  }, [selectedDecisionId, selectedDecision]);
+  }, [selectedDecisionId, selectedDecision, decisions]);
 
   const handleSummarize = async () => {
     if (!selectedDecision || !objective) {
