@@ -1,3 +1,4 @@
+
 import type { Decision, DecisionStatus, Objective, GovernanceLevel } from './types';
 
 // In a real application, this would be a database.
@@ -21,6 +22,7 @@ export let decisions: Decision[] = [
     relatedDecisionIds: ['DEC-004'],
     alignmentScore: 85,
     governanceLevel: 'Project',
+    submittingOrganisation: 'Product Development',
   },
   {
     id: 'DEC-002',
@@ -32,6 +34,7 @@ export let decisions: Decision[] = [
     objectiveId: 'OBJ-002',
     alignmentScore: 92,
     governanceLevel: 'Program',
+    submittingOrganisation: 'Human Resources',
   },
   {
     id: 'DEC-003',
@@ -42,6 +45,7 @@ export let decisions: Decision[] = [
     submittedAt: new Date('2023-10-22T11:00:00Z').toISOString(),
     objectiveId: 'OBJ-004',
     governanceLevel: 'Strategic Board',
+    submittingOrganisation: 'Senior Leadership Team',
   },
   {
     id: 'DEC-004',
@@ -54,6 +58,7 @@ export let decisions: Decision[] = [
     objectiveId: 'OBJ-004',
     alignmentScore: 78,
     governanceLevel: 'Strategic Board',
+    submittingOrganisation: 'Events Committee',
   },
   {
     id: 'DEC-005',
@@ -66,6 +71,7 @@ export let decisions: Decision[] = [
     objectiveId: 'OBJ-001',
     alignmentScore: 95,
     governanceLevel: 'Program',
+    submittingOrganisation: 'Business Development',
   },
   {
     id: 'DEC-006',
@@ -79,6 +85,7 @@ export let decisions: Decision[] = [
     alignmentScore: 88,
     relatedDecisionIds: ['DEC-001'],
     governanceLevel: 'Project',
+    submittingOrganisation: 'Marketing Department',
   },
    {
     id: 'DEC-007',
@@ -89,6 +96,7 @@ export let decisions: Decision[] = [
     submittedAt: new Date('2023-10-21T18:00:00Z').toISOString(),
     objectiveId: 'OBJ-002',
     governanceLevel: 'Program',
+    submittingOrganisation: 'IT Department',
   },
 ];
 

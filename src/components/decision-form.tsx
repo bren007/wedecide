@@ -51,7 +51,7 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
       <div>
         <Button variant="outline" className="w-full" disabled>
           <Upload className="mr-2 h-4 w-4" />
-          Upload proposal document
+          Upload decision proposal paper
         </Button>
       </div>
 
@@ -61,16 +61,53 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         <div className="flex-grow border-t border-muted"></div>
       </div>
 
+      <div className="space-y-3">
+        <Label id="decisionTypeLabel">Type of Decision Sought</Label>
+        <RadioGroup name="decisionType" className="gap-4" aria-labelledby="decisionTypeLabel">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="Approve" id="approve" />
+            <Label htmlFor="approve" className="font-normal">Approve: Seek formal approval for an action or resource allocation.</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="Endorse" id="endorse" />
+            <Label htmlFor="endorse" className="font-normal">Endorse: Seek support or backing for a proposal or initiative.</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="Agree" id="agree" />
+            <Label htmlFor="agree" className="font-normal">Agree: Seek agreement on a course of action or statement.</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="Direct" id="direct" />
+            <Label htmlFor="direct" className="font-normal">Direct: Seek a formal instruction to undertake a specific task.</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="Note" id="note" />
+            <Label htmlFor="note" className="font-normal">Note: For information purposes; no formal decision required.</Label>
+          </div>
+        </RadioGroup>
+        {state.errors?.decisionType && (
+          <p className="text-sm text-destructive">{state.errors.decisionType.join(', ')}</p>
+        )}
+      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
-        <Input id="title" name="title" placeholder="e.g., Project Phoenix Q3 Budget" />
+        <Label htmlFor="title">Decision</Label>
+        <Input id="title" name="title" placeholder="e.g., Project Phoenix Q3 Budget Allocation" />
         {state.errors?.title && (
           <p className="text-sm text-destructive">{state.errors.title.join(', ')}</p>
         )}
       </div>
+
+       <div className="space-y-2">
+        <Label htmlFor="submittingOrganisation">Submitting Organisation</Label>
+        <Input id="submittingOrganisation" name="submittingOrganisation" placeholder="e.g., Digital Transformation Unit" />
+        {state.errors?.submittingOrganisation && (
+          <p className="text-sm text-destructive">{state.errors.submittingOrganisation.join(', ')}</p>
+        )}
+      </div>
       
       <div className="space-y-3">
-        <Label id="objectiveLabel">Strategic Objective</Label>
+        <Label id="objectiveLabel">Which strategic objective does this decision align with?</Label>
         <RadioGroup 
             name="objectiveId" 
             className="grid grid-cols-1 sm:grid-cols-2 gap-4" 
@@ -126,7 +163,7 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="background">Background</Label>
+        <Label htmlFor="background">Decision Background</Label>
         <Textarea
           id="background"
           name="background"
@@ -135,35 +172,6 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         />
         {state.errors?.background && (
           <p className="text-sm text-destructive">{state.errors.background.join(', ')}</p>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <Label id="decisionTypeLabel">Type of Decision Sought</Label>
-        <RadioGroup name="decisionType" className="gap-4" aria-labelledby="decisionTypeLabel">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Approve" id="approve" />
-            <Label htmlFor="approve" className="font-normal">Approve: Seek formal approval for an action or resource allocation.</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Endorse" id="endorse" />
-            <Label htmlFor="endorse" className="font-normal">Endorse: Seek support or backing for a proposal or initiative.</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Agree" id="agree" />
-            <Label htmlFor="agree" className="font-normal">Agree: Seek agreement on a course of action or statement.</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Direct" id="direct" />
-            <Label htmlFor="direct" className="font-normal">Direct: Seek a formal instruction to undertake a specific task.</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Note" id="note" />
-            <Label htmlFor="note" className="font-normal">Note: For information purposes; no formal decision required.</Label>
-          </div>
-        </RadioGroup>
-        {state.errors?.decisionType && (
-          <p className="text-sm text-destructive">{state.errors.decisionType.join(', ')}</p>
         )}
       </div>
       

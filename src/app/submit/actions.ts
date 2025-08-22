@@ -17,6 +17,7 @@ const DecisionSchema = z.object({
   governanceLevel: z.enum(['Project', 'Program', 'Strategic Board'], {
     errorMap: () => ({ message: 'Please select a governance level.' }),
   }),
+  submittingOrganisation: z.string().min(1, 'Please enter the submitting organisation.'),
 });
 
 export type FormState = {
@@ -26,6 +27,7 @@ export type FormState = {
     decisionType?: string[];
     objectiveId?: string[];
     governanceLevel?: string[];
+    submittingOrganisation?: string[];
   };
   message?: string;
 };
@@ -49,6 +51,7 @@ export async function createDecision(prevState: FormState, formData: FormData) {
     decisionType: formData.get('decisionType'),
     objectiveId: formData.get('objectiveId'),
     governanceLevel: formData.get('governanceLevel'),
+    submittingOrganisation: formData.get('submittingOrganisation'),
   });
 
   if (!validatedFields.success) {

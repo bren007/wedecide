@@ -1,3 +1,4 @@
+
 export type Objective = {
   id: string;
   name: string;
@@ -16,6 +17,7 @@ export type Decision = {
   relatedDecisionIds?: string[];
   alignmentScore?: number;
   governanceLevel?: GovernanceLevel;
+  submittingOrganisation?: string;
 };
 
 export type GovernanceLevel = 'Project' | 'Program' | 'Strategic Board';
