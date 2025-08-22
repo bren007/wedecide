@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { LayoutDashboard, FilePlus2, ClipboardList, History, Landmark } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, ClipboardList, Landmark } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -42,19 +42,19 @@ function NavLinks() {
 
   return (
     <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/')}>
-          <Link href="/">
-            <LayoutDashboard />
-            <span>Dashboard</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
+        <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/submit')}>
           <Link href="/submit">
             <FilePlus2 />
             <span>Decision Preparation</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive('/')}>
+          <Link href="/">
+            <LayoutDashboard />
+            <span>Secretariat Dashboard</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
