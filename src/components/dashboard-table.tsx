@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import type { Decision, DecisionStatus } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { FileSearch, Filter } from 'lucide-react';
+import { FileSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
@@ -55,36 +56,48 @@ function FormattedDate({ dateString }: { dateString: string }) {
 
 
 export function DashboardTable({ decisions }: { decisions: Decision[] }) {
+  const allStatuses = ['Submitted', 'In Review', 'Awaiting Update', 'Scheduled for Meeting'];
+  const allDecisionTypes = ['Approve', 'Endorse', 'Note', 'Agree', 'Direct'];
+  const allGovernanceLevels = ['Project', 'Program', 'Strategic Board'];
+
+
   return (
     <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>
-                <div className="flex items-center gap-2">
-                    Title <Filter className="h-3 w-3" />
-                </div>
-            </TableHead>
-            <TableHead className="w-[150px]">
-                <div className="flex items-center gap-2">
-                    Status <Filter className="h-3 w-3" />
-                </div>
+            <TableHead>Title</TableHead>
+            <TableHead className="w-[200px]">
+                <Select disabled>
+                    <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
+                        <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {allStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </TableHead>
             <TableHead className="w-[200px]">
-                <div className="flex items-center gap-2">
-                    Decision Type <Filter className="h-3 w-3" />
-                </div>
+                 <Select disabled>
+                    <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
+                        <SelectValue placeholder="Decision Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {allDecisionTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </TableHead>
             <TableHead className="w-[200px]">
-                <div className="flex items-center gap-2">
-                    Governance Level <Filter className="h-3 w-3" />
-                </div>
+                 <Select disabled>
+                    <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
+                        <SelectValue placeholder="Governance Level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {allGovernanceLevels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </TableHead>
-            <TableHead className="w-[200px]">
-                <div className="flex items-center gap-2">
-                    Submitted <Filter className="h-3 w-3" />
-                </div>
-            </TableHead>
+            <TableHead className="w-[200px]">Submitted</TableHead>
             <TableHead className="w-[150px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
