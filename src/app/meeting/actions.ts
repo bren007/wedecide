@@ -10,7 +10,7 @@ async function updateDecisionStatus(id: string, status: DecisionStatus) {
   if (decision) {
       decision.status = status;
       // Set the decidedAt timestamp when a final decision is made
-      if (['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(status)) {
+      if (['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(status)) {
         decision.decidedAt = new Date().toISOString();
       }
       return decision;
@@ -19,7 +19,7 @@ async function updateDecisionStatus(id: string, status: DecisionStatus) {
 }
 
 export async function setDecisionOutcome(id: string, outcome: DecisionStatus): Promise<Decision | undefined> {
-  const validOutcomes: DecisionStatus[] = ['Approved', 'Endorsed', 'Noted', 'Not Approved'];
+  const validOutcomes: DecisionStatus[] = ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'];
   if (validOutcomes.includes(outcome)) {
     const updatedDecision = await updateDecisionStatus(id, outcome);
     revalidatePath('/meeting');

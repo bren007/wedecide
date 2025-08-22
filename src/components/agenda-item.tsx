@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useTransition } from 'react';
 import { StrategicAlignment } from './strategic-alignment';
 
@@ -31,7 +31,7 @@ function OutcomeButton({ decision, outcome, currentStatus, children, variant = '
     });
   };
   
-  const isPastDecision = ['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(currentStatus);
+  const isPastDecision = ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(currentStatus);
 
   if (isPastDecision) return null;
 
@@ -47,6 +47,7 @@ const statusConfig = {
   Endorsed: { icon: ThumbsUp, color: 'text-blue-600', text: 'Endorsed' },
   Noted: { icon: Bookmark, color: 'text-slate-600', text: 'Noted' },
   'Not Approved': { icon: FileX, color: 'text-red-600', text: 'Not Approved' },
+  'Not Endorsed': { icon: ThumbsDown, color: 'text-red-600', text: 'Not Endorsed' },
   'Scheduled for Meeting': { icon: () => null, color: '', text: '' }
 };
 
@@ -58,14 +59,46 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
   const Icon = config.icon;
   
   const handleUpdate = onDecisionUpdate || (() => {});
+  
+  const renderOutcomeButtons = () => {
+      switch (decisionType) {
+          case 'Approve':
+              return (
+                  <>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved" variant="default"><CheckCircle className="mr-2 h-4 w-4" />Approve</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Approved" variant="destructive"><XCircle className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
+                  </>
+              );
+          case 'Endorse':
+              return (
+                   <>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Endorsed" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Endorse</OutcomeButton>
+                  </>
+              );
+          case 'Agree':
+              return (
+                   <>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved"><Handshake className="mr-2 h-4 w-4" />Agree</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Approved" variant="destructive"><MinusCircle className="mr-2 h-4 w-4" />Disagree</OutcomeButton>
+                  </>
+              );
+          case 'Note':
+              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Acknowledge as Noted</OutcomeButton>;
+          case 'Direct':
+              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Acknowledge Directive</OutcomeButton>
+          default:
+              return null;
+      }
+  }
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
             <div>
                 <Badge variant="outline" className="mb-2">{decisionType}</Badge>
-                <CardTitle>{title}</CardTitle>
+                <CardTitle className="text-xl">{title}</CardTitle>
             </div>
             {isPastDecision && (
                 <div className={`flex items-center gap-2 font-semibold ${config.color}`}>
@@ -77,16 +110,22 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
       </CardHeader>
       <CardContent className="space-y-4">
         {objective && (
-          <div className="flex items-start gap-3 text-muted-foreground p-3 bg-muted/50 rounded-lg text-sm">
-            <Target className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">{objective.name}</p>
-              <p>{objective.description}</p>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-muted-foreground">Strategic Objective</p>
+            <div className="flex items-start gap-3 text-muted-foreground p-3 bg-muted/50 rounded-lg text-sm">
+                <Target className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                <div className="flex-1">
+                <p className="font-semibold text-foreground">{objective.name}</p>
+                <p>{objective.description}</p>
+                </div>
+                {decision.alignmentScore && <StrategicAlignment score={decision.alignmentScore} />}
             </div>
-             {decision.alignmentScore && <StrategicAlignment score={decision.alignmentScore} />}
           </div>
         )}
-        <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
+        <div className="space-y-2">
+            <p className="text-sm font-semibold text-muted-foreground">Background Summary</p>
+            <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
+        </div>
       </CardContent>
       <CardFooter className="flex flex-wrap justify-between items-center gap-4 pt-4">
         <div className="flex gap-2">
@@ -103,10 +142,7 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
         </div>
         {!isPastDecision && (
             <div className="flex justify-end gap-2 flex-wrap">
-                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Approve</OutcomeButton>
-                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
-                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Note</OutcomeButton>
-                <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Approved" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
+                {renderOutcomeButtons()}
             </div>
         )}
       </CardFooter>
