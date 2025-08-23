@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
@@ -53,7 +53,7 @@ const statusConfig = {
 
 
 export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision: Decision; objective?: Objective; onDecisionUpdate?: (decision: Decision) => void }) {
-  const { proposalTitle, background, decisionType, status, id } = decision;
+  const { proposalTitle, background, decisionType, status, id, submittingOrganisation } = decision;
   const isPastDecision = status !== 'Scheduled for Meeting';
   const config = statusConfig[status] || {};
   const Icon = config.icon;
@@ -99,6 +99,7 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
             <div>
                 <Badge variant="outline" className="mb-2">{decisionType}</Badge>
                 <CardTitle className="text-xl">{proposalTitle}</CardTitle>
+                {submittingOrganisation && <CardDescription>Submitted by: {submittingOrganisation}</CardDescription>}
             </div>
             {isPastDecision && (
                 <div className={`flex items-center gap-2 font-semibold ${config.color}`}>
