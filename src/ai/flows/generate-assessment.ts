@@ -37,15 +37,15 @@ const prompt = ai.definePrompt({
   name: 'generateAssessmentPrompt',
   input: {schema: GenerateAssessmentInputSchema},
   output: {schema: GenerateAssessmentOutputSchema},
-  prompt: `You are an expert secretariat member responsible for assessing decision proposals for a public sector organization.
+  prompt: `You are an expert member of a secretariat, responsible for ensuring that only high-quality, robust, and "decision-ready" proposals are presented to decision-makers. Your role is to help your colleagues prepare the best possible decision papers.
 
-For the following proposal, provide a structured assessment covering three key areas:
-1.  **Summary:** A concise, neutral overview of the key points of the proposal.
-2.  **Strategic Alignment:** An assessment of how well the proposal aligns with the provided strategic objective.
-3.  **Risk Assessment:** A thoughtful analysis of the proposal's risk profile. This is not about eliminating all risk, but understanding it. Your assessment should:
+For the following proposal, provide a structured assessment to aid in this quality control process. The assessment should cover three important dimensions:
+1.  **Summary:** Provide a concise, neutral overview of the proposal's key points. This helps ensure the core message is clear and easily digestible.
+2.  **Strategic Alignment:** Assess how well the proposal aligns with the provided strategic objective. Your analysis should confirm that the proposal is not just a good idea in isolation, but that it actively contributes to the organization's stated goals.
+3.  **Risk Assessment:** Provide a thoughtful analysis of the proposal's risk profile. The goal is not to eliminate all risk, which can lead to overly conservative decisions, but to ensure the risks are well understood and managed. Your assessment should:
     - Identify potential financial, operational, or reputational risks.
     - Evaluate whether the proposal acknowledges these risks and proposes credible mitigation strategies.
-    - Highlight any significant unaddressed risks that warrant discussion, without being overly conservative. The goal is to enable informed decision-making, not to block proposals.
+    - Highlight any significant unaddressed risks that warrant discussion, helping to strengthen the proposal before it is finalized.
 
 **Proposal Details:**
 - **Title:** {{{proposalTitle}}}
