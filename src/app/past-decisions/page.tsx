@@ -56,7 +56,7 @@ function getDecisionRate(decisions: Decision[]): number {
     if (decisions.length === 0) {
         return 0;
     }
-    const actionStatuses: (typeof decisions[0]['status'])[] = ['Approved', 'Endorsed', 'Not Approved'];
+    const actionStatuses: (typeof decisions[0]['status'])[] = ['Approved', 'Endorsed', 'Not Approved', 'Not Endorsed'];
     const actionDecisions = decisions.filter(d => actionStatuses.includes(d.status));
 
     return Math.round((actionDecisions.length / decisions.length) * 100);
@@ -67,7 +67,7 @@ export default async function PastDecisionsPage() {
   const allDecisions = await getDecisions();
   const objectives = await getObjectives();
   const pastDecisions = allDecisions.filter(d =>
-    ['Approved', 'Endorsed', 'Noted', 'Not Approved'].includes(d.status)
+    ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(d.status)
   );
   
   const mostFrequentObjective = await getMostFrequentObjective(pastDecisions, objectives);
@@ -98,7 +98,7 @@ export default async function PastDecisionsPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{averageCycleTime} days</div>
                 <p className="text-xs text-muted-foreground">
-                  Average time from submission to decision
+                  Average business days to decision
                 </p>
               </CardContent>
             </Card>
