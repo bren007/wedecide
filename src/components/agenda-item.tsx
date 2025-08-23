@@ -131,23 +131,23 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
             <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-wrap justify-between items-center gap-4 pt-4">
-        <div className="flex gap-2">
+      <CardFooter className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex gap-2 flex-wrap">
             <Button variant="outline" size="sm" disabled>
                 <FileText className="mr-2 h-4 w-4"/>
                 View Proposal Document
             </Button>
             {isPastDecision && (
-                <>
-                    <Button variant="outline" size="sm" disabled>
-                        <ClipboardList className="mr-2 h-4 w-4" />
-                        View Approved Minutes
-                    </Button>
-                    <Button variant="outline" size="sm" disabled>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Decision
-                    </Button>
-                </>
+                 <Button variant="outline" size="sm" disabled>
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    View Approved Minutes
+                </Button>
+            )}
+            {isPastDecision && (
+                <Button variant="outline" size="sm" disabled>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Decision
+                </Button>
             )}
         </div>
         {!isPastDecision && (
