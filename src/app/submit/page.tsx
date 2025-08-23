@@ -18,7 +18,7 @@ export default async function SubmitPage() {
             <CardHeader>
               <CardTitle>Decision Preparation</CardTitle>
               <CardDescription>
-                Fill out the form below to submit a proposal for review by the secretariat.
+                Complete the decision form below. Once submitted, the secretariat will review the proposal before it can be scheduled for a meeting.
               </CardDescription>
             </CardHeader>
             <CardContent>
