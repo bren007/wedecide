@@ -1,18 +1,18 @@
 
-
 import { getDecisionById, getObjectiveById, getDecisions } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { approveForMeeting } from './actions';
-import { ProposalSummary } from '@/components/proposal-summary';
+import { IntelligentAssessment } from '@/components/intelligent-assessment';
 import { FitnessQuestions } from '@/components/fitness-questions';
 import { RelatedDecisions } from '@/components/related-decisions';
 import { StrategicAlignment } from '@/components/strategic-alignment';
 import { CheckCircle2, Target, FileText, Download, ClipboardList } from 'lucide-react';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
+import { SecretariatFeedback } from '@/components/secretariat-feedback';
 
 export default async function ReviewPage({ params }: { params: { id: string } }) {
   const decision = await getDecisionById(params.id);
@@ -24,7 +24,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
   const allDecisions = await getDecisions();
   const objective = await getObjectiveById(decision.objectiveId);
 
-  const canApprove = decision.status === 'Submitted' || decision.status === 'In Review';
+  const canApprove = decision.status === 'Submitted' || decision.status === 'In Review' || decision.status === 'Awaiting Update';
   const isPastDecision = ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(decision.status);
 
 
@@ -94,8 +94,9 @@ export default async function ReviewPage({ params }: { params: { id: string } })
             </div>
 
             <div className="lg:col-span-1 space-y-6">
-                <ProposalSummary decisions={[decision]} />
+                <IntelligentAssessment decision={decision} />
                 <FitnessQuestions decision={decision} />
+                <SecretariatFeedback />
                 <RelatedDecisions decision={decision} allDecisions={allDecisions} />
             </div>
           </div>

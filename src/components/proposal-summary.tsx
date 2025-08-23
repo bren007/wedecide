@@ -26,6 +26,9 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
     if (decisions.length > 0 && !selectedDecisionId) {
         setSelectedDecisionId(decisions[0].id);
     }
+     if (decisions.length > 0 && selectedDecisionId === undefined) {
+      setSelectedDecisionId(decisions[0].id);
+    }
     if (selectedDecision) {
         getObjectiveById(selectedDecision.objectiveId).then(setObjective);
     } else {

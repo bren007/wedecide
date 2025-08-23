@@ -1,3 +1,4 @@
+
 'use server';
 
 import { decisions } from '@/lib/data';
@@ -17,5 +18,5 @@ export async function approveForMeeting(id: string) {
   revalidatePath(`/review/${id}`);
   revalidatePath('/');
   revalidatePath('/meeting');
-  redirect('/');
+  redirect('/meeting');
 }
