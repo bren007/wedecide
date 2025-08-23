@@ -91,12 +91,12 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                     </Button>
                 </CardFooter>
               </Card>
+               <SecretariatFeedback />
             </div>
 
             <div className="lg:col-span-1 space-y-6">
                 <IntelligentAssessment decision={decision} />
                 <FitnessQuestions decision={decision} />
-                <SecretariatFeedback />
                 <RelatedDecisions decision={decision} allDecisions={allDecisions} />
             </div>
           </div>
