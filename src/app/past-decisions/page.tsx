@@ -84,7 +84,7 @@ export default async function PastDecisionsPage() {
         <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Decision Bank</h1>
-            <p className="text-muted-foreground">An auditable record of all decisions, providing insights into organizational performance.</p>
+            <p className="text-muted-foreground">Treating decisions as a strategic asset. Each decision deposited improves future analysis, compliance, and organizational intelligence.</p>
           </div>
           
            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
