@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { summarizeProposalForMeeting, type SummarizeProposalForMeetingOutput } from '@/ai/flows/summarize-proposal';
-import { Loader2, Sparkles, FileText, Target } from 'lucide-react';
+import { Loader2, Sparkles, FileText, Target, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
 import type { Decision, Objective } from '@/lib/types';
@@ -123,6 +123,14 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
                 Strategic Alignment
               </h4>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.strategicAlignment}</p>
+            </div>
+            <Separator />
+             <div>
+              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
+                <ShieldAlert className="h-4 w-4 text-primary" />
+                Risk Appraisal
+              </h4>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.riskAppraisal}</p>
             </div>
           </div>
         )}

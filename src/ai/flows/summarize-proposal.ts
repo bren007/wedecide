@@ -24,6 +24,7 @@ export type SummarizeProposalForMeetingInput = z.infer<typeof SummarizeProposalF
 const SummarizeProposalForMeetingOutputSchema = z.object({
   overview: z.string().describe("A concise overview of the proposal's key points and the specific decision being sought."),
   strategicAlignment: z.string().describe('An assessment of how well the proposal aligns with the stated strategic objective.'),
+  riskAppraisal: z.string().describe('A brief summary of key risks, potential exposure, and any critical missing information to support decision-making.'),
 });
 export type SummarizeProposalForMeetingOutput = z.infer<typeof SummarizeProposalForMeetingOutputSchema>;
 
@@ -35,11 +36,12 @@ const prompt = ai.definePrompt({
   name: 'summarizeProposalForMeetingPrompt',
   input: {schema: SummarizeProposalForMeetingInputSchema},
   output: {schema: SummarizeProposalForMeetingOutputSchema},
-  prompt: `You are an expert at briefing senior decision-makers. Your role is to provide a clear, concise, and structured summary of a proposal to help them make a confident and informed decision.
+  prompt: `You are an expert at briefing senior decision-makers. Your role is to provide a clear, concise, and structured summary of a proposal to help them make a confident and informed decision. The goal is to anticipate and manage risks, not to avoid them.
 
 For the following proposal, provide:
 1.  **Overview:** A summary of the proposal's key points and a clear statement of the specific decision being sought.
 2.  **Strategic Alignment:** A brief assessment of how the proposal contributes to the stated strategic objective.
+3.  **Risk Appraisal:** A brief, forward-looking summary of the key risks. What is the potential exposure? Is anything critical missing from the proposal that decision-makers need to consider before proceeding?
 
 Keep the language direct and to the point.
 
