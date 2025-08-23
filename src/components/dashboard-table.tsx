@@ -22,6 +22,7 @@ const statusStyles: Record<DecisionStatus, { text: string; variant: StatusVarian
   Endorsed: { text: 'Endorsed', variant: 'default' },
   Noted: { text: 'Noted', variant: 'secondary' },
   'Not Approved': { text: 'Not Approved', variant: 'destructive' },
+  'Not Endorsed': { text: 'Not Endorsed', variant: 'destructive' },
 };
 
 function StatusBadge({ status }: { status: DecisionStatus }) {
@@ -66,7 +67,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
+            <TableHead>Proposal Title</TableHead>
             <TableHead className="w-[200px]">
                 <Select disabled>
                     <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
@@ -111,7 +112,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
           )}
           {decisions.map(decision => (
             <TableRow key={decision.id}>
-              <TableCell className="font-medium">{decision.title}</TableCell>
+              <TableCell className="font-medium">{decision.proposalTitle}</TableCell>
               <TableCell>
                 <StatusBadge status={decision.status} />
               </TableCell>

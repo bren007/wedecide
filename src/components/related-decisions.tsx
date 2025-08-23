@@ -32,7 +32,7 @@ export function RelatedDecisions({ decision, allDecisions }: { decision: Decisio
           {relatedDecisions.map(related => (
             <li key={related.id} className="text-sm">
                 <Link href={`/review/${related.id}`} className="font-medium text-primary hover:underline">
-                    {related.title}
+                    {related.proposalTitle}
                 </Link>
                 <div className="flex items-center gap-2 mt-1">
                     <Badge variant="outline">{related.status}</Badge>

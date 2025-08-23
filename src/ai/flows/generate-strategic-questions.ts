@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -12,7 +13,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateStrategicQuestionsInputSchema = z.object({
-  title: z.string().describe('The title of the proposal.'),
+  proposalTitle: z.string().describe('The title of the proposal.'),
+  decision: z.string().describe('The specific decision being sought.'),
   background: z.string().describe('The background information of the proposal.'),
   decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct']).describe('The type of decision being sought.'),
 });
@@ -52,7 +54,8 @@ For the proposal below, generate a list of questions for each of the following c
 Ensure the questions are specific to the proposal details provided.
 
 **Proposal Details:**
-- **Title:** {{{title}}}
+- **Title:** {{{proposalTitle}}}
+- **Decision Sought:** {{{decision}}}
 - **Decision Type:** {{{decisionType}}}
 - **Background:** {{{background}}}
 `,

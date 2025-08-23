@@ -13,7 +13,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateAssessmentInputSchema = z.object({
-  title: z.string().describe('The title of the proposal.'),
+  proposalTitle: z.string().describe('The title of the proposal.'),
+  decision: z.string().describe('The specific decision being sought.'),
   background: z.string().describe('The lengthy proposal background to assess.'),
   decisionType: z.string().describe('The type of decision being sought.'),
   objectiveName: z.string().describe('The name of the strategic objective.'),
@@ -44,7 +45,8 @@ For the following proposal, provide a structured assessment covering three key a
 3.  **Risk Assessment:** A brief analysis of potential risks or downsides associated with the proposal.
 
 **Proposal Details:**
-- **Title:** {{{title}}}
+- **Title:** {{{proposalTitle}}}
+- **Decision Sought:** {{{decision}}}
 - **Type:** {{{decisionType}}}
 - **Background:** {{{background}}}
 

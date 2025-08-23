@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -19,7 +20,8 @@ export function FitnessQuestions({ decision }: { decision: Decision }) {
     setQuestions([]);
     try {
       const result = await generateFitnessReviewQuestions({
-        title: decision.title,
+        proposalTitle: decision.proposalTitle,
+        decision: decision.decision,
         background: decision.background,
         decisionType: decision.decisionType,
       });

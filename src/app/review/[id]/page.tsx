@@ -45,7 +45,8 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                         <Badge variant="outline">{decision.decisionType}</Badge>
                         {decision.governanceLevel && <Badge variant="secondary">{decision.governanceLevel}</Badge>}
                       </div>
-                      <CardTitle className="text-2xl">{decision.title}</CardTitle>
+                      <CardTitle className="text-2xl">{decision.proposalTitle}</CardTitle>
+                      {decision.submittingOrganisation && <CardDescription>Submitted by: {decision.submittingOrganisation}</CardDescription>}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <form action={approveForMeeting.bind(null, decision.id)}>
@@ -58,6 +59,11 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                   </div>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-6">
+                    <h3 className="font-semibold mb-2 text-lg">Decision Sought</h3>
+                    <p className="text-muted-foreground p-4 bg-muted/50 rounded-lg">{decision.decision}</p>
+                  </div>
+
                   {objective && (
                     <div className="mb-6">
                       <h3 className="font-semibold mb-2 text-lg">Strategic Objective</h3>

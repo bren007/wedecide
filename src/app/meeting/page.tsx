@@ -45,7 +45,7 @@ export default function MeetingPage() {
     );
      toast({
         title: "Decision Recorded",
-        description: `The outcome for "${updatedDecision.title}" has been set to ${updatedDecision.status}.`,
+        description: `The outcome for "${updatedDecision.proposalTitle}" has been set to ${updatedDecision.status}.`,
     });
   };
 

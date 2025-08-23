@@ -13,7 +13,8 @@ const objectives: Objective[] = [
 export let decisions: Decision[] = [
   {
     id: 'DEC-008',
-    title: 'New Regional Office Establishment',
+    proposalTitle: 'New Regional Office Establishment in Southeast Asia',
+    decision: 'Approve the budget and operational plan for the establishment of a new regional office in Southeast Asia.',
     background: 'To support our market expansion strategy, this proposal outlines the plan and budget for establishing a new regional office in Southeast Asia. This includes office lease, initial staffing, and operational setup costs. The projected benefit is a 20% increase in regional sales within two years.',
     decisionType: 'Approve',
     status: 'Submitted',
@@ -25,7 +26,8 @@ export let decisions: Decision[] = [
   },
   {
     id: 'DEC-001',
-    title: 'Project Phoenix: Q3 Budget Allocation',
+    proposalTitle: 'Project Phoenix Q3 Scaling',
+    decision: 'Approve the Q3 budget allocation of $250,000 for Project Phoenix to fund new hires, marketing, and infrastructure upgrades.',
     background: 'Project Phoenix is entering its third quarter and requires a significant budget allocation to scale operations. The project has met all its Q2 milestones and is projected to exceed its annual targets. This proposal outlines the need for an additional $250,000 for new hires, marketing, and infrastructure upgrades. The finance department has reviewed the preliminary request and found it to be within the company\'s strategic investment framework.',
     decisionType: 'Approve',
     status: 'Scheduled for Meeting',
@@ -38,7 +40,8 @@ export let decisions: Decision[] = [
   },
   {
     id: 'DEC-002',
-    title: 'Adoption of New HR Management Software',
+    proposalTitle: 'HR Management Software Modernization',
+    decision: 'Endorse the adoption of "HR-Flow" as the new standard HR management software platform for the organization.',
     background: 'The current HR software is outdated, leading to inefficiencies in payroll, recruitment, and employee data management. After evaluating several market-leading solutions, the HR department recommends adopting "HR-Flow", a cloud-based platform that promises to streamline all HR processes. This proposal seeks endorsement for the transition, with a projected implementation timeline of 6 months.',
     decisionType: 'Endorse',
     status: 'In Review',
@@ -50,7 +53,8 @@ export let decisions: Decision[] = [
   },
   {
     id: 'DEC-003',
-    title: 'Updated Work-From-Home Policy',
+    proposalTitle: 'Revised Work-From-Home Policy',
+    decision: 'Note the updated Work-From-Home policy, establishing a hybrid model of three days in the office per week.',
     background: 'This document provides an overview of the proposed changes to the company\'s work-from-home policy. The key changes include a hybrid model requiring employees to be in the office three days a week and new guidelines for home office setup and security. This is for noting purposes, and feedback will be collected in a separate forum.',
     decisionType: 'Note',
     status: 'Awaiting Update',
@@ -61,7 +65,8 @@ export let decisions: Decision[] = [
   },
   {
     id: 'DEC-004',
-    title: 'Annual Company Offsite Event 2024',
+    proposalTitle: 'Company Offsite Event 2024',
+    decision: 'Approve the proposal and budget of $80,000 for the 2024 annual company offsite event at the mountain resort.',
     background: 'Proposal for the annual company offsite event. The proposed location is a resort in the mountains, with a focus on team-building activities and strategic planning sessions. The total estimated cost is $80,000.',
     decisionType: 'Approve',
     status: 'Approved',
@@ -74,7 +79,8 @@ export let decisions: Decision[] = [
   },
   {
     id: 'DEC-005',
-    title: 'New Partnership with Innovate Inc.',
+    proposalTitle: 'Partnership with Innovate Inc.',
+    decision: 'Endorse the strategic partnership agreement with Innovate Inc. to accelerate product development.',
     background: 'A strategic partnership opportunity has emerged with Innovate Inc., a leader in the AI research space. This collaboration would give us access to their proprietary technology, accelerating our product development. This proposal is to endorse the partnership agreement draft.',
     decisionType: 'Endorse',
     status: 'Endorsed',
@@ -87,7 +93,8 @@ export let decisions: Decision[] = [
   },
   {
     id: 'DEC-006',
-    title: 'Q4 Marketing Campaign Launch',
+    proposalTitle: 'Q4 "Future Forward" Marketing Campaign',
+    decision: 'Note the details of the "Future Forward" Q4 marketing campaign.',
     background: 'Details of the upcoming Q4 marketing campaign, "Future Forward". The campaign will target new demographics through social media and influencer collaborations. This is for the board to note.',
     decisionType: 'Note',
     status: 'Noted',
@@ -101,7 +108,8 @@ export let decisions: Decision[] = [
   },
    {
     id: 'DEC-007',
-    title: 'IT Infrastructure Overhaul Phase 1',
+    proposalTitle: 'Phase 1 IT Infrastructure Overhaul',
+    decision: 'Agree to proceed with Phase 1 of the IT infrastructure overhaul, pending final vendor selection.',
     background: 'The initial phase of the IT infrastructure overhaul requires approval. This includes server upgrades and migrating to a new cloud provider. The attached document has the full cost-benefit analysis and risk assessment. The proposal has been reviewed by the finance team but requires further clarification on vendor selection before proceeding.',
     decisionType: 'Agree',
     status: 'Awaiting Update',

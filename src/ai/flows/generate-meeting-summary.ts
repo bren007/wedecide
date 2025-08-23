@@ -15,15 +15,17 @@ import type { Decision } from '@/lib/types';
 
 const DecisionSchema = z.object({
   id: z.string(),
-  title: z.string(),
+  proposalTitle: z.string(),
+  decision: z.string(),
   background: z.string(),
   decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct']),
-  status: z.enum(['Submitted', 'In Review', 'Scheduled for Meeting', 'Approved', 'Endorsed', 'Noted', 'Not Approved']),
+  status: z.enum(['Submitted', 'In Review', 'Scheduled for Meeting', 'Approved', 'Endorsed', 'Noted', 'Not Approved', 'Awaiting Update', 'Not Endorsed']),
   submittedAt: z.string(),
   objectiveId: z.string(),
   relatedDecisionIds: z.array(z.string()).optional(),
   alignmentScore: z.number().optional(),
   governanceLevel: z.enum(['Project', 'Program', 'Strategic Board']).optional(),
+  submittingOrganisation: z.string().optional(),
 });
 
 const GenerateMeetingSummaryInputSchema = z.object({
@@ -53,7 +55,7 @@ The summary should be written in a professional, neutral tone suitable for offic
 
 **Decisions:**
 {{#each decisions}}
-- **Title:** {{{title}}}
+- **Title:** {{{proposalTitle}}}
   - **Outcome:** {{{status}}}
 {{/each}}
 `,

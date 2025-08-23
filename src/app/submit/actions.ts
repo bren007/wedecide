@@ -8,7 +8,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 const DecisionSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters long.'),
+  proposalTitle: z.string().min(5, 'Title must be at least 5 characters long.'),
+  decision: z.string().min(10, 'Decision must be at least 10 characters long.'),
   background: z.string().min(20, 'Background must be at least 20 characters long.'),
   decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct'], {
     errorMap: () => ({ message: 'Please select a decision type.' }),
@@ -22,7 +23,8 @@ const DecisionSchema = z.object({
 
 export type FormState = {
   errors?: {
-    title?: string[];
+    proposalTitle?: string[];
+    decision?: string[];
     background?: string[];
     decisionType?: string[];
     objectiveId?: string[];
@@ -46,7 +48,8 @@ async function addDecision(decision: Omit<Decision, 'id' | 'submittedAt' | 'stat
 
 export async function createDecision(prevState: FormState, formData: FormData) {
   const validatedFields = DecisionSchema.safeParse({
-    title: formData.get('title'),
+    proposalTitle: formData.get('proposalTitle'),
+    decision: formData.get('decision'),
     background: formData.get('background'),
     decisionType: formData.get('decisionType'),
     objectiveId: formData.get('objectiveId'),

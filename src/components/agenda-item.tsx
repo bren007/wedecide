@@ -53,7 +53,7 @@ const statusConfig = {
 
 
 export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision: Decision; objective?: Objective; onDecisionUpdate?: (decision: Decision) => void }) {
-  const { title, background, decisionType, status, id } = decision;
+  const { proposalTitle, background, decisionType, status, id } = decision;
   const isPastDecision = status !== 'Scheduled for Meeting';
   const config = statusConfig[status] || {};
   const Icon = config.icon;
@@ -98,7 +98,7 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
         <div className="flex justify-between items-start gap-4">
             <div>
                 <Badge variant="outline" className="mb-2">{decisionType}</Badge>
-                <CardTitle className="text-xl">{title}</CardTitle>
+                <CardTitle className="text-xl">{proposalTitle}</CardTitle>
             </div>
             {isPastDecision && (
                 <div className={`flex items-center gap-2 font-semibold ${config.color}`}>
@@ -109,6 +109,10 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div>
+            <p className="text-sm font-semibold text-muted-foreground mb-1">Decision Sought</p>
+            <p className="text-foreground p-3 bg-muted/50 rounded-lg text-sm">{decision.decision}</p>
+        </div>
         {objective && (
           <div className="space-y-2">
             <p className="text-sm font-semibold text-muted-foreground">Strategic Objective</p>

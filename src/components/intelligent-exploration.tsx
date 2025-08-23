@@ -38,7 +38,8 @@ export function IntelligentExploration({ decisions }: { decisions: Decision[] })
     setQuestions(null);
     try {
       const result = await generateStrategicQuestions({
-        title: decision.title,
+        proposalTitle: decision.proposalTitle,
+        decision: decision.decision,
         background: decision.background,
         decisionType: decision.decisionType,
       });
@@ -74,7 +75,7 @@ export function IntelligentExploration({ decisions }: { decisions: Decision[] })
             <SelectContent>
                 {decisions.map(decision => (
                 <SelectItem key={decision.id} value={decision.id}>
-                    {decision.title}
+                    {decision.proposalTitle}
                 </SelectItem>
                 ))}
             </SelectContent>

@@ -82,7 +82,7 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
             <SelectContent>
                 {decisions.map(decision => (
                 <SelectItem key={decision.id} value={decision.id}>
-                    {decision.title}
+                    {decision.proposalTitle}
                 </SelectItem>
                 ))}
             </SelectContent>

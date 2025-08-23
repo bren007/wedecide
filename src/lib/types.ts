@@ -7,7 +7,8 @@ export type Objective = {
 
 export type Decision = {
   id: string;
-  title: string;
+  proposalTitle: string;
+  decision: string;
   background: string;
   decisionType: 'Approve' | 'Endorse' | 'Note' | 'Agree' | 'Direct';
   status: DecisionStatus;
