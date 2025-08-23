@@ -64,7 +64,7 @@ export function IntelligentExploration({ decisions }: { decisions: Decision[] })
         <CardTitle>
           Intelligent Exploration
         </CardTitle>
-        <CardDescription>Select a proposal and generate targeted questions that assist group exploration and lead to well informed decision making</CardDescription>
+        <CardDescription>Select a proposal and generate targeted questions to improve the focus and quality of the group discussion, leading to a better-informed decision.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

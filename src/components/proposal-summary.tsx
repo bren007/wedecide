@@ -4,18 +4,19 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { summarizeProposalBackground } from '@/ai/flows/summarize-proposal';
-import { Loader2, Sparkles } from 'lucide-react';
+import { summarizeProposalForMeeting, type SummarizeProposalForMeetingOutput } from '@/ai/flows/summarize-proposal';
+import { Loader2, Sparkles, FileText, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
 import type { Decision, Objective } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getObjectiveById } from '@/lib/data';
+import { Separator } from './ui/separator';
 
 
 export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
   const [selectedDecisionId, setSelectedDecisionId] = useState<string | undefined>(decisions.length > 0 ? decisions[0].id : undefined);
-  const [summary, setSummary] = useState('');
+  const [summary, setSummary] = useState<SummarizeProposalForMeetingOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
@@ -34,7 +35,7 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
     } else {
         setObjective(undefined);
     }
-    setSummary('');
+    setSummary(null);
   }, [selectedDecisionId, selectedDecision, decisions]);
 
   const handleSummarize = async () => {
@@ -47,14 +48,16 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
         return;
     }
     setIsLoading(true);
-    setSummary('');
+    setSummary(null);
     try {
-      const result = await summarizeProposalBackground({
+      const result = await summarizeProposalForMeeting({
+        proposalTitle: selectedDecision.proposalTitle,
+        decision: selectedDecision.decision,
         background: selectedDecision.background,
         objectiveName: objective.name,
         objectiveDescription: objective.description,
        });
-      setSummary(result.summary);
+      setSummary(result);
     } catch (error) {
       console.error('Failed to generate summary:', error);
       toast({
@@ -71,7 +74,7 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
     <Card>
       <CardHeader>
         <CardTitle>Intelligent Summary</CardTitle>
-        <CardDescription>Generate a concise summary of the proposal background and its strategic alignment.</CardDescription>
+        <CardDescription>Generate a concise summary of the proposal to brief decision-makers.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -97,15 +100,30 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
           Generate Summary
         </Button>
         {isLoading && (
-          <div className="space-y-2 pt-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+          <div className="space-y-4 pt-2">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-12 w-full" />
           </div>
         )}
         {summary && (
-          <div className="p-4 bg-muted/50 rounded-md border">
-            <p className="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
+          <div className="space-y-4 pt-2">
+             <div>
+              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Overview
+              </h4>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.overview}</p>
+            </div>
+            <Separator />
+             <div>
+              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
+                <Target className="h-4 w-4 text-primary" />
+                Strategic Alignment
+              </h4>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.strategicAlignment}</p>
+            </div>
           </div>
         )}
       </CardContent>

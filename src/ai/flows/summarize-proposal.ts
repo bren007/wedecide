@@ -2,42 +2,51 @@
 'use server';
 
 /**
- * @fileOverview AI agent that summarizes a proposal background and its strategic alignment.
+ * @fileOverview AI agent that summarizes a proposal for executive decision-makers.
  *
- * - summarizeProposalBackground - A function that summarizes the proposal background.
- * - SummarizeProposalBackgroundInput - The input type for the summarizeProposalBackground function.
- * - SummarizeProposalBackgroundOutput - The return type for the summarizeProposalBackground function.
+ * - summarizeProposalForMeeting - A function that summarizes the proposal.
+ * - SummarizeProposalForMeetingInput - The input type for the function.
+ * - SummarizeProposalForMeetingOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const SummarizeProposalBackgroundInputSchema = z.object({
+const SummarizeProposalForMeetingInputSchema = z.object({
+  proposalTitle: z.string().describe('The title of the proposal.'),
+  decision: z.string().describe('The specific decision being sought.'),
   background: z.string().describe('The lengthy proposal background to summarize.'),
   objectiveName: z.string().describe('The name of the strategic objective.'),
   objectiveDescription: z.string().describe('The description of the strategic objective.'),
 });
-export type SummarizeProposalBackgroundInput = z.infer<typeof SummarizeProposalBackgroundInputSchema>;
+export type SummarizeProposalForMeetingInput = z.infer<typeof SummarizeProposalForMeetingInputSchema>;
 
-const SummarizeProposalBackgroundOutputSchema = z.object({
-  summary: z.string().describe('The summarized proposal background, including its strategic alignment.'),
+const SummarizeProposalForMeetingOutputSchema = z.object({
+  overview: z.string().describe("A concise overview of the proposal's key points and the specific decision being sought."),
+  strategicAlignment: z.string().describe('An assessment of how well the proposal aligns with the stated strategic objective.'),
 });
-export type SummarizeProposalBackgroundOutput = z.infer<typeof SummarizeProposalBackgroundOutputSchema>;
+export type SummarizeProposalForMeetingOutput = z.infer<typeof SummarizeProposalForMeetingOutputSchema>;
 
-export async function summarizeProposalBackground(input: SummarizeProposalBackgroundInput): Promise<SummarizeProposalBackgroundOutput> {
-  return summarizeProposalBackgroundFlow(input);
+export async function summarizeProposalForMeeting(input: SummarizeProposalForMeetingInput): Promise<SummarizeProposalForMeetingOutput> {
+  return summarizeProposalForMeetingFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'summarizeProposalBackgroundPrompt',
-  input: {schema: SummarizeProposalBackgroundInputSchema},
-  output: {schema: SummarizeProposalBackgroundOutputSchema},
-  prompt: `You are an expert at summarizing lengthy documents and identifying strategic context.
+  name: 'summarizeProposalForMeetingPrompt',
+  input: {schema: SummarizeProposalForMeetingInputSchema},
+  output: {schema: SummarizeProposalForMeetingOutputSchema},
+  prompt: `You are an expert at briefing senior decision-makers. Your role is to provide a clear, concise, and structured summary of a proposal to help them make a confident and informed decision.
 
-Please summarize the following proposal background. In your summary, first provide a concise overview of the key points, then explicitly describe how the proposal aligns with the following strategic objective.
+For the following proposal, provide:
+1.  **Overview:** A summary of the proposal's key points and a clear statement of the specific decision being sought.
+2.  **Strategic Alignment:** A brief assessment of how the proposal contributes to the stated strategic objective.
 
-**Proposal Background:**
-{{{background}}}
+Keep the language direct and to the point.
+
+**Proposal Details:**
+- **Title:** {{{proposalTitle}}}
+- **Decision Sought:** {{{decision}}}
+- **Background:** {{{background}}}
 
 **Strategic Objective:**
 - **Name:** {{{objectiveName}}}
@@ -45,11 +54,11 @@ Please summarize the following proposal background. In your summary, first provi
 `,
 });
 
-const summarizeProposalBackgroundFlow = ai.defineFlow(
+const summarizeProposalForMeetingFlow = ai.defineFlow(
   {
-    name: 'summarizeProposalBackgroundFlow',
-    inputSchema: SummarizeProposalBackgroundInputSchema,
-    outputSchema: SummarizeProposalBackgroundOutputSchema,
+    name: 'summarizeProposalForMeetingFlow',
+    inputSchema: SummarizeProposalForMeetingInputSchema,
+    outputSchema: SummarizeProposalForMeetingOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);

@@ -27,7 +27,7 @@ const StrategicQuestionsSchema = z.object({
     'What if?': z.array(z.string()).describe('Questions to explore potential scenarios and consequences.'),
     'Now What?': z.array(z.string()).describe('Questions to determine actionable next steps and implementation plans.'),
     'So, What?': z.array(z.string()).describe('Questions to assess the impact and significance of the decision.'),
-    "What's Unsaid?": z.array(z.string()).describe('Questions to uncover hidden assumptions, biases, or unaddressed issues.'),
+    "What's Unsaid?": z.array(zstring()).describe('Questions to uncover hidden assumptions, biases, or unaddressed issues.'),
 });
 export type StrategicQuestions = z.infer<typeof StrategicQuestionsSchema>;
 
@@ -42,16 +42,16 @@ const prompt = ai.definePrompt({
   name: 'generateStrategicQuestionsPrompt',
   input: {schema: GenerateStrategicQuestionsInputSchema},
   output: {schema: StrategicQuestionsSchema},
-  prompt: `You are an expert strategic advisor in a high-stakes meeting. Your role is to help decision-makers thoroughly vet a proposal by asking insightful, targeted questions.
+  prompt: `You are an expert strategic advisor in a high-stakes meeting. Your role is to help decision-makers thoroughly vet a proposal by asking insightful, targeted questions that stimulate a robust and focused group discussion.
 
-For the proposal below, generate a list of questions for each of the following categories to facilitate a robust discussion:
-- "What is known?": Clarify facts, data, and the current state.
-- "What if?": Explore potential scenarios, risks, and unintended consequences.
-- "Now What?": Focus on implementation, action plans, and next steps.
-- "So, What?": Assess the broader impact, significance, and alignment with strategic goals.
-- "What's Unsaid?": Uncover hidden assumptions, biases, unspoken concerns, or missing information.
+For the proposal below, generate a list of questions for each of the following categories to facilitate a productive dialogue:
+- "What is known?": Clarify facts, data, and the current state to establish a shared understanding.
+- "What if?": Explore potential scenarios, risks, and unintended consequences to pressure-test the proposal.
+- "Now What?": Focus on implementation, action plans, and next steps to ensure the decision is actionable.
+- "So, What?": Assess the broader impact, significance, and alignment with strategic goals to confirm the decision's value.
+- "What's Unsaid?": Uncover hidden assumptions, biases, unspoken concerns, or missing information that could derail the plan.
 
-Ensure the questions are specific to the proposal details provided.
+Ensure the questions are specific to the proposal details provided and are framed to encourage discussion, not just "yes/no" answers.
 
 **Proposal Details:**
 - **Title:** {{{proposalTitle}}}
