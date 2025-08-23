@@ -97,7 +97,7 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
       <CardHeader>
         <div className="flex justify-between items-start gap-4">
             <div>
-                <Badge variant="outline" className="mb-2">{decisionType}</Badge>
+                <Badge variant="default" className="mb-2 text-sm py-1 px-3">{decisionType}</Badge>
                 <CardTitle className="text-xl">{proposalTitle}</CardTitle>
                 {submittingOrganisation && <CardDescription>Submitted by: {submittingOrganisation}</CardDescription>}
             </div>
