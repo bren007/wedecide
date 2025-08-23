@@ -27,7 +27,7 @@ const StrategicQuestionsSchema = z.object({
     'What if?': z.array(z.string()).describe('Questions to explore potential scenarios and consequences.'),
     'Now What?': z.array(z.string()).describe('Questions to determine actionable next steps and implementation plans.'),
     'So, What?': z.array(z.string()).describe('Questions to assess the impact and significance of the decision.'),
-    "What's Unsaid?": z.array(zstring()).describe('Questions to uncover hidden assumptions, biases, or unaddressed issues.'),
+    "What's Unsaid?": z.array(z.string()).describe('Questions to uncover hidden assumptions, biases, or unaddressed issues.'),
 });
 export type StrategicQuestions = z.infer<typeof StrategicQuestionsSchema>;
 
