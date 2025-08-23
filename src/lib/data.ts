@@ -12,6 +12,18 @@ const objectives: Objective[] = [
 
 export let decisions: Decision[] = [
   {
+    id: 'DEC-008',
+    title: 'New Regional Office Establishment',
+    background: 'To support our market expansion strategy, this proposal outlines the plan and budget for establishing a new regional office in Southeast Asia. This includes office lease, initial staffing, and operational setup costs. The projected benefit is a 20% increase in regional sales within two years.',
+    decisionType: 'Approve',
+    status: 'Submitted',
+    submittedAt: new Date('2023-10-25T10:00:00Z').toISOString(),
+    objectiveId: 'OBJ-001',
+    alignmentScore: 90,
+    governanceLevel: 'Strategic Board',
+    submittingOrganisation: 'International Operations',
+  },
+  {
     id: 'DEC-001',
     title: 'Project Phoenix: Q3 Budget Allocation',
     background: 'Project Phoenix is entering its third quarter and requires a significant budget allocation to scale operations. The project has met all its Q2 milestones and is projected to exceed its annual targets. This proposal outlines the need for an additional $250,000 for new hires, marketing, and infrastructure upgrades. The finance department has reviewed the preliminary request and found it to be within the company\'s strategic investment framework.',
