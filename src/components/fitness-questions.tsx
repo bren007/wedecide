@@ -9,6 +9,7 @@ import { Loader2, Sparkles, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Decision } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 export function FitnessQuestions({ decision }: { decision: Decision }) {
   const [questions, setQuestions] = useState<string[]>([]);
@@ -66,14 +67,23 @@ export function FitnessQuestions({ decision }: { decision: Decision }) {
           </div>
         )}
         {questions.length > 0 && (
-          <ul className="space-y-3 pt-2">
-            {questions.map((q, index) => (
-              <li key={index} className="flex items-start gap-3">
-                <HelpCircle className="h-4 w-4 mt-1 shrink-0 text-primary" />
-                <span className="text-sm text-foreground">{q}</span>
-              </li>
-            ))}
-          </ul>
+          <Accordion type="single" collapsible defaultValue="questions" className="w-full">
+            <AccordionItem value="questions">
+                <AccordionTrigger>
+                    <h4 className="text-sm font-semibold">Generated Vetting Questions</h4>
+                </AccordionTrigger>
+                <AccordionContent>
+                    <ul className="space-y-3 pt-2">
+                        {questions.map((q, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                            <HelpCircle className="h-4 w-4 mt-1 shrink-0 text-primary" />
+                            <span className="text-sm text-foreground">{q}</span>
+                        </li>
+                        ))}
+                    </ul>
+                </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         )}
       </CardContent>
     </Card>

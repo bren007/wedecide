@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
 import type { Decision, Objective } from '@/lib/types';
 import { getObjectiveById } from '@/lib/data';
-import { Separator } from './ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 export function IntelligentAssessment({ decision }: { decision: Decision }) {
   const [assessment, setAssessment] = useState<GenerateAssessmentOutput | null>(null);
@@ -86,29 +86,41 @@ export function IntelligentAssessment({ decision }: { decision: Decision }) {
         )}
         {assessment && (
           <div className="space-y-4 pt-2">
-            <div>
-              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
-                <FileText className="h-4 w-4 text-primary" />
-                Summary
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{assessment.summary}</p>
-            </div>
-            <Separator />
-             <div>
-              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Strategic Alignment
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{assessment.strategicAlignment}</p>
-            </div>
-            <Separator />
-            <div>
-              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                Risk Assessment
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{assessment.riskAssessment}</p>
-            </div>
+            <Accordion type="multiple" defaultValue={['summary', 'alignment', 'risk']} className="w-full">
+              <AccordionItem value="summary">
+                <AccordionTrigger>
+                  <h4 className="flex items-center gap-2 text-sm font-semibold">
+                    <FileText className="h-4 w-4 text-primary" />
+                    Summary
+                  </h4>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{assessment.summary}</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="alignment">
+                <AccordionTrigger>
+                  <h4 className="flex items-center gap-2 text-sm font-semibold">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    Strategic Alignment
+                  </h4>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{assessment.strategicAlignment}</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="risk">
+                <AccordionTrigger>
+                  <h4 className="flex items-center gap-2 text-sm font-semibold">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Risk Assessment
+                  </h4>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{assessment.riskAssessment}</p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
       </CardContent>

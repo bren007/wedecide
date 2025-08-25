@@ -11,7 +11,7 @@ import { Skeleton } from './ui/skeleton';
 import type { Decision, Objective } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getObjectiveById } from '@/lib/data';
-import { Separator } from './ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 
 export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
@@ -109,29 +109,41 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
         )}
         {summary && (
           <div className="space-y-4 pt-2">
-             <div>
-              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
-                <FileText className="h-4 w-4 text-primary" />
-                Overview
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.overview}</p>
-            </div>
-            <Separator />
-             <div>
-              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
-                <Target className="h-4 w-4 text-primary" />
-                Strategic Alignment
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.strategicAlignment}</p>
-            </div>
-            <Separator />
-             <div>
-              <h4 className="flex items-center gap-2 text-sm font-semibold mb-2">
-                <ShieldAlert className="h-4 w-4 text-primary" />
-                Risk Appraisal
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.riskAppraisal}</p>
-            </div>
+             <Accordion type="multiple" defaultValue={['overview', 'alignment', 'risk']} className="w-full">
+                <AccordionItem value="overview">
+                    <AccordionTrigger>
+                        <h4 className="flex items-center gap-2 text-sm font-semibold">
+                            <FileText className="h-4 w-4 text-primary" />
+                            Overview
+                        </h4>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.overview}</p>
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="alignment">
+                    <AccordionTrigger>
+                        <h4 className="flex items-center gap-2 text-sm font-semibold">
+                            <Target className="h-4 w-4 text-primary" />
+                            Strategic Alignment
+                        </h4>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.strategicAlignment}</p>
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="risk">
+                    <AccordionTrigger>
+                        <h4 className="flex items-center gap-2 text-sm font-semibold">
+                            <ShieldAlert className="h-4 w-4 text-primary" />
+                            Risk Appraisal
+                        </h4>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{summary.riskAppraisal}</p>
+                    </AccordionContent>
+                </AccordionItem>
+             </Accordion>
           </div>
         )}
       </CardContent>
