@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -63,12 +64,12 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
 
 
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md relative w-full overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Proposal Title</TableHead>
-            <TableHead className="w-[200px]">
+            <TableHead className="min-w-[250px]">Proposal Title</TableHead>
+            <TableHead className="w-[150px]">
                 <Select disabled>
                     <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
                         <SelectValue placeholder="Status" />
@@ -78,7 +79,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
                     </SelectContent>
                 </Select>
             </TableHead>
-            <TableHead className="w-[200px]">
+            <TableHead className="w-[180px]">
                  <Select disabled>
                     <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
                         <SelectValue placeholder="Decision Type" />
@@ -88,7 +89,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
                     </SelectContent>
                 </Select>
             </TableHead>
-            <TableHead className="w-[200px]">
+            <TableHead className="w-[180px]">
                  <Select disabled>
                     <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
                         <SelectValue placeholder="Governance Level" />
@@ -98,8 +99,8 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
                     </SelectContent>
                 </Select>
             </TableHead>
-            <TableHead className="w-[200px]">Submitted</TableHead>
-            <TableHead className="w-[150px] text-right">Actions</TableHead>
+            <TableHead className="w-[150px]">Submitted</TableHead>
+            <TableHead className="w-[100px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

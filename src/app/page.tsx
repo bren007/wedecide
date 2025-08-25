@@ -6,7 +6,7 @@ import { FilePlus2, FileSearch, CheckSquare, Hourglass } from 'lucide-react';
 import { getDecisions, getObjectives } from '@/lib/data';
 import { DashboardTable } from '@/components/dashboard-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import type { Objective, DecisionStatus } from '@/lib/types';
 
@@ -33,6 +33,9 @@ export default async function DashboardPage() {
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Secretariat Dashboard</h1>
               <p className="text-muted-foreground">Review and manage all submitted decisions.</p>
+            </div>
+            <div className="md:hidden">
+                <SidebarTrigger />
             </div>
           </div>
           
