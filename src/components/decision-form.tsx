@@ -174,6 +174,19 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
                 <p className="text-sm text-destructive">{state.errors.governanceLevel.join(', ')}</p>
             )}
       </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="consultedParties">Consulted Parties</Label>
+        <Textarea
+          id="consultedParties"
+          name="consultedParties"
+          placeholder="List the key departments, agencies, or external stakeholders who have been consulted on this proposal."
+          rows={3}
+        />
+         {state.errors?.consultedParties && (
+          <p className="text-sm text-destructive">{state.errors.consultedParties.join(', ')}</p>
+        )}
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="background">Decision Background</Label>

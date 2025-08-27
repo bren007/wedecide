@@ -19,6 +19,7 @@ export type Decision = {
   alignmentScore?: number;
   governanceLevel?: GovernanceLevel;
   submittingOrganisation?: string;
+  consultedParties?: string;
 };
 
 export type GovernanceLevel = 'Project' | 'Program' | 'Strategic Board';

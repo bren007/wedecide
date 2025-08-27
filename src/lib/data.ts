@@ -23,6 +23,7 @@ export let decisions: Decision[] = [
     alignmentScore: 90,
     governanceLevel: 'Strategic Board',
     submittingOrganisation: 'Technology and Digital Services Agency',
+    consultedParties: 'Treasury Board Secretariat, Office of the Privacy Commissioner, National Cyber Security Centre',
   },
   {
     id: 'DEC-001',
@@ -37,6 +38,7 @@ export let decisions: Decision[] = [
     alignmentScore: 85,
     governanceLevel: 'Program',
     submittingOrganisation: 'Department of Communications and Digital Economy',
+    consultedParties: 'Infrastructure Development Agency, Regional Development Councils, Telecommunications Regulatory Authority',
   },
   {
     id: 'DEC-002',
@@ -50,6 +52,7 @@ export let decisions: Decision[] = [
     alignmentScore: 92,
     governanceLevel: 'Strategic Board',
     submittingOrganisation: 'Inter-Agency Task Force on Transparency',
+    consultedParties: 'National Archives, Chief Information Officer Council, Public Sector Transparency Board',
   },
   {
     id: 'DEC-003',
@@ -76,6 +79,7 @@ export let decisions: Decision[] = [
     alignmentScore: 78,
     governanceLevel: 'Strategic Board',
     submittingOrganisation: 'Ministry of Environment',
+    consultedParties: 'Ministry of Foreign Affairs, Ministry of Trade and Industry',
   },
   {
     id: 'DEC-005',
@@ -117,6 +121,7 @@ export let decisions: Decision[] = [
     objectiveId: 'OBJ-001',
     governanceLevel: 'Program',
     submittingOrganisation: 'Department for Transport',
+    consultedParties: 'Treasury Department, Public Works Agency',
   },
 ];
 

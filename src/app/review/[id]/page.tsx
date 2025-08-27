@@ -9,7 +9,7 @@ import { IntelligentAssessment } from '@/components/intelligent-assessment';
 import { FitnessQuestions } from '@/components/fitness-questions';
 import { RelatedDecisions } from '@/components/related-decisions';
 import { StrategicAlignment } from '@/components/strategic-alignment';
-import { CheckCircle2, Target, FileText, Download, ClipboardList } from 'lucide-react';
+import { CheckCircle2, Target, FileText, Download, ClipboardList, Users } from 'lucide-react';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SecretariatFeedback } from '@/components/secretariat-feedback';
@@ -77,6 +77,19 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                       </div>
                     </div>
                   )}
+
+                  {decision.consultedParties && (
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-2 text-lg">Consulted Parties</h3>
+                       <div className="flex items-start gap-3 text-muted-foreground p-4 bg-muted/50 rounded-lg">
+                        <Users className="h-5 w-5 mt-1 shrink-0 text-primary" />
+                        <div className="flex-1">
+                          <p className="text-foreground whitespace-pre-wrap">{decision.consultedParties}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <h3 className="font-semibold mb-2 text-lg">Background</h3>
                   <p className="text-muted-foreground whitespace-pre-wrap">{decision.background}</p>
                 </CardContent>
