@@ -10,13 +10,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Send, Loader2, Upload, Target } from 'lucide-react';
+import { Send, Loader2, Upload, Target, PlusCircle, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import type { Objective, GovernanceLevel } from '@/lib/types';
+import type { Objective, GovernanceLevel, Consultation } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
+import { Separator } from './ui/separator';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -29,6 +30,69 @@ function SubmitButton() {
 }
 
 const governanceLevels: GovernanceLevel[] = ['Project', 'Program', 'Strategic Board'];
+const consultationStatuses: Consultation['status'][] = ['Supports', 'Supports with conditions', 'Neutral', 'Opposed', 'Awaiting Response'];
+
+function ConsultationFields() {
+  const [consultations, setConsultations] = useState<Partial<Consultation>[]>([{}]);
+
+  const addConsultation = () => {
+    setConsultations([...consultations, {}]);
+  };
+
+  const removeConsultation = (index: number) => {
+    setConsultations(consultations.filter((_, i) => i !== index));
+  };
+  
+  return (
+    <div className="space-y-4 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium text-base flex items-center gap-2"><Users className="h-5 w-5" />Consultation & Assurance</h3>
+            <p className="text-sm text-muted-foreground">Record the parties consulted on this proposal.</p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={addConsultation}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add
+          </Button>
+      </div>
+      <Separator />
+      {consultations.map((consult, index) => (
+        <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 p-3 rounded-md bg-muted/50 relative">
+          <Input type="hidden" name="consultationIndex" value={index} />
+          <div className="space-y-1.5">
+            <Label htmlFor={`consultation-party-${index}`}>Consulted Party</Label>
+            <Input id={`consultation-party-${index}`} name="consultationParty" placeholder="e.g., Treasury Board" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`consultation-status-${index}`}>Status</Label>
+            <Select name="consultationStatus" defaultValue="Awaiting Response">
+                <SelectTrigger id={`consultation-status-${index}`}>
+                    <SelectValue placeholder="Select status..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {consultationStatuses.map(status => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+          </div>
+          <div className="md:self-end">
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeConsultation(index)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Remove consultation</span>
+              </Button>
+          </div>
+          <div className="md:col-span-3 space-y-1.5">
+             <Label htmlFor={`consultation-comment-${index}`}>Comment (Optional)</Label>
+             <Textarea id={`consultation-comment-${index}`} name="consultationComment" placeholder="Add any relevant comments..." rows={2} />
+          </div>
+        </div>
+      ))}
+       {consultations.length === 0 && <p className="text-sm text-center text-muted-foreground py-4">No consultations added.</p>}
+    </div>
+  );
+}
+
 
 export function DecisionForm({ objectives }: { objectives: Objective[] }) {
   const initialState: FormState = {};
@@ -175,18 +239,7 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
             )}
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="consultedParties">Consulted Parties</Label>
-        <Textarea
-          id="consultedParties"
-          name="consultedParties"
-          placeholder="List the key departments, agencies, or external stakeholders who have been consulted on this proposal."
-          rows={3}
-        />
-         {state.errors?.consultedParties && (
-          <p className="text-sm text-destructive">{state.errors.consultedParties.join(', ')}</p>
-        )}
-      </div>
+      <ConsultationFields />
 
       <div className="space-y-2">
         <Label htmlFor="background">Decision Background</Label>

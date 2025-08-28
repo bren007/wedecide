@@ -5,6 +5,12 @@ export type Objective = {
   description: string;
 };
 
+export type Consultation = {
+  party: string;
+  status: 'Supports' | 'Supports with conditions' | 'Neutral' | 'Opposed' | 'Awaiting Response';
+  comment?: string;
+};
+
 export type Decision = {
   id: string;
   proposalTitle: string;
@@ -19,7 +25,7 @@ export type Decision = {
   alignmentScore?: number;
   governanceLevel?: GovernanceLevel;
   submittingOrganisation?: string;
-  consultedParties?: string;
+  consultations?: Consultation[];
 };
 
 export type GovernanceLevel = 'Project' | 'Program' | 'Strategic Board';

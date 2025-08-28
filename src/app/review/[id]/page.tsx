@@ -9,10 +9,29 @@ import { IntelligentAssessment } from '@/components/intelligent-assessment';
 import { FitnessQuestions } from '@/components/fitness-questions';
 import { RelatedDecisions } from '@/components/related-decisions';
 import { StrategicAlignment } from '@/components/strategic-alignment';
-import { CheckCircle2, Target, FileText, Download, ClipboardList, Users } from 'lucide-react';
+import { CheckCircle2, Target, FileText, Download, ClipboardList, Users, ThumbsUp, HelpCircle, ThumbsDown, MinusCircle, Clock } from 'lucide-react';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SecretariatFeedback } from '@/components/secretariat-feedback';
+import type { Consultation } from '@/lib/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+function getStatusIcon(status: Consultation['status']) {
+  switch (status) {
+    case 'Supports':
+      return { icon: ThumbsUp, color: 'text-green-600', label: 'Supports' };
+    case 'Supports with conditions':
+      return { icon: HelpCircle, color: 'text-yellow-600', label: 'Supports with Conditions' };
+    case 'Neutral':
+      return { icon: MinusCircle, color: 'text-gray-500', label: 'Neutral' };
+    case 'Opposed':
+      return { icon: ThumbsDown, color: 'text-red-600', label: 'Opposed' };
+    case 'Awaiting Response':
+      return { icon: Clock, color: 'text-blue-500', label: 'Awaiting Response' };
+    default:
+      return { icon: HelpCircle, color: 'text-gray-500', label: 'Unknown' };
+  }
+}
 
 export default async function ReviewPage({ params }: { params: { id: string } }) {
   const decision = await getDecisionById(params.id);
@@ -78,14 +97,31 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                     </div>
                   )}
 
-                  {decision.consultedParties && (
+                  {decision.consultations && decision.consultations.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold mb-2 text-lg">Consulted Parties</h3>
-                       <div className="flex items-start gap-3 text-muted-foreground p-4 bg-muted/50 rounded-lg">
-                        <Users className="h-5 w-5 mt-1 shrink-0 text-primary" />
-                        <div className="flex-1">
-                          <p className="text-foreground whitespace-pre-wrap">{decision.consultedParties}</p>
-                        </div>
+                      <h3 className="font-semibold mb-2 text-lg">Consultation & Assurance</h3>
+                       <div className="p-4 bg-muted/50 rounded-lg space-y-4">
+                         <TooltipProvider>
+                           {decision.consultations.map((consultation, index) => {
+                             const { icon: Icon, color, label } = getStatusIcon(consultation.status);
+                             return (
+                               <div key={index} className="flex items-start gap-4">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${color}`} />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{label}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                 <div className="flex-1">
+                                   <p className="font-semibold text-foreground">{consultation.party}</p>
+                                   {consultation.comment && <p className="text-sm text-muted-foreground italic">"{consultation.comment}"</p>}
+                                 </div>
+                               </div>
+                             );
+                           })}
+                         </TooltipProvider>
                       </div>
                     </div>
                   )}

@@ -1,5 +1,5 @@
 
-import type { Decision, DecisionStatus, Objective, GovernanceLevel } from './types';
+import type { Decision, Objective } from './types';
 
 // In a real application, this would be a database.
 // For this demo, we're using a mutable in-memory array.
@@ -23,7 +23,11 @@ export let decisions: Decision[] = [
     alignmentScore: 90,
     governanceLevel: 'Strategic Board',
     submittingOrganisation: 'Technology and Digital Services Agency',
-    consultedParties: 'Treasury Board Secretariat, Office of the Privacy Commissioner, National Cyber Security Centre',
+    consultations: [
+      { party: 'Treasury Board Secretariat', status: 'Supports with conditions', comment: 'Support is conditional on a revised cost-benefit analysis within 30 days.' },
+      { party: 'Office of the Privacy Commissioner', status: 'Neutral', comment: 'No objections, provided the final implementation adheres to the Privacy Impact Assessment recommendations.' },
+      { party: 'National Cyber Security Centre', status: 'Supports' },
+    ]
   },
   {
     id: 'DEC-001',
@@ -38,7 +42,11 @@ export let decisions: Decision[] = [
     alignmentScore: 85,
     governanceLevel: 'Program',
     submittingOrganisation: 'Department of Communications and Digital Economy',
-    consultedParties: 'Infrastructure Development Agency, Regional Development Councils, Telecommunications Regulatory Authority',
+    consultations: [
+        { party: 'Infrastructure Development Agency', status: 'Supports' },
+        { party: 'Regional Development Councils', status: 'Supports' },
+        { party: 'Telecommunications Regulatory Authority', status: 'Supports' },
+    ]
   },
   {
     id: 'DEC-002',
@@ -52,7 +60,11 @@ export let decisions: Decision[] = [
     alignmentScore: 92,
     governanceLevel: 'Strategic Board',
     submittingOrganisation: 'Inter-Agency Task Force on Transparency',
-    consultedParties: 'National Archives, Chief Information Officer Council, Public Sector Transparency Board',
+    consultations: [
+        { party: 'National Archives', status: 'Supports' },
+        { party: 'Chief Information Officer Council', status: 'Awaiting Response' },
+        { party: 'Public Sector Transparency Board', status: 'Supports' },
+    ]
   },
   {
     id: 'DEC-003',
@@ -79,7 +91,10 @@ export let decisions: Decision[] = [
     alignmentScore: 78,
     governanceLevel: 'Strategic Board',
     submittingOrganisation: 'Ministry of Environment',
-    consultedParties: 'Ministry of Foreign Affairs, Ministry of Trade and Industry',
+    consultations: [
+        { party: 'Ministry of Foreign Affairs', status: 'Supports' },
+        { party: 'Ministry of Trade and Industry', status: 'Supports' },
+    ]
   },
   {
     id: 'DEC-005',
@@ -121,7 +136,10 @@ export let decisions: Decision[] = [
     objectiveId: 'OBJ-001',
     governanceLevel: 'Program',
     submittingOrganisation: 'Department for Transport',
-    consultedParties: 'Treasury Department, Public Works Agency',
+    consultations: [
+        { party: 'Treasury Department', status: 'Supports with conditions', comment: 'Awaiting final vendor selection for the ticketing system.' },
+        { party: 'Public Works Agency', status: 'Supports' },
+    ]
   },
 ];
 

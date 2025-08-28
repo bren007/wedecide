@@ -3,9 +3,15 @@
 
 import { z } from 'zod';
 import { decisions } from '@/lib/data';
-import type { Decision, GovernanceLevel } from '@/lib/types';
+import type { Decision, Consultation } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+
+const ConsultationSchema = z.object({
+  party: z.string().min(1, 'Party name is required.'),
+  status: z.enum(['Supports', 'Supports with conditions', 'Neutral', 'Opposed', 'Awaiting Response']),
+  comment: z.string().optional(),
+});
 
 const DecisionSchema = z.object({
   proposalTitle: z.string().min(5, 'Title must be at least 5 characters long.'),
@@ -19,7 +25,7 @@ const DecisionSchema = z.object({
     errorMap: () => ({ message: 'Please select a governance level.' }),
   }),
   submittingOrganisation: z.string().min(1, 'Please enter the submitting organisation.'),
-  consultedParties: z.string().optional(),
+  consultations: z.array(ConsultationSchema).optional(),
 });
 
 export type FormState = {
@@ -31,7 +37,7 @@ export type FormState = {
     objectiveId?: string[];
     governanceLevel?: string[];
     submittingOrganisation?: string[];
-    consultedParties?: string[];
+    consultations?: string[];
   };
   message?: string;
 };
@@ -49,6 +55,18 @@ async function addDecision(decision: Omit<Decision, 'id' | 'submittedAt' | 'stat
 }
 
 export async function createDecision(prevState: FormState, formData: FormData) {
+
+  const consultationParties = formData.getAll('consultationParty');
+  const consultationStatuses = formData.getAll('consultationStatus');
+  const consultationComments = formData.getAll('consultationComment');
+
+  const consultations: Consultation[] = consultationParties.map((party, index) => ({
+    party: party as string,
+    status: consultationStatuses[index] as Consultation['status'],
+    comment: consultationComments[index] as string | undefined,
+  })).filter(c => c.party);
+
+
   const validatedFields = DecisionSchema.safeParse({
     proposalTitle: formData.get('proposalTitle'),
     decision: formData.get('decision'),
@@ -57,7 +75,7 @@ export async function createDecision(prevState: FormState, formData: FormData) {
     objectiveId: formData.get('objectiveId'),
     governanceLevel: formData.get('governanceLevel'),
     submittingOrganisation: formData.get('submittingOrganisation'),
-    consultedParties: formData.get('consultedParties'),
+    consultations: consultations.length > 0 ? consultations : undefined,
   });
 
   if (!validatedFields.success) {
