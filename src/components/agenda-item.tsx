@@ -101,11 +101,13 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
                 <CardTitle className="text-xl">{proposalTitle}</CardTitle>
                 {submittingOrganisation && <CardDescription>Submitted by: {submittingOrganisation}</CardDescription>}
             </div>
-            {isPastDecision && (
+            {isPastDecision ? (
                 <div className={`flex items-center gap-2 font-semibold ${config.color}`}>
                     <Icon className="h-5 w-5" />
                     <span>{config.text}</span>
                 </div>
+            ) : (
+                decision.alignmentScore && <StrategicAlignment score={decision.alignmentScore} />
             )}
         </div>
       </CardHeader>
@@ -123,7 +125,6 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
                 <p className="font-semibold text-foreground">{objective.name}</p>
                 <p>{objective.description}</p>
                 </div>
-                {decision.alignmentScore && <StrategicAlignment score={decision.alignmentScore} />}
             </div>
           </div>
         )}
