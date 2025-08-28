@@ -17,6 +17,7 @@ import { Calendar, Clock, Users, User, FileSignature } from 'lucide-react';
 import { MeetingSummary } from '@/components/meeting-summary';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { AssuranceGlimpse } from '@/components/assurance-glimpse';
 
 
 export default function MeetingPage() {
@@ -51,6 +52,8 @@ export default function MeetingPage() {
 
   const scheduledDecisions = decisions.filter(d => d.status === 'Scheduled for Meeting');
   const pastDecisions = decisions.filter(d => ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(d.status));
+  const decisionBank = decisions.filter(d => ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(d.status));
+
 
   if (loading) {
     return (
@@ -133,6 +136,7 @@ export default function MeetingPage() {
               </div>
               <div className="lg:col-span-1 space-y-6 sticky top-8">
                 <h2 className="text-xl font-semibold tracking-tight">Decision Support</h2>
+                <AssuranceGlimpse decisions={scheduledDecisions} decisionBank={decisionBank} />
                 <ProposalSummary decisions={scheduledDecisions} />
                 <IntelligentExploration decisions={scheduledDecisions} />
               </div>
