@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle, ClipboardList, Users } from 'lucide-react';
 import { useTransition } from 'react';
 import { StrategicAlignment } from './strategic-alignment';
+import { ConsultationSummary } from './consultation-summary';
 
 type OutcomeButtonProps = {
   decision: Decision;
@@ -53,7 +54,7 @@ const statusConfig = {
 
 
 export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision: Decision; objective?: Objective; onDecisionUpdate?: (decision: Decision) => void }) {
-  const { proposalTitle, background, decisionType, status, id, submittingOrganisation } = decision;
+  const { proposalTitle, background, decisionType, status, id, submittingOrganisation, consultations } = decision;
   const isPastDecision = status !== 'Scheduled for Meeting';
   const config = statusConfig[status] || {};
   const Icon = config.icon;
@@ -116,6 +117,14 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
             <p className="text-sm font-semibold text-muted-foreground mb-1">Decision Sought</p>
             <p className="text-foreground p-3 bg-muted/50 rounded-lg text-sm">{decision.decision}</p>
         </div>
+        
+        {consultations && consultations.length > 0 && !isPastDecision && (
+           <div className="space-y-2">
+            <p className="text-sm font-semibold text-muted-foreground mb-1">Consultation</p>
+            <ConsultationSummary consultations={consultations} />
+          </div>
+        )}
+
         {objective && (
           <div className="space-y-2">
             <p className="text-sm font-semibold text-muted-foreground">Strategic Objective</p>
