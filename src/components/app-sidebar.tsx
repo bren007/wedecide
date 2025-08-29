@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { LayoutDashboard, FilePlus2, ClipboardList, Landmark } from 'lucide-react';
@@ -38,13 +39,18 @@ function Logo() {
 
 function NavLinks() {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
   const isActive = (path: string) => pathname === path;
+
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
 
   return (
     <SidebarMenu>
         <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/submit')}>
-          <Link href="/submit">
+          <Link href="/submit" onClick={handleLinkClick}>
             <FilePlus2 />
             <span>Decision Preparation</span>
           </Link>
@@ -52,7 +58,7 @@ function NavLinks() {
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/')}>
-          <Link href="/">
+          <Link href="/" onClick={handleLinkClick}>
             <LayoutDashboard />
             <span>Secretariat Dashboard</span>
           </Link>
@@ -60,7 +66,7 @@ function NavLinks() {
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/meeting')}>
-          <Link href="/meeting">
+          <Link href="/meeting" onClick={handleLinkClick}>
             <ClipboardList />
             <span>Decision Making</span>
           </Link>
@@ -68,7 +74,7 @@ function NavLinks() {
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive('/past-decisions')}>
-          <Link href="/past-decisions">
+          <Link href="/past-decisions" onClick={handleLinkClick}>
             <Landmark />
             <span>Decision Bank</span>
           </Link>
