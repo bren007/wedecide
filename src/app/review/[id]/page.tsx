@@ -1,4 +1,5 @@
 
+
 import { getDecisionById, getObjectiveById, getDecisions } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -146,12 +147,19 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                     </Button>
                 </CardFooter>
               </Card>
-               <SecretariatFeedback />
+              {/* On mobile, this will now stack underneath the AI tools */}
+              <div className="block lg:hidden">
+                 <SecretariatFeedback />
+              </div>
             </div>
 
             <div className="lg:col-span-1 space-y-6">
                 <IntelligentAssessment decision={decision} />
                 <FitnessQuestions decision={decision} />
+                {/* On mobile, this is hidden as it appears in the main column */}
+                <div className="hidden lg:block">
+                  <SecretariatFeedback />
+                </div>
                 <RelatedDecisions decision={decision} allDecisions={allDecisions} />
             </div>
           </div>
