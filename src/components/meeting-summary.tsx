@@ -186,12 +186,12 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
                 ) : (
                     <Sparkles className="mr-2 h-4 w-4" />
                 )}
-                Generate from Decisions
+                Generate from Decision Data
                 </Button>
             </div>
              <div className="flex items-center space-x-2">
                 <Switch id="chatham-house" checked={isChathamHouse} onCheckedChange={setIsChathamHouse} />
-                <Label htmlFor="chatham-house" className="text-sm">Chatham House Rule</Label>
+                <Label htmlFor="chatham-house" className="text-sm">Chatham House Rules</Label>
             </div>
         </div>
 
