@@ -4,6 +4,7 @@
 import { getDecisionById } from '@/lib/data';
 import type { Decision, DecisionStatus } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+import { summarizeTranscript } from '@/ai/flows/summarize-transcript';
 
 async function updateDecisionStatus(id: string, status: DecisionStatus) {
   const decision = await getDecisionById(id);
@@ -29,4 +30,12 @@ export async function setDecisionOutcome(id: string, outcome: DecisionStatus): P
     console.error('Invalid outcome status:', outcome);
     return undefined;
   }
+}
+
+export async function generateSummaryFromAudio(audioDataUri: string) {
+  if (!audioDataUri) {
+    throw new Error('Audio data is required.');
+  }
+  const result = await summarizeTranscript({ audioDataUri });
+  return result;
 }
