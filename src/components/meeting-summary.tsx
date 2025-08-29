@@ -13,6 +13,7 @@ import { Skeleton } from './ui/skeleton';
 import { Textarea } from './ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Switch } from './ui/switch';
 
 export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   const [summary, setSummary] = useState('');
@@ -25,6 +26,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const [isChathamHouse, setIsChathamHouse] = useState(false);
 
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
         reader.onloadend = async () => {
           const base64Audio = reader.result as string;
           try {
-            const result = await generateSummaryFromAudio(base64Audio);
+            const result = await generateSummaryFromAudio(base64Audio, isChathamHouse);
             const formattedSummary = `## Discussion Summary\n${result.discussionSummary}\n\n## Decisions Agreed\n${result.decisionsAgreed}\n\n## Action Items\n${result.actionItems}`;
             setSummary(formattedSummary);
           } catch (error) {
@@ -167,24 +169,30 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
             </AlertDescription>
           </Alert>
         )}
-        <div className="flex flex-col sm:flex-row gap-2">
-            <Button 
-                variant="outline" 
-                onClick={handleRecordClick}
-                disabled={hasPermission === null || isProcessing}
-                className="w-full sm:w-auto"
-            >
-              {isRecording ? <StopCircle className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
-              {isRecording ? 'Stop Recording' : 'Record Meeting'}
-            </Button>
-            <Button onClick={handleGenerateSummary} disabled={isLoading || decisions.length === 0} className="w-full sm:w-auto">
-            {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            Generate from Decisions
-            </Button>
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button 
+                    variant="outline" 
+                    onClick={handleRecordClick}
+                    disabled={hasPermission === null || isProcessing}
+                    className="w-full sm:w-auto"
+                >
+                {isRecording ? <StopCircle className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
+                {isRecording ? 'Stop Recording' : 'Record Meeting'}
+                </Button>
+                <Button onClick={handleGenerateSummary} disabled={isLoading || decisions.length === 0} className="w-full sm:w-auto">
+                {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Generate from Decisions
+                </Button>
+            </div>
+             <div className="flex items-center space-x-2">
+                <Switch id="chatham-house" checked={isChathamHouse} onCheckedChange={setIsChathamHouse} />
+                <Label htmlFor="chatham-house" className="text-sm">Chatham House Rule</Label>
+            </div>
         </div>
 
         {(isLoading || isProcessing) && (

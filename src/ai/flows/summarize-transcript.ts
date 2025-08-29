@@ -14,6 +14,7 @@ import { z } from 'genkit';
 
 const SummarizeTranscriptInputSchema = z.object({
   audioDataUri: z.string().describe("A recording of a meeting, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+  isChathamHouse: z.boolean().optional().describe('If true, the summary should not attribute comments to specific individuals.'),
 });
 export type SummarizeTranscriptInput = z.infer<typeof SummarizeTranscriptInputSchema>;
 
@@ -40,6 +41,10 @@ Second, based on the transcript you just created, generate a structured summary 
 2.  **Decisions Agreed:** A clear list of the specific decisions that were formally agreed upon by the participants.
 3.  **Action Items:** A bulleted list of all tasks or actions that were assigned, noting who is responsible for each if specified.
 
+{{#if isChathamHouse}}
+**IMPORTANT**: This meeting was held under the Chatham House Rule. The summary must not attribute any statement or viewpoint to a specific person or their affiliation. Report on what was said, but not on who said it.
+{{/if}}
+
 Format the output clearly.
 
 **Audio Recording:**
@@ -58,3 +63,4 @@ const summarizeTranscriptFlow = ai.defineFlow(
     return output!;
   }
 );
+

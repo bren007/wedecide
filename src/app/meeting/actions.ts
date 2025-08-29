@@ -32,10 +32,11 @@ export async function setDecisionOutcome(id: string, outcome: DecisionStatus): P
   }
 }
 
-export async function generateSummaryFromAudio(audioDataUri: string) {
+export async function generateSummaryFromAudio(audioDataUri: string, isChathamHouse: boolean) {
   if (!audioDataUri) {
     throw new Error('Audio data is required.');
   }
-  const result = await summarizeTranscript({ audioDataUri });
+  const result = await summarizeTranscript({ audioDataUri, isChathamHouse });
   return result;
 }
+
