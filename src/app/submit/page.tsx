@@ -13,14 +13,16 @@ export default async function SubmitPage() {
         <AppSidebar />
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-1 flex-col items-start justify-center p-4 md:p-6 lg:p-8">
-           <div className="flex items-center gap-4 mb-6 md:mb-8 md:hidden">
-              <SidebarTrigger />
-              <h1 className="text-xl font-semibold tracking-tight text-muted-foreground">Decision Preparation</h1>
+        <div className="flex flex-1 flex-col p-4 md:p-6 lg:p-8 gap-6 md:gap-8">
+           <div className="flex items-center gap-4">
+              <div className="md:hidden">
+                <SidebarTrigger />
+              </div>
+              <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">Decision Preparation</h1>
             </div>
           <Card className="w-full max-w-4xl">
             <CardHeader>
-              <CardTitle>Decision Preparation</CardTitle>
+              <CardTitle>Submit a New Proposal</CardTitle>
               <CardDescription>
                 Complete the decision form below. Once submitted, the secretariat will review the proposal before it can be scheduled for a meeting.
               </CardDescription>

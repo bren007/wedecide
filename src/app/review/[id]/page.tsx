@@ -54,8 +54,8 @@ export default async function ReviewPage({ params }: { params: { id: string } })
         <AppSidebar />
       </Sidebar>
       <SidebarInset>
-        <div className="flex-1 p-4 md:p-6 lg:p-8">
-            <div className="flex items-center gap-4 mb-6 md:mb-8">
+        <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
+            <div className="flex items-center gap-4">
                 <div className="md:hidden">
                     <SidebarTrigger />
                 </div>
@@ -153,11 +153,9 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                     </Button>
                 </CardFooter>
               </Card>
-              <div className="lg:hidden">
+              <div className="lg:hidden space-y-6">
                 <IntelligentAssessment decision={decision} />
-                <div className="mt-6" />
                 <FitnessQuestions decision={decision} />
-                <div className="mt-6" />
                 <SecretariatFeedback />
               </div>
             </div>
