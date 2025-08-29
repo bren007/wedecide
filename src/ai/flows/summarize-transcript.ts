@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A Genkit flow for transcribing audio and generating a summary.
+ * @fileOverview A Genkit flow for transcribing audio and generating a structured meeting summary.
  *
  * - summarizeTranscript - A function that triggers the transcription and summary flow.
  * - SummarizeTranscriptInput - The input type for the summarizeTranscript function.
@@ -18,7 +18,9 @@ const SummarizeTranscriptInputSchema = z.object({
 export type SummarizeTranscriptInput = z.infer<typeof SummarizeTranscriptInputSchema>;
 
 const SummarizeTranscriptOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the meeting transcript.'),
+  discussionSummary: z.string().describe('A concise summary of the key points discussed during the meeting.'),
+  decisionsAgreed: z.string().describe('A clear list of the specific decisions that were formally agreed upon.'),
+  actionItems: z.string().describe('A list of action items, including who is responsible for each if mentioned.'),
 });
 export type SummarizeTranscriptOutput = z.infer<typeof SummarizeTranscriptOutputSchema>;
 
@@ -33,9 +35,12 @@ const prompt = ai.definePrompt({
   prompt: `You are a professional secretariat responsible for drafting minutes. 
 
 First, transcribe the following audio recording of a meeting.
-Second, based on the transcript you just created, generate a concise summary of the meeting's key outcomes, decisions, and action items.
+Second, based on the transcript you just created, generate a structured summary with the following distinct sections:
+1.  **Discussion Summary:** A concise overview of the key points, arguments, and topics covered.
+2.  **Decisions Agreed:** A clear list of the specific decisions that were formally agreed upon by the participants.
+3.  **Action Items:** A bulleted list of all tasks or actions that were assigned, noting who is responsible for each if specified.
 
-The summary should be written in a professional, neutral tone suitable for official records.
+Format the output clearly.
 
 **Audio Recording:**
 {{media url=audioDataUri}}

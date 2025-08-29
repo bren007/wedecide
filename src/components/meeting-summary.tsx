@@ -70,7 +70,8 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
           const base64Audio = reader.result as string;
           try {
             const result = await generateSummaryFromAudio(base64Audio);
-            setSummary(result.summary);
+            const formattedSummary = `## Discussion Summary\n${result.discussionSummary}\n\n## Decisions Agreed\n${result.decisionsAgreed}\n\n## Action Items\n${result.actionItems}`;
+            setSummary(formattedSummary);
           } catch (error) {
             console.error('Failed to generate summary from audio:', error);
             toast({
