@@ -50,7 +50,7 @@ function FormattedDate({ dateString }: { dateString: string }) {
 
   // Render a placeholder on the server and initial client render
   if (!formattedDate) {
-    return null;
+    return <span>...</span>; // Render a loading state or nothing
   }
 
   return <>{formattedDate}</>;
@@ -68,36 +68,15 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-[250px]">Proposal Title</TableHead>
+            <TableHead className="min-w-[250px] font-semibold">Proposal Title</TableHead>
             <TableHead className="w-[150px]">
-                <Select disabled>
-                    <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {allStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+                Status
             </TableHead>
             <TableHead className="w-[180px]">
-                 <Select disabled>
-                    <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
-                        <SelectValue placeholder="Decision Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {allDecisionTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+                 Decision Type
             </TableHead>
             <TableHead className="w-[180px]">
-                 <Select disabled>
-                    <SelectTrigger className="border-none shadow-none text-muted-foreground font-medium -ml-3 h-8">
-                        <SelectValue placeholder="Governance Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {allGovernanceLevels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+                 Governance Level
             </TableHead>
             <TableHead className="w-[150px]">Submitted</TableHead>
             <TableHead className="w-[100px] text-right">Actions</TableHead>

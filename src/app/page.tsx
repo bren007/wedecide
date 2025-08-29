@@ -29,17 +29,17 @@ export default async function DashboardPage() {
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-1 flex-col p-4 md:p-6 lg:p-8 gap-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+             <div className="md:hidden">
+              <SidebarTrigger />
+            </div>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Secretariat Dashboard</h1>
               <p className="text-muted-foreground">Review and manage all submitted decisions.</p>
             </div>
-            <div className="md:hidden">
-                <SidebarTrigger />
-            </div>
           </div>
           
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
