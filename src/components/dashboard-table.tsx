@@ -44,10 +44,13 @@ function FormattedDate({ dateString }: { dateString: string }) {
   const [formattedDate, setFormattedDate] = useState('');
 
   useEffect(() => {
+    // This hook ensures the date is only formatted on the client,
+    // after hydration, preventing a mismatch with the server-rendered HTML.
     setFormattedDate(format(new Date(dateString), 'PPP'));
   }, [dateString]);
 
   if (!formattedDate) {
+    // Return a placeholder or null during server-side rendering and initial client render.
     return <span>...</span>;
   }
 
@@ -67,8 +70,8 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
 
   return (
     <>
-      {/* Mobile View: List of Cards */}
-      <div className="md:hidden space-y-4">
+      {/* Mobile & Tablet View: List of Cards */}
+      <div className="space-y-4 lg:hidden">
         {decisions.map(decision => (
            <Link href={`/review/${decision.id}`} key={decision.id} className="block">
             <Card className="hover:bg-muted/50 transition-colors">
@@ -99,7 +102,7 @@ export function DashboardTable({ decisions }: { decisions: Decision[] }) {
       </div>
       
       {/* Desktop View: Table */}
-      <div className="hidden md:block border rounded-md relative w-full overflow-auto">
+      <div className="hidden lg:block border rounded-md relative w-full overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
