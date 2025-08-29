@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -113,12 +114,22 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
 
   return (
     <form action={dispatch} className="space-y-6">
-      <div>
-        <Button variant="outline" className="w-full" disabled>
-          <Upload className="mr-2 h-4 w-4" />
-          Upload decision proposal paper
-        </Button>
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {/* The div wrapper is necessary to allow the tooltip to trigger on a disabled button */}
+            <div className="w-full" tabIndex={0}>
+              <Button variant="outline" className="w-full" disabled style={{ pointerEvents: 'none' }}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload decision proposal paper
+              </Button>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>This feature is not yet implemented in the prototype.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <div className="flex items-center">
         <div className="flex-grow border-t border-muted"></div>
