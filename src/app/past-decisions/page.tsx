@@ -3,7 +3,7 @@
 import { getDecisions, getObjectives } from '@/lib/data';
 import { AgendaItem } from '@/components/agenda-item';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Clock, TrendingUp, Target, BarChart } from 'lucide-react';
 import type { Decision, Objective } from '@/lib/types';
@@ -82,9 +82,14 @@ export default async function PastDecisionsPage() {
       </Sidebar>
       <SidebarInset>
         <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Decision Bank</h1>
-            <p className="text-muted-foreground">Treating decisions as a strategic asset. Each decision deposited improves future analysis, compliance, and organizational intelligence.</p>
+          <div className="flex items-center gap-4">
+             <div className="md:hidden">
+              <SidebarTrigger />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Decision Bank</h1>
+              <p className="text-muted-foreground">Treating decisions as a strategic asset. Each decision deposited improves future analysis, compliance, and organizational intelligence.</p>
+            </div>
           </div>
           
            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

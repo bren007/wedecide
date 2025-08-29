@@ -45,14 +45,14 @@ export function SecretariatFeedback() {
           onChange={(e) => setFeedback(e.target.value)}
           rows={6}
         />
-        <div className="grid grid-cols-1 sm:flex-row gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Button variant="outline" size="sm" onClick={() => handleIncorporate('assessment')}>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Incorporate AI Assessment
+                Add Assessment
             </Button>
             <Button variant="outline" size="sm" onClick={() => handleIncorporate('questions')}>
                 <HelpCircle className="mr-2 h-4 w-4" />
-                Incorporate Vetting Questions
+                Add Vetting Questions
             </Button>
         </div>
         <Button onClick={handleSendFeedback} disabled={!feedback} className="w-full">

@@ -10,8 +10,8 @@ import { IntelligentAssessment } from '@/components/intelligent-assessment';
 import { FitnessQuestions } from '@/components/fitness-questions';
 import { RelatedDecisions } from '@/components/related-decisions';
 import { StrategicAlignment } from '@/components/strategic-alignment';
-import { CheckCircle2, Target, FileText, Download, ClipboardList, Users, ThumbsUp, HelpCircle, ThumbsDown, MinusCircle, Clock } from 'lucide-react';
-import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { CheckCircle2, Target, FileText, Download, ClipboardList, ThumbsUp, HelpCircle, ThumbsDown, MinusCircle, Clock, Menu } from 'lucide-react';
+import { Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SecretariatFeedback } from '@/components/secretariat-feedback';
 import type { Consultation } from '@/lib/types';
@@ -55,6 +55,12 @@ export default async function ReviewPage({ params }: { params: { id: string } })
       </Sidebar>
       <SidebarInset>
         <div className="flex-1 p-4 md:p-6 lg:p-8">
+            <div className="flex items-center gap-4 mb-6 md:mb-8">
+                <div className="md:hidden">
+                    <SidebarTrigger />
+                </div>
+                <h1 className="text-xl font-semibold tracking-tight text-muted-foreground">Review Proposal</h1>
+            </div>
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
               <Card>
@@ -147,19 +153,19 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                     </Button>
                 </CardFooter>
               </Card>
-              {/* On mobile, this will now stack underneath the AI tools */}
-              <div className="block lg:hidden">
-                 <SecretariatFeedback />
+              <div className="lg:hidden">
+                <IntelligentAssessment decision={decision} />
+                <div className="mt-6" />
+                <FitnessQuestions decision={decision} />
+                <div className="mt-6" />
+                <SecretariatFeedback />
               </div>
             </div>
 
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-6 hidden lg:block">
                 <IntelligentAssessment decision={decision} />
                 <FitnessQuestions decision={decision} />
-                {/* On mobile, this is hidden as it appears in the main column */}
-                <div className="hidden lg:block">
-                  <SecretariatFeedback />
-                </div>
+                <SecretariatFeedback />
                 <RelatedDecisions decision={decision} allDecisions={allDecisions} />
             </div>
           </div>

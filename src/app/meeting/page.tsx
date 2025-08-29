@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MeetingModeToggle } from '@/components/meeting-mode-toggle';
 import type { Decision, Objective } from '@/lib/types';
-import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { cn } from '@/lib/utils';
 import { Calendar, Clock, Users, User, FileSignature } from 'lucide-react';
@@ -76,9 +76,14 @@ export default function MeetingPage() {
       <SidebarInset className={cn(meetingMode && "ml-0")}>
         <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Meeting Agenda</h1>
-              <p className="text-muted-foreground">Review and finalize decisions for the current meeting.</p>
+            <div className="flex items-center gap-4">
+               <div className="md:hidden">
+                <SidebarTrigger />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight">Meeting Agenda</h1>
+                <p className="text-muted-foreground">Review and finalize decisions for the current meeting.</p>
+              </div>
             </div>
             <MeetingModeToggle isEnabled={meetingMode} onToggle={setMeetingMode} />
           </div>
