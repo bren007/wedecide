@@ -32,7 +32,7 @@ function SubmitButton() {
 const governanceLevels: GovernanceLevel[] = ['Project', 'Program', 'Strategic Board'];
 const consultationStatuses: Consultation['status'][] = ['Supports', 'Supports with conditions', 'Neutral', 'Opposed', 'Awaiting Response'];
 
-function ConsultationFields() {
+function ConsultationFields({ error }: { error?: string }) {
   const [consultations, setConsultations] = useState<Partial<Consultation>[]>([{}]);
 
   const addConsultation = () => {
@@ -88,7 +88,8 @@ function ConsultationFields() {
           </div>
         </div>
       ))}
-       {consultations.length === 0 && <p className="text-sm text-center text-muted-foreground py-4">No consultations added.</p>}
+      {consultations.length === 0 && <p className="text-sm text-center text-muted-foreground py-4">No consultations added.</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
@@ -123,6 +124,25 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         <div className="flex-grow border-t border-muted"></div>
         <span className="mx-4 text-xs uppercase text-muted-foreground">Or</span>
         <div className="flex-grow border-t border-muted"></div>
+      </div>
+      
+       <div className="space-y-2">
+            <Label htmlFor="governanceLevel">Governance Group</Label>
+            <Select name="governanceLevel">
+                <SelectTrigger id="governanceLevel">
+                    <SelectValue placeholder="Select a group..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {governanceLevels.map(level => (
+                    <SelectItem key={level} value={level}>
+                        {level}
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            {state.errors?.governanceLevel && (
+                <p className="text-sm text-destructive">{state.errors.governanceLevel.join(', ')}</p>
+            )}
       </div>
 
       <div className="space-y-3">
@@ -161,7 +181,15 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
           <p className="text-sm text-destructive">{state.errors.proposalTitle.join(', ')}</p>
         )}
       </div>
-      
+
+      <div className="space-y-2">
+        <Label htmlFor="submittingOrganisation">Submitting Organisation</Label>
+        <Input id="submittingOrganisation" name="submittingOrganisation" placeholder="e.g., Digital Transformation Unit" />
+        {state.errors?.submittingOrganisation && (
+          <p className="text-sm text-destructive">{state.errors.submittingOrganisation.join(', ')}</p>
+        )}
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="decision">Decision Sought</Label>
         <Textarea
@@ -172,14 +200,6 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         />
         {state.errors?.decision && (
           <p className="text-sm text-destructive">{state.errors.decision.join(', ')}</p>
-        )}
-      </div>
-
-       <div className="space-y-2">
-        <Label htmlFor="submittingOrganisation">Submitting Organisation</Label>
-        <Input id="submittingOrganisation" name="submittingOrganisation" placeholder="e.g., Digital Transformation Unit" />
-        {state.errors?.submittingOrganisation && (
-          <p className="text-sm text-destructive">{state.errors.submittingOrganisation.join(', ')}</p>
         )}
       </div>
       
@@ -219,27 +239,6 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
             <p className="text-sm text-destructive">{state.errors.objectiveId.join(', ')}</p>
         )}
       </div>
-      
-      <div className="space-y-2">
-            <Label htmlFor="governanceLevel">Governance Level</Label>
-            <Select name="governanceLevel">
-                <SelectTrigger id="governanceLevel">
-                    <SelectValue placeholder="Select a level..." />
-                </SelectTrigger>
-                <SelectContent>
-                    {governanceLevels.map(level => (
-                    <SelectItem key={level} value={level}>
-                        {level}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-            {state.errors?.governanceLevel && (
-                <p className="text-sm text-destructive">{state.errors.governanceLevel.join(', ')}</p>
-            )}
-      </div>
-      
-      <ConsultationFields />
 
       <div className="space-y-2">
         <Label htmlFor="background">Decision Background</Label>
@@ -253,6 +252,8 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
           <p className="text-sm text-destructive">{state.errors.background.join(', ')}</p>
         )}
       </div>
+
+      <ConsultationFields error={state.errors?.consultations?.join(', ')} />
       
       <div className="flex justify-end pt-4">
         <SubmitButton />

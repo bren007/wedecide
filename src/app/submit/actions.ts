@@ -22,7 +22,7 @@ const DecisionSchema = z.object({
   }),
   objectiveId: z.string().min(1, 'Please select a strategic objective.'),
   governanceLevel: z.enum(['Project', 'Program', 'Strategic Board'], {
-    errorMap: () => ({ message: 'Please select a governance level.' }),
+    errorMap: () => ({ message: 'Please select a governance group.' }),
   }),
   submittingOrganisation: z.string().min(1, 'Please enter the submitting organisation.'),
   consultations: z.array(ConsultationSchema).optional(),
@@ -38,6 +38,8 @@ export type FormState = {
     governanceLevel?: string[];
     submittingOrganisation?: string[];
     consultations?: string[];
+    consultationParty?: string[];
+    consultationStatus?: string[];
   };
   message?: string;
 };
@@ -77,7 +79,7 @@ export async function createDecision(prevState: FormState, formData: FormData) {
     submittingOrganisation: formData.get('submittingOrganisation'),
     consultations: consultations.length > 0 ? consultations : undefined,
   });
-
+  
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
