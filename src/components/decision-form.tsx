@@ -117,13 +117,10 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            {/* The div wrapper is necessary to allow the tooltip to trigger on a disabled button */}
-            <div className="w-full" tabIndex={0}>
-              <Button variant="outline" className="w-full" disabled style={{ pointerEvents: 'none' }}>
-                <Upload className="mr-2 h-4 w-4" />
-                Upload decision proposal paper
-              </Button>
-            </div>
+            <Button type="button" variant="outline" className="w-full">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload decision proposal paper
+            </Button>
           </TooltipTrigger>
           <TooltipContent>
             <p>This feature is not yet implemented in the prototype.</p>
