@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import type { Decision, DecisionStatus } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { FileSearch } from 'lucide-react';
+import { FileSearch, ChevronRight, Clock, CheckSquare, FilePlus2, FileText, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 
 type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
@@ -44,13 +44,11 @@ function FormattedDate({ dateString }: { dateString: string }) {
   const [formattedDate, setFormattedDate] = useState('');
 
   useEffect(() => {
-    // This now runs only on the client, avoiding the hydration mismatch.
     setFormattedDate(format(new Date(dateString), 'PPP'));
   }, [dateString]);
 
-  // Render a placeholder on the server and initial client render
   if (!formattedDate) {
-    return <span>...</span>; // Render a loading state or nothing
+    return <span>...</span>;
   }
 
   return <>{formattedDate}</>;
@@ -58,61 +56,92 @@ function FormattedDate({ dateString }: { dateString: string }) {
 
 
 export function DashboardTable({ decisions }: { decisions: Decision[] }) {
-  const allStatuses = ['Submitted', 'In Review', 'Awaiting Update', 'Scheduled for Meeting'];
-  const allDecisionTypes = ['Approve', 'Endorse', 'Note', 'Agree', 'Direct'];
-  const allGovernanceLevels = ['Project', 'Program', 'Strategic Board'];
 
+  if (decisions.length === 0) {
+    return (
+        <Card className="flex items-center justify-center h-40">
+            <p className="text-muted-foreground">No decisions submitted yet.</p>
+        </Card>
+    )
+  }
 
   return (
-    <div className="border rounded-md relative w-full overflow-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[250px] font-semibold">Proposal Title</TableHead>
-            <TableHead className="w-[150px]">
-                Status
-            </TableHead>
-            <TableHead className="w-[180px]">
-                 Decision Type
-            </TableHead>
-            <TableHead className="w-[180px]">
-                 Governance Level
-            </TableHead>
-            <TableHead className="w-[150px]">Submitted</TableHead>
-            <TableHead className="w-[100px] text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {decisions.length === 0 && (
+    <>
+      {/* Mobile View: List of Cards */}
+      <div className="md:hidden space-y-4">
+        {decisions.map(decision => (
+           <Link href={`/review/${decision.id}`} key={decision.id} className="block">
+            <Card className="hover:bg-muted/50 transition-colors">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex-1 space-y-2">
+                    <p className="font-semibold text-base pr-4">{decision.proposalTitle}</p>
+                    <div className="flex items-center gap-2">
+                         <StatusBadge status={decision.status} />
+                    </div>
+                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <FileText className="h-4 w-4" />
+                        <span>{decision.decisionType}</span>
+                     </div>
+                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>{decision.governanceLevel || 'N/A'}</span>
+                     </div>
+                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <FormattedDate dateString={decision.submittedAt} />
+                     </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+           </Link>
+        ))}
+      </div>
+      
+      {/* Desktop View: Table */}
+      <div className="hidden md:block border rounded-md relative w-full overflow-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                No decisions submitted yet.
-              </TableCell>
+              <TableHead className="min-w-[250px] font-semibold">Proposal Title</TableHead>
+              <TableHead className="w-[150px]">
+                  Status
+              </TableHead>
+              <TableHead className="w-[180px]">
+                   Decision Type
+              </TableHead>
+              <TableHead className="w-[180px]">
+                   Governance Level
+              </TableHead>
+              <TableHead className="w-[150px]">Submitted</TableHead>
+              <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
-          )}
-          {decisions.map(decision => (
-            <TableRow key={decision.id}>
-              <TableCell className="font-medium">{decision.proposalTitle}</TableCell>
-              <TableCell>
-                <StatusBadge status={decision.status} />
-              </TableCell>
-              <TableCell>{decision.decisionType}</TableCell>
-              <TableCell>{decision.governanceLevel || 'N/A'}</TableCell>
-              <TableCell>
-                <FormattedDate dateString={decision.submittedAt} />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/review/${decision.id}`}>
-                    <FileSearch className="h-4 w-4" />
-                    <span className="sr-only">Review</span>
-                  </Link>
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {decisions.map(decision => (
+              <TableRow key={decision.id}>
+                <TableCell className="font-medium">{decision.proposalTitle}</TableCell>
+                <TableCell>
+                  <StatusBadge status={decision.status} />
+                </TableCell>
+                <TableCell>{decision.decisionType}</TableCell>
+                <TableCell>{decision.governanceLevel || 'N/A'}</TableCell>
+                <TableCell>
+                  <FormattedDate dateString={decision.submittedAt} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/review/${decision.id}`}>
+                      <FileSearch className="h-4 w-4" />
+                      <span className="sr-only">Review</span>
+                    </Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
