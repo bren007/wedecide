@@ -47,7 +47,7 @@ Keep the language direct and to the point.
 
 **Proposal Details:**
 - **Title:** {{{proposalTitle}}}
-- **Decision Sought:** {{{decision}}}
+- **Decision Sought:** {{{decisionSought}}}
 - **Background:** {{{background}}}
 
 **Strategic Objective:**

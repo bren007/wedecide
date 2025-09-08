@@ -54,12 +54,12 @@ export default async function ReviewPage({ params }: { params: { id: string } })
         <AppSidebar />
       </Sidebar>
       <SidebarInset>
-        <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
-            <div className="flex items-center gap-4">
+        <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6 lg:p-8">
+            <div className="flex items-center gap-4 p-2 md:p-0 bg-background md:bg-transparent rounded-lg">
                 <div className="md:hidden">
                     <SidebarTrigger />
                 </div>
-                <h1 className="text-xl font-semibold tracking-tight text-muted-foreground">Review Proposal</h1>
+                <h1 className="text-xl font-semibold tracking-tight">Review Proposal</h1>
             </div>
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
@@ -87,7 +87,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                 <CardContent>
                   <div className="mb-6">
                     <h3 className="font-semibold mb-2 text-lg">Decision Sought</h3>
-                    <p className="text-muted-foreground p-4 bg-muted/50 rounded-lg">{decision.decision}</p>
+                    <p className="text-muted-foreground p-4 bg-muted/50 rounded-lg">{decision.decisionSought}</p>
                   </div>
 
                   {objective && (

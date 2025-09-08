@@ -55,7 +55,7 @@ Ensure the questions are specific to the proposal details provided and are frame
 
 **Proposal Details:**
 - **Title:** {{{proposalTitle}}}
-- **Decision Sought:** {{{decision}}}
+- **Decision Sought:** {{{decisionSought}}}
 - **Decision Type:** {{{decisionType}}}
 - **Background:** {{{background}}}
 `,

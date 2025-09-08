@@ -22,7 +22,7 @@ export function FitnessQuestions({ decision }: { decision: Decision }) {
     try {
       const result = await generateFitnessReviewQuestions({
         proposalTitle: decision.proposalTitle,
-        decision: decision.decision,
+        decision: decision.decisionSought,
         background: decision.background,
         decisionType: decision.decisionType,
       });

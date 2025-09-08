@@ -15,7 +15,7 @@ const ConsultationSchema = z.object({
 
 const DecisionSchema = z.object({
   proposalTitle: z.string().min(5, 'Title must be at least 5 characters long.'),
-  decision: z.string().min(10, 'Decision must be at least 10 characters long.'),
+  decisionSought: z.string().min(10, 'Decision must be at least 10 characters long.'),
   background: z.string().min(20, 'Background must be at least 20 characters long.'),
   decisionType: z.enum(['Approve', 'Endorse', 'Note', 'Agree', 'Direct'], {
     errorMap: () => ({ message: 'Please select a decision type.' }),
@@ -31,7 +31,7 @@ const DecisionSchema = z.object({
 export type FormState = {
   errors?: {
     proposalTitle?: string[];
-    decision?: string[];
+    decisionSought?: string[];
     background?: string[];
     decisionType?: string[];
     objectiveId?: string[];
@@ -71,7 +71,7 @@ export async function createDecision(prevState: FormState, formData: FormData) {
 
   const validatedFields = DecisionSchema.safeParse({
     proposalTitle: formData.get('proposalTitle'),
-    decision: formData.get('decision'),
+    decisionSought: formData.get('decisionSought'),
     background: formData.get('background'),
     decisionType: formData.get('decisionType'),
     objectiveId: formData.get('objectiveId'),

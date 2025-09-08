@@ -199,15 +199,15 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="decision">Decision Sought</Label>
+        <Label htmlFor="decisionSought">Decision Sought</Label>
         <Textarea
-          id="decision"
-          name="decision"
+          id="decisionSought"
+          name="decisionSought"
           placeholder="Clearly state the decision you are asking the group to make. For example: 'Approve the budget of $50,000 for the Q3 marketing campaign.'"
           rows={3}
         />
-        {state.errors?.decision && (
-          <p className="text-sm text-destructive">{state.errors.decision.join(', ')}</p>
+        {state.errors?.decisionSought && (
+          <p className="text-sm text-destructive">{state.errors.decisionSought.join(', ')}</p>
         )}
       </div>
       

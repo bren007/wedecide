@@ -52,7 +52,7 @@ export function ProposalSummary({ decisions }: { decisions: Decision[] }) {
     try {
       const result = await summarizeProposalForMeeting({
         proposalTitle: selectedDecision.proposalTitle,
-        decision: selectedDecision.decision,
+        decision: selectedDecision.decisionSought,
         background: selectedDecision.background,
         objectiveName: objective.name,
         objectiveDescription: objective.description,

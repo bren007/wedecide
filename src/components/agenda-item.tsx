@@ -6,40 +6,94 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle, ClipboardList, Users } from 'lucide-react';
-import { useTransition } from 'react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle, ClipboardList, Users, Edit } from 'lucide-react';
+import { useTransition, useState } from 'react';
 import { StrategicAlignment } from './strategic-alignment';
 import { ConsultationSummary } from './consultation-summary';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
 
 type OutcomeButtonProps = {
   decision: Decision;
   outcome: DecisionStatus;
-  currentStatus: DecisionStatus;
   children: React.ReactNode;
   variant?: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link" | null | undefined;
   onDecisionUpdate: (decision: Decision) => void;
 }
 
-function OutcomeButton({ decision, outcome, currentStatus, children, variant = 'outline', onDecisionUpdate }: OutcomeButtonProps) {
+function OutcomeButton({ decision, outcome, children, variant = 'outline', onDecisionUpdate }: OutcomeButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const [finalDecisionText, setFinalDecisionText] = useState(decision.decisionSought);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSetOutcome = async () => {
     startTransition(async () => {
-      const updatedDecision = await setDecisionOutcome(decision.id, outcome);
+      const updatedDecision = await setDecisionOutcome(decision.id, outcome, finalDecisionText);
       if (updatedDecision) {
         onDecisionUpdate(updatedDecision);
+        setIsDialogOpen(false);
       }
     });
   };
-  
-  const isPastDecision = ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(currentStatus);
 
+  const isPastDecision = ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(decision.status);
   if (isPastDecision) return null;
 
+  // For "Note" type, we don't need a dialog to edit the text, we can just set the outcome directly.
+  if (decision.decisionType === 'Note') {
+      return (
+          <Button variant={variant} size="sm" onClick={() => handleSetOutcome()} disabled={isPending}>
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : children}
+        </Button>
+      )
+  }
+
   return (
-    <Button variant={variant} size="sm" onClick={handleSetOutcome} disabled={isPending}>
-      {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : children}
-    </Button>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button variant={variant} size="sm">
+          {children}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Finalize Decision Outcome</DialogTitle>
+          <DialogDescription>
+            Confirm the outcome and edit the final decision text if it was reframed during the discussion.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+                <Label htmlFor="final-decision-text">Final Decision Text</Label>
+                <Textarea
+                    id="final-decision-text"
+                    value={finalDecisionText}
+                    onChange={(e) => setFinalDecisionText(e.target.value)}
+                    rows={5}
+                />
+            </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+             <Button variant="ghost">Cancel</Button>
+          </DialogClose>
+          <Button type="button" onClick={handleSetOutcome} disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Confirm Outcome
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -54,7 +108,7 @@ const statusConfig = {
 
 
 export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision: Decision; objective?: Objective; onDecisionUpdate?: (decision: Decision) => void }) {
-  const { proposalTitle, background, decisionType, status, id, submittingOrganisation, consultations } = decision;
+  const { proposalTitle, background, decisionType, status, id, submittingOrganisation, consultations, decisionSought, finalDecision } = decision;
   const isPastDecision = status !== 'Scheduled for Meeting';
   const config = statusConfig[status] || {};
   const Icon = config.icon;
@@ -66,28 +120,28 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
           case 'Approve':
               return (
                   <>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved" variant="default"><CheckCircle className="mr-2 h-4 w-4" />Approve</OutcomeButton>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Approved" variant="destructive"><XCircle className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Approved" variant="default"><CheckCircle className="mr-2 h-4 w-4" />Approve</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Not Approved" variant="destructive"><XCircle className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
                   </>
               );
           case 'Endorse':
               return (
                    <>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Endorsed" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Endorse</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Not Endorsed" variant="destructive"><ThumbsDown className="mr-2 h-4 w-4" />Not Endorse</OutcomeButton>
                   </>
               );
           case 'Agree':
               return (
                    <>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved"><Handshake className="mr-2 h-4 w-4" />Agree</OutcomeButton>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Not Approved" variant="destructive"><MinusCircle className="mr-2 h-4 w-4" />Disagree</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Approved"><Handshake className="mr-2 h-4 w-4" />Agree</OutcomeButton>
+                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Not Approved" variant="destructive"><MinusCircle className="mr-2 h-4 w-4" />Disagree</OutcomeButton>
                   </>
               );
           case 'Note':
-              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Noted"><Bookmark className="mr-2 h-4 w-4" />Acknowledge as Noted</OutcomeButton>;
+              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Noted" variant='outline' size='sm'><Bookmark className="mr-2 h-4 w-4" />Acknowledge as Noted</OutcomeButton>;
           case 'Direct':
-              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} currentStatus={status} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Acknowledge Directive</OutcomeButton>
+              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Acknowledge Directive</OutcomeButton>
           default:
               return null;
       }
@@ -114,8 +168,10 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-            <p className="text-sm font-semibold text-muted-foreground mb-1">Decision Sought</p>
-            <p className="text-foreground p-3 bg-muted/50 rounded-lg text-sm">{decision.decision}</p>
+            <p className="text-sm font-semibold text-muted-foreground mb-1">
+              {isPastDecision && finalDecision ? 'Final Decision' : 'Decision Sought'}
+            </p>
+            <p className="text-foreground p-3 bg-muted/50 rounded-lg text-sm">{isPastDecision && finalDecision ? finalDecision : decisionSought}</p>
         </div>
         
         {consultations && consultations.length > 0 && !isPastDecision && (

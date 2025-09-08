@@ -42,7 +42,7 @@ export function IntelligentAssessment({ decision }: { decision: Decision }) {
     try {
       const result = await generateAssessment({
         proposalTitle: decision.proposalTitle,
-        decision: decision.decision,
+        decisionSought: decision.decisionSought,
         background: decision.background,
         decisionType: decision.decisionType,
         objectiveName: objective.name,

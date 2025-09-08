@@ -14,7 +14,8 @@ export type Consultation = {
 export type Decision = {
   id: string;
   proposalTitle: string;
-  decision: string;
+  decisionSought: string;
+  finalDecision?: string;
   background: string;
   decisionType: 'Approve' | 'Endorse' | 'Note' | 'Agree' | 'Direct';
   status: DecisionStatus;

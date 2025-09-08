@@ -44,7 +44,7 @@ const prompt = ai.definePrompt({
 For the following proposal, generate a list of vetting questions. These questions should help determine if the proposal is fully formed, well-considered, and strategically aligned. Focus on questions that probe for clarity, completeness, potential risks, and resource implications to ensure decision-makers receive only high-quality materials.
 
 Proposal Title: {{{proposalTitle}}}
-Decision Sought: {{{decision}}}
+Decision Sought: {{{decisionSought}}}
 Background: {{{background}}}
 Decision Type: {{{decisionType}}}
 

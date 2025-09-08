@@ -14,7 +14,7 @@ import {z} from 'genkit';
 
 const GenerateAssessmentInputSchema = z.object({
   proposalTitle: z.string().describe('The title of the proposal.'),
-  decision: z.string().describe('The specific decision being sought.'),
+  decisionSought: z.string().describe('The specific decision being sought.'),
   background: z.string().describe('The lengthy proposal background to assess.'),
   decisionType: z.string().describe('The type of decision being sought.'),
   objectiveName: z.string().describe('The name of the strategic objective.'),
@@ -49,7 +49,7 @@ For the following proposal, provide a structured assessment to aid in this quali
 
 **Proposal Details:**
 - **Title:** {{{proposalTitle}}}
-- **Decision Sought:** {{{decision}}}
+- **Decision Sought:** {{{decisionSought}}}
 - **Type:** {{{decisionType}}}
 - **Background:** {{{background}}}
 

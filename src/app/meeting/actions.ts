@@ -6,10 +6,11 @@ import type { Decision, DecisionStatus } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { summarizeTranscript } from '@/ai/flows/summarize-transcript';
 
-async function updateDecisionStatus(id: string, status: DecisionStatus) {
+async function updateDecisionStatus(id: string, status: DecisionStatus, finalDecision: string) {
   const decision = await getDecisionById(id);
   if (decision) {
       decision.status = status;
+      decision.finalDecision = finalDecision;
       // Set the decidedAt timestamp when a final decision is made
       if (['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'].includes(status)) {
         decision.decidedAt = new Date().toISOString();
@@ -19,12 +20,13 @@ async function updateDecisionStatus(id: string, status: DecisionStatus) {
   return undefined;
 }
 
-export async function setDecisionOutcome(id: string, outcome: DecisionStatus): Promise<Decision | undefined> {
+export async function setDecisionOutcome(id: string, outcome: DecisionStatus, finalDecision: string): Promise<Decision | undefined> {
   const validOutcomes: DecisionStatus[] = ['Approved', 'Endorsed', 'Noted', 'Not Approved', 'Not Endorsed'];
   if (validOutcomes.includes(outcome)) {
-    const updatedDecision = await updateDecisionStatus(id, outcome);
+    const updatedDecision = await updateDecisionStatus(id, outcome, finalDecision);
     revalidatePath('/meeting');
     revalidatePath('/past-decisions');
+    revalidatePath(`/review/${id}`);
     return updatedDecision;
   } else {
     console.error('Invalid outcome status:', outcome);
@@ -39,4 +41,3 @@ export async function generateSummaryFromAudio(audioDataUri: string, isChathamHo
   const result = await summarizeTranscript({ audioDataUri, isChathamHouse });
   return result;
 }
-
