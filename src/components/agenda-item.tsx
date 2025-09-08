@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Decision, DecisionStatus, Objective } from '@/lib/types';
 import { setDecisionOutcome } from '@/app/meeting/actions';
-import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle, ClipboardList, Users, Edit, MessageSquareQuote } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Check, Bookmark, FileCheck, FileX, Loader2, Target, FileText, Download, Handshake, MinusCircle, CheckCircle, XCircle, ClipboardList, Users, Edit, MessageSquareQuote, ChevronDown } from 'lucide-react';
 import { useTransition, useState } from 'react';
 import { StrategicAlignment } from './strategic-alignment';
 import { ConsultationSummary } from './consultation-summary';
@@ -20,6 +20,13 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 
@@ -27,12 +34,11 @@ type OutcomeButtonProps = {
   decision: Decision;
   outcome: DecisionStatus;
   children: React.ReactNode;
-  variant?: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link" | null | undefined;
   onDecisionUpdate: (decision: Decision) => void;
   isNegativeOutcome?: boolean;
 }
 
-function OutcomeButton({ decision, outcome, children, variant = 'outline', onDecisionUpdate, isNegativeOutcome = false }: OutcomeButtonProps) {
+function FinalizeDecisionDialog({ decision, outcome, children, onDecisionUpdate, isNegativeOutcome = false }: OutcomeButtonProps) {
   const [isPending, startTransition] = useTransition();
   const [finalDecisionText, setFinalDecisionText] = useState(decision.decisionSought);
   const [decisionNote, setDecisionNote] = useState('');
@@ -51,7 +57,7 @@ function OutcomeButton({ decision, outcome, children, variant = 'outline', onDec
   // For "Note" type, we can set the outcome directly without a dialog.
   if (decision.decisionType === 'Note') {
       return (
-          <Button variant={variant} size="sm" onClick={() => handleSetOutcome()} disabled={isPending}>
+          <Button variant="outline" size="sm" onClick={() => handleSetOutcome()} disabled={isPending} className="w-full">
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : children}
         </Button>
       )
@@ -60,9 +66,7 @@ function OutcomeButton({ decision, outcome, children, variant = 'outline', onDec
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant={variant} size="sm">
-          {children}
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -132,35 +136,59 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
   const handleUpdate = onDecisionUpdate || (() => {});
   
   const renderOutcomeButtons = () => {
+    if (decision.decisionType === 'Note') {
+        return (
+            <FinalizeDecisionDialog decision={decision} onDecisionUpdate={handleUpdate} outcome="Noted">
+                <Bookmark className="mr-2 h-4 w-4" />Acknowledge as Noted
+            </FinalizeDecisionDialog>
+        );
+    }
+
+      const outcomes: {label: string, outcome: DecisionStatus, icon: React.ElementType, isNegative?: boolean}[] = [];
       switch (decisionType) {
           case 'Approve':
-              return (
-                  <>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Approved" variant="default"><CheckCircle className="mr-2 h-4 w-4" />Approve</OutcomeButton>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Not Approved" variant="destructive" isNegativeOutcome={true}><XCircle className="mr-2 h-4 w-4" />Not Approve</OutcomeButton>
-                  </>
-              );
+              outcomes.push({label: 'Approve', outcome: 'Approved', icon: CheckCircle});
+              outcomes.push({label: 'Not Approve', outcome: 'Not Approved', icon: XCircle, isNegative: true});
+              break;
           case 'Endorse':
-              return (
-                   <>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Endorsed"><ThumbsUp className="mr-2 h-4 w-4" />Endorse</OutcomeButton>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Not Endorsed" variant="destructive" isNegativeOutcome={true}><ThumbsDown className="mr-2 h-4 w-4" />Not Endorse</OutcomeButton>
-                  </>
-              );
+              outcomes.push({label: 'Endorse', outcome: 'Endorsed', icon: ThumbsUp});
+              outcomes.push({label: 'Not Endorse', outcome: 'Not Endorsed', icon: ThumbsDown, isNegative: true});
+              break;
           case 'Agree':
-              return (
-                   <>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Approved"><Handshake className="mr-2 h-4 w-4" />Agree</OutcomeButton>
-                      <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Not Approved" variant="destructive" isNegativeOutcome={true}><MinusCircle className="mr-2 h-4 w-4" />Disagree</OutcomeButton>
-                  </>
-              );
-          case 'Note':
-              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Noted" variant='outline' size='sm'><Bookmark className="mr-2 h-4 w-4" />Acknowledge as Noted</OutcomeButton>;
+               outcomes.push({label: 'Agree', outcome: 'Approved', icon: Handshake});
+               outcomes.push({label: 'Disagree', outcome: 'Not Approved', icon: MinusCircle, isNegative: true});
+              break;
           case 'Direct':
-              return <OutcomeButton decision={decision} onDecisionUpdate={handleUpdate} outcome="Approved" variant="default"><Check className="mr-2 h-4 w-4" />Acknowledge Directive</OutcomeButton>
-          default:
-              return null;
+              outcomes.push({label: 'Acknowledge Directive', outcome: 'Approved', icon: Check});
+              break;
       }
+      
+      return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button>
+                Set Outcome
+                <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {outcomes.map(({label, outcome, icon: ItemIcon, isNegative}) => (
+                    <FinalizeDecisionDialog
+                        key={outcome}
+                        decision={decision}
+                        onDecisionUpdate={handleUpdate}
+                        outcome={outcome}
+                        isNegativeOutcome={isNegative}
+                    >
+                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <ItemIcon className="mr-2 h-4 w-4" />
+                            {label}
+                        </DropdownMenuItem>
+                    </FinalizeDecisionDialog>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
+      )
   }
 
   return (
