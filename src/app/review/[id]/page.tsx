@@ -10,7 +10,7 @@ import { IntelligentAssessment } from '@/components/intelligent-assessment';
 import { FitnessQuestions } from '@/components/fitness-questions';
 import { RelatedDecisions } from '@/components/related-decisions';
 import { StrategicAlignment } from '@/components/strategic-alignment';
-import { CheckCircle2, Target, FileText, Download, ClipboardList, ThumbsUp, HelpCircle, ThumbsDown, MinusCircle, Clock, Menu } from 'lucide-react';
+import { CheckCircle2, Target, FileText, Download, ClipboardList, ThumbsUp, HelpCircle, ThumbsDown, MinusCircle, Clock, Menu, MessageSquareQuote } from 'lucide-react';
 import { Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SecretariatFeedback } from '@/components/secretariat-feedback';
@@ -54,14 +54,14 @@ export default async function ReviewPage({ params }: { params: { id: string } })
         <AppSidebar />
       </Sidebar>
       <SidebarInset>
-        <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6 lg:p-8">
-            <div className="flex items-center gap-4 p-2 md:p-0 bg-background md:bg-transparent rounded-lg">
+        <div className="flex-1 space-y-4 md:space-y-6 lg:p-8">
+            <div className="flex items-center gap-4 p-4 md:p-6 lg:p-0 bg-card md:bg-transparent rounded-lg">
                 <div className="md:hidden">
                     <SidebarTrigger />
                 </div>
                 <h1 className="text-xl font-semibold tracking-tight">Review Proposal</h1>
             </div>
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid gap-8 lg:grid-cols-3 px-4 md:px-6 lg:px-0">
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
@@ -86,9 +86,19 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                 </CardHeader>
                 <CardContent>
                   <div className="mb-6">
-                    <h3 className="font-semibold mb-2 text-lg">Decision Sought</h3>
-                    <p className="text-muted-foreground p-4 bg-muted/50 rounded-lg">{decision.decisionSought}</p>
+                    <h3 className="font-semibold mb-2 text-lg">{isPastDecision && decision.finalDecision ? "Final Decision" : "Decision Sought"}</h3>
+                    <p className="text-muted-foreground p-4 bg-muted/50 rounded-lg">{isPastDecision && decision.finalDecision ? decision.finalDecision : decision.decisionSought}</p>
                   </div>
+                  
+                  {isPastDecision && decision.decisionNote && (
+                    <div className="mb-6">
+                        <h3 className="font-semibold mb-2 text-lg">Decision Note</h3>
+                        <div className="flex items-start gap-3 text-muted-foreground p-4 bg-muted/50 rounded-lg">
+                            <MessageSquareQuote className="h-5 w-5 mt-1 shrink-0 text-primary" />
+                            <p className="italic">"{decision.decisionNote}"</p>
+                        </div>
+                    </div>
+                  )}
 
                   {objective && (
                     <div className="mb-6">

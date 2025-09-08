@@ -16,6 +16,7 @@ export type Decision = {
   proposalTitle: string;
   decisionSought: string;
   finalDecision?: string;
+  decisionNote?: string;
   background: string;
   decisionType: 'Approve' | 'Endorse' | 'Note' | 'Agree' | 'Direct';
   status: DecisionStatus;
