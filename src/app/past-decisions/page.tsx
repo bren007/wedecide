@@ -82,15 +82,15 @@ export default async function PastDecisionsPage() {
       </Sidebar>
       <SidebarInset>
         <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-          <div className="flex items-center gap-4">
-             <div className="md:hidden">
+          <header className="flex items-center gap-4">
+            <div className="md:hidden">
               <SidebarTrigger />
             </div>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Decision Bank</h1>
               <p className="text-muted-foreground">Treating decisions as a strategic asset. Each decision deposited improves future analysis, compliance, and organizational intelligence.</p>
             </div>
-          </div>
+          </header>
           
            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
@@ -109,7 +109,7 @@ export default async function PastDecisionsPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Strategic Hotspot</CardTitle>
+                <CardTitle className="text-sm font-medium">Strategic Focus</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
