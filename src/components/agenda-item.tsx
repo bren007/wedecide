@@ -228,13 +228,6 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
             </div>
         )}
         
-        {consultations && consultations.length > 0 && !isPastDecision && (
-           <div className="space-y-2">
-            <p className="text-sm font-semibold text-muted-foreground mb-1">Consultation</p>
-            <ConsultationSummary consultations={consultations} />
-          </div>
-        )}
-
         {objective && (
           <div className="space-y-2">
             <p className="text-sm font-semibold text-muted-foreground">Strategic Objective</p>
@@ -247,6 +240,14 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
             </div>
           </div>
         )}
+
+        {consultations && consultations.length > 0 && !isPastDecision && (
+           <div className="space-y-2">
+            <p className="text-sm font-semibold text-muted-foreground mb-1">Consultation</p>
+            <ConsultationSummary consultations={consultations} />
+          </div>
+        )}
+
         <div className="space-y-2">
             <p className="text-sm font-semibold text-muted-foreground">Background Summary</p>
             <p className="text-muted-foreground text-sm line-clamp-3">{background}</p>
