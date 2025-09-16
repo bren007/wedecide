@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -37,7 +38,7 @@ const prompt = ai.definePrompt({
 
 First, transcribe the following audio recording of a meeting.
 Second, based on the transcript you just created, generate a structured summary with the following distinct sections:
-{{#if (eq summaryType "full")}}
+{{#if summaryType.full}}
 1.  **Discussion Summary:** A concise overview of the key points, arguments, and topics covered.
 {{/if}}
 2.  **Decisions Agreed:** A clear list of the specific decisions that were formally agreed upon by the participants.
@@ -61,8 +62,16 @@ const summarizeTranscriptFlow = ai.defineFlow(
     outputSchema: SummarizeTranscriptOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // Re-map input to make it compatible with Handlebars #if
+    const promptInput = {
+      ...input,
+      summaryType: {
+        full: input.summaryType === 'full',
+      },
+    };
+
+    const { output } = await prompt(promptInput);
+
     return output!;
   }
 );
-
