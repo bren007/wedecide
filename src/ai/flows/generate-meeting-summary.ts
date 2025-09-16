@@ -53,7 +53,7 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateMeetingSummaryOutputSchema },
   prompt: `You are a professional secretariat responsible for drafting minutes. Based on the list of decisions provided below, generate a concise summary of the meeting's key outcomes.
 
-For each decision, clearly state the title and its final outcome (e.g., Approved, Endorsed, Noted, Not Approved). Group the outcomes logically.
+For each decision, clearly state the title and its final outcome (e.g., Approved, Endorsed, Noted, Not Approved). If a final decision text is provided, state it in full. Include any explanatory notes. Group the outcomes logically.
 
 The summary should be written in a professional, neutral tone suitable for official records.
 
