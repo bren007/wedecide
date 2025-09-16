@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -123,7 +124,14 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
     setSummary('');
     setIsApproved(false);
     try {
-      const result = await generateMeetingSummary({ decisions });
+      const result = await generateMeetingSummary({ 
+          decisions,
+          // This is hardcoded for the prototype but would be dynamic in a real app
+          governanceLevel: 'Strategic Board',
+          meetingDate: 'October 26, 2023',
+          meetingTime: '10:00 AM - 12:00 PM',
+          attendees: 'Jane Doe (Chair)',
+      });
       setSummary(result.summary);
     } catch (error) {
       console.error('Failed to generate summary:', error);

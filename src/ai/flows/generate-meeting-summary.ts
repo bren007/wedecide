@@ -6,7 +6,7 @@
  *
  * - generateMeetingSummary - A function that triggers the summary generation flow.
  * - GenerateMeetingSummaryInput - The input type for the generateMeetingSummary function.
- * - GenerateMeetingSummaryOutput - The return type for the generateMeetingSummary function.
+ * - GenerateMeetingSummaryOutput - The return type for the generateMeetingsummary function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -34,13 +34,17 @@ const DecisionSchema = z.object({
 
 const GenerateMeetingSummaryInputSchema = z.object({
   decisions: z.array(DecisionSchema).describe('The list of decisions that were discussed in the meeting.'),
+  meetingDate: z.string().describe('The date of the meeting.'),
+  meetingTime: z.string().describe('The time of the meeting.'),
+  attendees: z.string().describe('The attendees of the meeting.'),
+  governanceLevel: z.string().describe('The name of the decision-making group for the meeting.'),
 });
-type GenerateMeetingSummaryInput = z.infer<typeof GenerateMeetingSummaryInputSchema>;
+export type GenerateMeetingSummaryInput = z.infer<typeof GenerateMeetingSummaryInputSchema>;
 
 const GenerateMeetingSummaryOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the meeting outcomes.'),
+  summary: z.string().describe('A concise summary of the meeting outcomes, formatted as meeting minutes.'),
 });
-type GenerateMeetingSummaryOutput = z.infer<typeof GenerateMeetingSummaryOutputSchema>;
+export type GenerateMeetingSummaryOutput = z.infer<typeof GenerateMeetingSummaryOutputSchema>;
 
 
 export async function generateMeetingSummary(input: GenerateMeetingSummaryInput): Promise<GenerateMeetingSummaryOutput> {
@@ -51,20 +55,31 @@ const prompt = ai.definePrompt({
   name: 'generateMeetingSummaryPrompt',
   input: { schema: GenerateMeetingSummaryInputSchema },
   output: { schema: GenerateMeetingSummaryOutputSchema },
-  prompt: `You are a professional secretariat responsible for drafting minutes. Based on the list of decisions provided below, generate a concise summary of the meeting's key outcomes.
+  prompt: `You are a professional secretariat responsible for drafting minutes. Based on the information provided, generate a structured and formal set of meeting minutes.
+
+**Meeting Details:**
+- **Group:** {{{governanceLevel}}}
+- **Date:** {{{meetingDate}}}
+- **Time:** {{{meetingTime}}}
+- **Attendees:** {{{attendees}}}
+
+## Meeting Outcomes
 
 For each decision, clearly state the title and its final outcome (e.g., Approved, Endorsed, Noted, Not Approved). State the final decision text in full.
 
 If an explanatory note ('decisionNote') is provided, you must attribute it to the correct decision-making body ('governanceLevel') using natural and contextually appropriate language. For example, instead of a robotic template, you should generate phrases like "The Strategic Board also stipulated that..." or "Furthermore, the Program Committee required that...". The phrasing should be formal and clear.
 
-**Decisions:**
+---
+
 {{#each decisions}}
-- **Title:** {{{proposalTitle}}}
-  - **Outcome:** The proposal was {{{status}}}.
-  - **Final Decision:** {{{finalDecision}}}
-  {{#if decisionNote}}
-  - **Note:** The {{{governanceLevel}}} also stated: "{{{decisionNote}}}"
-  {{/if}}
+### {{{proposalTitle}}}
+- **Outcome:** The proposal was {{{status}}}.
+- **Final Decision:** {{{finalDecision}}}
+{{#if decisionNote}}
+- **Note:** The {{{governanceLevel}}} also stated: "{{{decisionNote}}}"
+{{/if}}
+
+---
 {{/each}}
 `,
 });
