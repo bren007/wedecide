@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -14,6 +13,7 @@ import { Textarea } from './ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Switch } from './ui/switch';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   const [summary, setSummary] = useState('');
@@ -27,6 +27,7 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const [isChathamHouse, setIsChathamHouse] = useState(false);
+  const [summaryType, setSummaryType] = useState<'concise' | 'full'>('concise');
 
 
   useEffect(() => {
@@ -71,8 +72,11 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
         reader.onloadend = async () => {
           const base64Audio = reader.result as string;
           try {
-            const result = await generateSummaryFromAudio(base64Audio, isChathamHouse);
-            const formattedSummary = `## Discussion Summary\n${result.discussionSummary}\n\n## Decisions Agreed\n${result.decisionsAgreed}\n\n## Action Items\n${result.actionItems}`;
+            const result = await generateSummaryFromAudio(base64Audio, isChathamHouse, summaryType);
+            let formattedSummary = `## Decisions Agreed\n${result.decisionsAgreed}\n\n## Action Items\n${result.actionItems}`;
+            if (result.discussionSummary) {
+                formattedSummary = `## Discussion Summary\n${result.discussionSummary}\n\n${formattedSummary}`;
+            }
             setSummary(formattedSummary);
           } catch (error) {
             console.error('Failed to generate summary from audio:', error);
@@ -169,6 +173,25 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
             </AlertDescription>
           </Alert>
         )}
+
+        <div className="p-4 border rounded-lg space-y-4">
+            <RadioGroup value={summaryType} onValueChange={(value: 'concise' | 'full') => setSummaryType(value)}>
+                <Label className="font-medium">Summary Format</Label>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="concise" id="concise" />
+                    <Label htmlFor="concise" className="font-normal">Decisions & Actions Only</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="full" id="full" />
+                    <Label htmlFor="full" className="font-normal">Full Record (including discussion)</Label>
+                </div>
+            </RadioGroup>
+            <div className="flex items-center space-x-2 pt-2">
+                <Switch id="chatham-house" checked={isChathamHouse} onCheckedChange={setIsChathamHouse} />
+                <Label htmlFor="chatham-house" className="font-normal">Chatham House Rules</Label>
+            </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Button 
@@ -188,10 +211,6 @@ export function MeetingSummary({ decisions }: { decisions: Decision[] }) {
                 )}
                 Generate from Decision Data
                 </Button>
-            </div>
-             <div className="flex items-center space-x-2">
-                <Switch id="chatham-house" checked={isChathamHouse} onCheckedChange={setIsChathamHouse} />
-                <Label htmlFor="chatham-house" className="text-sm">Chatham House Rules</Label>
             </div>
         </div>
 

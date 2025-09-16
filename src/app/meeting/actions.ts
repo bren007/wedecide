@@ -1,10 +1,9 @@
-
 'use server';
 
 import { getDecisionById } from '@/lib/data';
 import type { Decision, DecisionStatus } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { summarizeTranscript } from '@/ai/flows/summarize-transcript';
+import { summarizeTranscript, type SummarizeTranscriptInput } from '@/ai/flows/summarize-transcript';
 
 async function updateDecisionStatus(id: string, status: DecisionStatus, finalDecision: string, decisionNote?: string) {
   const decision = await getDecisionById(id);
@@ -35,10 +34,10 @@ export async function setDecisionOutcome(id: string, outcome: DecisionStatus, fi
   }
 }
 
-export async function generateSummaryFromAudio(audioDataUri: string, isChathamHouse: boolean) {
+export async function generateSummaryFromAudio(audioDataUri: string, isChathamHouse: boolean, summaryType: 'full' | 'concise') {
   if (!audioDataUri) {
     throw new Error('Audio data is required.');
   }
-  const result = await summarizeTranscript({ audioDataUri, isChathamHouse });
+  const result = await summarizeTranscript({ audioDataUri, isChathamHouse, summaryType });
   return result;
 }

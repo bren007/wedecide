@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -15,11 +14,12 @@ import { z } from 'genkit';
 const SummarizeTranscriptInputSchema = z.object({
   audioDataUri: z.string().describe("A recording of a meeting, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   isChathamHouse: z.boolean().optional().describe('If true, the summary should not attribute comments to specific individuals.'),
+  summaryType: z.enum(['full', 'concise']).default('concise').describe("The type of summary to generate. 'full' includes discussion, decisions, and actions. 'concise' includes only decisions and actions."),
 });
 export type SummarizeTranscriptInput = z.infer<typeof SummarizeTranscriptInputSchema>;
 
 const SummarizeTranscriptOutputSchema = z.object({
-  discussionSummary: z.string().describe('A concise summary of the key points discussed during the meeting.'),
+  discussionSummary: z.string().optional().describe('A concise summary of the key points discussed during the meeting. This is only generated for "full" summaryType.'),
   decisionsAgreed: z.string().describe('A clear list of the specific decisions that were formally agreed upon.'),
   actionItems: z.string().describe('A list of action items, including who is responsible for each if mentioned.'),
 });
@@ -37,7 +37,9 @@ const prompt = ai.definePrompt({
 
 First, transcribe the following audio recording of a meeting.
 Second, based on the transcript you just created, generate a structured summary with the following distinct sections:
+{{#if (eq summaryType "full")}}
 1.  **Discussion Summary:** A concise overview of the key points, arguments, and topics covered.
+{{/if}}
 2.  **Decisions Agreed:** A clear list of the specific decisions that were formally agreed upon by the participants.
 3.  **Action Items:** A bulleted list of all tasks or actions that were assigned, noting who is responsible for each if specified.
 
