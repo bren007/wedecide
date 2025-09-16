@@ -53,9 +53,9 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateMeetingSummaryOutputSchema },
   prompt: `You are a professional secretariat responsible for drafting minutes. Based on the list of decisions provided below, generate a concise summary of the meeting's key outcomes.
 
-For each decision, clearly state the title and its final outcome (e.g., Approved, Endorsed, Noted, Not Approved). State the final decision text in full. If an explanatory note is provided, it must be attributed to the correct decision-making body.
+For each decision, clearly state the title and its final outcome (e.g., Approved, Endorsed, Noted, Not Approved). State the final decision text in full.
 
-The summary should be written in a professional, neutral tone suitable for official records.
+If an explanatory note ('decisionNote') is provided, you must attribute it to the correct decision-making body ('governanceLevel') using natural and contextually appropriate language. For example, instead of a robotic template, you should generate phrases like "The Strategic Board also stipulated that..." or "Furthermore, the Program Committee required that...". The phrasing should be formal and clear.
 
 **Decisions:**
 {{#each decisions}}
@@ -63,7 +63,7 @@ The summary should be written in a professional, neutral tone suitable for offic
   - **Outcome:** The proposal was {{{status}}}.
   - **Final Decision:** {{{finalDecision}}}
   {{#if decisionNote}}
-  - **Note:** The {{{governanceLevel}}} also noted that: "{{{decisionNote}}}"
+  - **Note:** The {{{governanceLevel}}} also stated: "{{{decisionNote}}}"
   {{/if}}
 {{/each}}
 `,
