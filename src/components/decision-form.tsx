@@ -152,9 +152,9 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
   
   useEffect(() => {
       if (analysisResult) {
-          setProposalTitle(analysisResult.extractedTitle);
-          setDecisionSought(analysisResult.extractedDecisionSought);
-          setBackground(analysisResult.extractedBackground);
+          setProposalTitle(analysisResult.suggestedTitle);
+          setDecisionSought(analysisResult.suggestedDecisionSought);
+          setBackground(analysisResult.suggestedBackground);
       }
   }, [analysisResult]);
 
@@ -166,7 +166,7 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         setAnalysisResult(result);
         toast({
             title: "Analysis Complete",
-            description: `The document has been analyzed and the form has been pre-populated.`
+            description: `The document has been analyzed and the form has been pre-populated with AI suggestions.`
         });
       } catch (error) {
         console.error('Failed to analyze document:', error);
@@ -185,7 +185,7 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
         <CardHeader>
             <CardTitle>Intelligent Ingestion</CardTitle>
             <CardDescription>
-                Have a pre-written document, business case, or policy paper? Upload it here and let AI extract key information to pre-populate this form.
+                Have a pre-written document, business case, or policy paper? Let AI extract key information and suggest improvements to pre-populate this form.
             </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
