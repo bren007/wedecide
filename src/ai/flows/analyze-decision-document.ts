@@ -12,12 +12,12 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const AnalyzeDecisionDocumentInputSchema = z.object({
+const AnalyzeDecisionDocumentInputSchema = z.object({
   documentContent: z.string().describe('The full text content of the decision document to be analyzed.'),
 });
 export type AnalyzeDecisionDocumentInput = z.infer<typeof AnalyzeDecisionDocumentInputSchema>;
 
-export const AnalyzeDecisionDocumentOutputSchema = z.object({
+const AnalyzeDecisionDocumentOutputSchema = z.object({
   documentType: z.string().describe("The identified type of the document (e.g., 'Business Case', 'Policy Paper', 'Report', 'Meeting Minutes')."),
   extractedTitle: z.string().describe('A suitable and concise title for the proposal, extracted or generated from the document.'),
   extractedDecisionSought: z.string().describe('The primary decision being sought, as identified in the document.'),
@@ -28,14 +28,11 @@ export type AnalyzeDecisionDocumentOutput = z.infer<typeof AnalyzeDecisionDocume
 
 
 export async function analyzeDecisionDocument(input: AnalyzeDecisionDocumentInput): Promise<AnalyzeDecisionDocumentOutput> {
-  return analyzeDecisionDocumentFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'analyzeDecisionDocumentPrompt',
-  input: {schema: AnalyzeDecisionDocumentInputSchema},
-  output: {schema: AnalyzeDecisionDocumentOutputSchema},
-  prompt: `You are an expert secretariat member responsible for helping colleagues prepare high-quality decision papers. You have been given the text from a document. Your task is to analyze it and prepare it for formal submission into a decision intelligence system.
+  const prompt = ai.definePrompt({
+    name: 'analyzeDecisionDocumentPrompt',
+    input: {schema: AnalyzeDecisionDocumentInputSchema},
+    output: {schema: AnalyzeDecisionDocumentOutputSchema},
+    prompt: `You are an expert secretariat member responsible for helping colleagues prepare high-quality decision papers. You have been given the text from a document. Your task is to analyze it and prepare it for formal submission into a decision intelligence system.
 
 Perform the following steps:
 
@@ -54,16 +51,19 @@ Perform the following steps:
 **Document Content to Analyze:**
 {{{documentContent}}}
 `,
-});
+  });
 
-const analyzeDecisionDocumentFlow = ai.defineFlow(
-  {
-    name: 'analyzeDecisionDocumentFlow',
-    inputSchema: AnalyzeDecisionDocumentInputSchema,
-    outputSchema: AnalyzeDecisionDocumentOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const analyzeDecisionDocumentFlow = ai.defineFlow(
+    {
+      name: 'analyzeDecisionDocumentFlow',
+      inputSchema: AnalyzeDecisionDocumentInputSchema,
+      outputSchema: AnalyzeDecisionDocumentOutputSchema,
+    },
+    async input => {
+      const {output} = await prompt(input);
+      return output!;
+    }
+  );
+  
+  return analyzeDecisionDocumentFlow(input);
+}
