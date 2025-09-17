@@ -18,7 +18,7 @@ export default async function SubmitPage() {
         <AppSidebar />
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-1 flex-col p-4 md:p-6 lg:p-8 gap-6 md:gap-8">
+        <div className="p-4 md:p-6 lg:p-8 gap-6 md:gap-8">
            <div className="flex items-center gap-4">
               <div className="md:hidden">
                 <SidebarTrigger />
@@ -26,7 +26,7 @@ export default async function SubmitPage() {
               <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">Decision Preparation</h1>
             </div>
             
-            <Tabs defaultValue="manual" className="w-full max-w-4xl mx-auto">
+            <Tabs defaultValue="manual" className="w-full max-w-4xl mx-auto pt-8">
               <Card>
                  <CardHeader>
                     <CardTitle>Submit a New Proposal</CardTitle>
