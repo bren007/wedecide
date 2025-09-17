@@ -2,10 +2,11 @@
 'use server';
 
 import { z } from 'zod';
-import { decisions } from '@/lib/data';
+import { decisions, sampleBusinessCase } from '@/lib/data';
 import type { Decision, Consultation } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { analyzeDecisionDocument, type AnalyzeDecisionDocumentOutput } from '@/ai/flows/analyze-decision-document';
 
 const ConsultationSchema = z.object({
   party: z.string().min(1, 'Party name is required.'),
@@ -98,4 +99,12 @@ export async function createDecision(prevState: FormState, formData: FormData) {
   }
 
   redirect('/');
+}
+
+// Action to analyze the document
+export async function analyzeDocument(): Promise<AnalyzeDecisionDocumentOutput> {
+    // In a real app, we'd get the content from a file upload.
+    // For this prototype, we'll use a hardcoded sample business case.
+    const result = await analyzeDecisionDocument({ documentContent: sampleBusinessCase });
+    return result;
 }

@@ -148,6 +148,34 @@ export let decisions: Decision[] = [
   },
 ];
 
+export const sampleBusinessCase = `
+BUSINESS CASE: NATIONAL DIGITAL IDENTITY VERIFICATION PLATFORM
+
+1. Executive Summary
+This document outlines the business case for the development and implementation of a National Digital Identity Verification Platform. The platform will provide a secure, reliable, and user-friendly way for citizens to verify their identity online, unlocking access to a wide range of digital government and private sector services. The total requested investment is $15M over two years, with an expected net benefit of $50M over five years through fraud reduction and administrative efficiencies. The primary decision sought is to approve the budget and operational plan to proceed with the project.
+
+2. Problem Statement
+Currently, citizens face a fragmented and often insecure process for accessing digital services, requiring multiple logins and passwords. This leads to user frustration, high administrative costs for government agencies, and significant security risks. The lack of a trusted digital identity framework is a major barrier to the digital transformation of public services.
+
+3. Proposed Solution
+We propose the creation of a centralized, federated digital identity platform. This platform will allow citizens to create a single, secure digital identity, which can be used across all government services. It will be built on open standards to ensure interoperability and future-proofing.
+
+4. Strategic Alignment
+This project directly supports the national strategic objective of 'Improving Public Service Delivery' (OBJ-001) by making services more accessible, efficient, and secure.
+
+5. Cost-Benefit Analysis
+- Costs: Total project cost is estimated at $15M over two years, covering development, infrastructure, and a public awareness campaign.
+- Benefits: Projected benefits include a $30M reduction in identity fraud, $15M in administrative savings, and $5M in improved service delivery efficiency over five years.
+
+6. Risk Assessment
+- Key risks include potential for data breaches, low public adoption, and vendor lock-in.
+- Mitigation strategies include undergoing independent security audits, a phased rollout with a strong public communication plan, and using open-source technologies.
+
+7. Decision Sought
+Approve the budget of $15M and the operational plan for the development of a national digital identity verification platform.
+`;
+
+
 export async function getDecisions(): Promise<Decision[]> {
   // Simulate network latency
   await new Promise(resolve => setTimeout(resolve, 100));
