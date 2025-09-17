@@ -9,3 +9,5 @@ import '@/ai/flows/generate-strategic-questions.ts';
 import '@/ai-flows/generate-meeting-summary.ts';
 import '@/ai/flows/summarize-transcript.ts';
 import '@/ai/flows/analyze-decision-document.ts';
+import '@/ai/flows/generate-improved-content.ts';
+
