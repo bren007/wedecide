@@ -7,6 +7,7 @@ import type { Decision, Consultation } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { analyzeDecisionDocument, type AnalyzeDecisionDocumentOutput } from '@/ai/flows/analyze-decision-document';
+import { generateDocumentScaffold, type GenerateDocumentScaffoldInput, type GenerateDocumentScaffoldOutput } from '@/ai/flows/generate-document-scaffold';
 
 const ConsultationSchema = z.object({
   party: z.string().min(1, 'Party name is required.'),
@@ -106,5 +107,11 @@ export async function analyzeDocument(): Promise<AnalyzeDecisionDocumentOutput> 
     // In a real app, we'd get the content from a file upload.
     // For this prototype, we'll use a hardcoded sample business case.
     const result = await analyzeDecisionDocument({ documentContent: sampleBusinessCase });
+    return result;
+}
+
+// Action to generate a document scaffold
+export async function generateScaffold(input: GenerateDocumentScaffoldInput): Promise<GenerateDocumentScaffoldOutput> {
+    const result = await generateDocumentScaffold(input);
     return result;
 }
