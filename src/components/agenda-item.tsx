@@ -128,7 +128,7 @@ const statusConfig = {
 
 
 export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision: Decision; objective?: Objective; onDecisionUpdate?: (decision: Decision) => void }) {
-  const { proposalTitle, background, decisionType, status, id, submittingOrganisation, consultations, decisionSought, finalDecision, decisionNote } = decision;
+  const { proposalTitle, background, decisionType, status, id, submittingOrganisation, consultations, decisionSought, finalDecision, decisionNote, governanceLevel } = decision;
   const isPastDecision = status !== 'Scheduled for Meeting';
   const config = statusConfig[status] || {};
   const Icon = config.icon;
@@ -220,7 +220,7 @@ export function AgendaItem({ decision, objective, onDecisionUpdate }: { decision
 
         {isPastDecision && decisionNote && (
             <div className="space-y-2">
-                <p className="text-sm font-semibold text-muted-foreground mb-1">Decision Note</p>
+                <p className="text-sm font-semibold text-muted-foreground mb-1">{governanceLevel} Comment</p>
                 <div className="flex items-start gap-3 text-muted-foreground p-3 bg-muted/50 rounded-lg text-sm">
                     <MessageSquareQuote className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                     <p className="italic">"{decisionNote}"</p>

@@ -92,7 +92,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
                   
                   {isPastDecision && decision.decisionNote && (
                     <div className="mb-6">
-                        <h3 className="font-semibold mb-2 text-lg">Decision Note</h3>
+                        <h3 className="font-semibold mb-2 text-lg">{decision.governanceLevel} Comment</h3>
                         <div className="flex items-start gap-3 text-muted-foreground p-4 bg-muted/50 rounded-lg">
                             <MessageSquareQuote className="h-5 w-5 mt-1 shrink-0 text-primary" />
                             <p className="italic">"{decision.decisionNote}"</p>
