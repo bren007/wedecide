@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Send, Loader2, Upload, Target, PlusCircle, Trash2, Users, Sparkles, Wand2, Lightbulb } from 'lucide-react';
+import { Send, Loader2, Upload, Target, PlusCircle, Trash2, Users, Sparkles, Wand2, Lightbulb, Copy } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { Objective, GovernanceLevel, Consultation } from '@/lib/types';
@@ -20,6 +20,7 @@ import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import { Skeleton } from './ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -96,32 +97,120 @@ function ConsultationFields({ error }: { error?: string }) {
   );
 }
 
-function InitialFeedbackCard({ assessment }: { assessment: AnalyzeDecisionDocumentOutput }) {
+
+function DocumentAnalysisResult({ assessment, onUseSuggestions }: { assessment: AnalyzeDecisionDocumentOutput, onUseSuggestions: () => void }) {
     if (!assessment) return null;
 
     return (
-        <Card className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
-            <CardHeader>
-                 <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-200">
-                    <Lightbulb />
-                    Initial Feedback
-                </CardTitle>
-                <CardDescription className="text-blue-800 dark:text-blue-300">
-                    The AI has analyzed your document (identified as a **{assessment.documentType}**) and provided some initial points to consider for strengthening your proposal. The fields below have been pre-populated with suggestions that address this feedback.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ul className="space-y-2 text-sm text-blue-900 dark:text-blue-200">
-                    {assessment.preVettingAssessment.map((item, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                            <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
-                            <span>{item}</span>
-                        </li>
-                    ))}
-                </ul>
-            </CardContent>
-        </Card>
+        <div className="space-y-4 pt-4">
+            <Card className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+                <CardHeader>
+                     <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-200">
+                        <Lightbulb />
+                        Initial Feedback
+                    </CardTitle>
+                    <CardDescription className="text-blue-800 dark:text-blue-300">
+                        The AI has analyzed your document (identified as a **{assessment.documentType}**) and provided some initial points to consider for strengthening your proposal. Review the suggested content improvements below.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ul className="space-y-2 text-sm text-blue-900 dark:text-blue-200">
+                        {assessment.preVettingAssessment.map((item, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                                <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                                <span>{item}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+            
+            <Accordion type="multiple" defaultValue={['title', 'decisionSought', 'background']} className="w-full">
+                <AccordionItem value="title">
+                    <AccordionTrigger>Suggested Title</AccordionTrigger>
+                    <AccordionContent>{assessment.suggestedTitle}</AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="decisionSought">
+                    <AccordionTrigger>Suggested Decision Sought</AccordionTrigger>
+                    <AccordionContent>{assessment.suggestedDecisionSought}</AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="background">
+                    <AccordionTrigger>Suggested Background</AccordionTrigger>
+                    <AccordionContent className="whitespace-pre-wrap">{assessment.suggestedBackground}</AccordionContent>
+                </AccordionItem>
+            </Accordion>
+            
+            <Button onClick={onUseSuggestions}>
+                <Copy className="mr-2 h-4 w-4" />
+                Use these suggestions
+            </Button>
+        </div>
     )
+}
+
+function IntelligentIngestion() {
+  const { toast } = useToast();
+  const [isAnalyzing, startAnalysisTransition] = useTransition();
+  const [analysisResult, setAnalysisResult] = useState<AnalyzeDecisionDocumentOutput | null>(null);
+
+  const handleAnalyzeDocument = () => {
+    startAnalysisTransition(async () => {
+      setAnalysisResult(null);
+      try {
+        const result = await analyzeDocument();
+        setAnalysisResult(result);
+        toast({
+            title: "Analysis Complete",
+            description: `The document has been analyzed and suggestions have been generated.`
+        });
+      } catch (error) {
+        console.error('Failed to analyze document:', error);
+        toast({
+          title: 'Error Analyzing Document',
+          description: 'Could not analyze the document. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    });
+  };
+  
+   const handleUseSuggestions = () => {
+    if (analysisResult) {
+      // This is a simplified way to pass data to the parent form.
+      // In a more complex app, you might use a shared state manager (like Zustand or Context).
+      document.dispatchEvent(new CustomEvent('useAiSuggestions', { detail: analysisResult }));
+      toast({
+          title: "Content Applied",
+          description: "AI suggestions have been populated into the form."
+      });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Intelligent Ingestion</CardTitle>
+        <CardDescription>
+          Have a pre-written document, business case, or policy paper? Let AI analyze it, provide feedback, and suggest improvements to pre-populate this form. This can be an iterative process.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Button type="button" variant="outline" className="w-full" onClick={handleAnalyzeDocument} disabled={isAnalyzing}>
+          {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+          Analyze Document (Simulated Upload)
+        </Button>
+        {isAnalyzing && (
+          <div className="space-y-4 pt-2">
+            <Skeleton className="h-6 w-1/4" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        )}
+        {analysisResult && <DocumentAnalysisResult assessment={analysisResult} onUseSuggestions={handleUseSuggestions} />}
+      </CardContent>
+    </Card>
+  );
 }
 
 
@@ -130,15 +219,11 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
   const [state, dispatch] = useActionState(createDecision, initialState);
   const { toast } = useToast();
   
-  const [isAnalyzing, startAnalysisTransition] = useTransition();
-  const [analysisResult, setAnalysisResult] = useState<AnalyzeDecisionDocumentOutput | null>(null);
-
   // Form field states
   const [proposalTitle, setProposalTitle] = useState('');
   const [decisionSought, setDecisionSought] = useState('');
   const [background, setBackground] = useState('');
   const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
-
 
   useEffect(() => {
     if (state.message) {
@@ -151,57 +236,23 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
   }, [state, toast]);
   
   useEffect(() => {
-      if (analysisResult) {
-          setProposalTitle(analysisResult.suggestedTitle);
-          setDecisionSought(analysisResult.suggestedDecisionSought);
-          setBackground(analysisResult.suggestedBackground);
-      }
-  }, [analysisResult]);
+    const handleSuggestions = (event: Event) => {
+      const detail = (event as CustomEvent).detail as AnalyzeDecisionDocumentOutput;
+      setProposalTitle(detail.suggestedTitle);
+      setDecisionSought(detail.suggestedDecisionSought);
+      setBackground(detail.suggestedBackground);
+    };
 
-  const handleAnalyzeDocument = () => {
-    startAnalysisTransition(async () => {
-      setAnalysisResult(null);
-      try {
-        const result = await analyzeDocument();
-        setAnalysisResult(result);
-        toast({
-            title: "Analysis Complete",
-            description: `The document has been analyzed and the form has been pre-populated with AI suggestions.`
-        });
-      } catch (error) {
-        console.error('Failed to analyze document:', error);
-        toast({
-          title: 'Error Analyzing Document',
-          description: 'Could not analyze the document. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    });
-  };
+    document.addEventListener('useAiSuggestions', handleSuggestions);
+    return () => {
+      document.removeEventListener('useAiSuggestions', handleSuggestions);
+    };
+  }, []);
+
 
   return (
     <form action={dispatch} className="space-y-6">
-       <Card>
-        <CardHeader>
-            <CardTitle>Intelligent Ingestion</CardTitle>
-            <CardDescription>
-                Have a pre-written document, business case, or policy paper? Let AI extract key information and suggest improvements to pre-populate this form.
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <Button type="button" variant="outline" className="w-full" onClick={handleAnalyzeDocument} disabled={isAnalyzing}>
-                {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                Analyze Document (Simulated Upload)
-            </Button>
-            {isAnalyzing && (
-                 <div className="space-y-4 pt-2">
-                    <Skeleton className="h-6 w-1/4" />
-                    <Skeleton className="h-16 w-full" />
-                </div>
-            )}
-            {analysisResult && <InitialFeedbackCard assessment={analysisResult} />}
-        </CardContent>
-       </Card>
+       <IntelligentIngestion />
 
       <div className="flex items-center">
         <div className="flex-grow border-t border-muted"></div>

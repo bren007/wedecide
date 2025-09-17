@@ -34,7 +34,7 @@ export async function analyzeDecisionDocument(input: AnalyzeDecisionDocumentInpu
       inputSchema: AnalyzeDecisionDocumentInputSchema,
       outputSchema: AnalyzeDecisionDocumentOutputSchema,
     },
-    async input => {
+    async (flowInput) => {
       const prompt = ai.definePrompt({
           name: 'analyzeDecisionDocumentPrompt',
           input: {schema: AnalyzeDecisionDocumentInputSchema},
@@ -60,7 +60,7 @@ Perform the following steps:
 `,
         });
 
-      const {output} = await prompt(input);
+      const {output} = await prompt(flowInput);
       return output!;
     }
   );
