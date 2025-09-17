@@ -12,14 +12,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GenerateDocumentScaffoldInputSchema = z.object({
+const GenerateDocumentScaffoldInputSchema = z.object({
   proposalTitle: z.string().describe('The working title for the proposal.'),
   documentType: z.enum(['Business Case', 'Policy Paper', 'Project Proposal', 'Report']).describe('The type of document to be generated.'),
   coreIdea: z.string().describe('A brief, one or two-sentence description of the core idea or problem to be addressed.'),
 });
 export type GenerateDocumentScaffoldInput = z.infer<typeof GenerateDocumentScaffoldInputSchema>;
 
-export const GenerateDocumentScaffoldOutputSchema = z.object({
+const GenerateDocumentScaffoldOutputSchema = z.object({
   draftDocument: z.string().describe('The generated draft document content in Markdown format.'),
 });
 export type GenerateDocumentScaffoldOutput = z.infer<typeof GenerateDocumentScaffoldOutputSchema>;
