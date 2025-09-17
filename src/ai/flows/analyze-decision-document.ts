@@ -45,15 +45,15 @@ Perform the following steps:
 
 1.  **Identify Document Type:** First, determine the type of document provided. Is it a Business Case, a Policy Paper, a Status Report, a formal proposal, or something else?
 
-2.  **Generate Improved Content:** Rewrite and improve the key sections of the proposal.
-    *   **Suggested Title:** Generate a concise, clear title for the proposal based on the document's content.
-    *   **Suggested Decision Sought:** Rewrite the 'Decision Sought' to be a single, unambiguous, and actionable request. Incorporate specific details from the background to make it self-contained.
-    *   **Suggested Background:** Rewrite the background as a compelling narrative for a time-poor executive. Start with the core problem, explain the solution, and clarify why this decision is important now.
-
-3.  **Conduct Pre-Vetting Assessment:** Based on the identified document type, provide a list of critical but constructive questions or feedback points for the submitter. This should help them improve the document *before* they formally submit it.
+2.  **Conduct Pre-Vetting Assessment:** Based on the identified document type, provide a list of critical but constructive feedback points. This should help the submitter understand what is needed to make their proposal "decision-ready".
     *   If it's a **Business Case**, your feedback should focus on financials, ROI, risk analysis, and options considered.
     *   If it's a **Policy Paper**, your feedback should focus on stakeholder impact, implementation plan, and alignment with existing policy.
     *   If it's a **Report**, your feedback might question the clarity of its recommendations or the data supporting its findings.
+
+3.  **Generate Improved Content:** Based on your pre-vetting assessment, rewrite and improve the key sections of the proposal. The new content should directly address the weaknesses you identified.
+    *   **Suggested Title:** Generate a concise, clear title for the proposal based on the document's content.
+    *   **Suggested Decision Sought:** Rewrite the 'Decision Sought' to be a single, unambiguous, and actionable request. Incorporate specific details from the background to make it self-contained.
+    *   **Suggested Background:** Rewrite the background as a compelling narrative for a time-poor executive. Start with the core problem, explain the solution, and clarify why this decision is important now.
 
 **Document Content to Analyze:**
 {{{documentContent}}}

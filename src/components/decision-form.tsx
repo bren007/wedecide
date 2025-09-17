@@ -107,7 +107,7 @@ function InitialFeedbackCard({ assessment }: { assessment: AnalyzeDecisionDocume
                     Initial Feedback
                 </CardTitle>
                 <CardDescription className="text-blue-800 dark:text-blue-300">
-                    The AI has analyzed your document (identified as a **{assessment.documentType}**) and provided some initial points to consider for strengthening your proposal.
+                    The AI has analyzed your document (identified as a **{assessment.documentType}**) and provided some initial points to consider for strengthening your proposal. The fields below have been pre-populated with suggestions that address this feedback.
                 </CardDescription>
             </CardHeader>
             <CardContent>
