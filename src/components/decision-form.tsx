@@ -28,7 +28,7 @@ import type { AnalyzeDecisionDocumentOutput } from '@/ai/flows/analyze-decision-
 import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
-import { CardHeader, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -385,5 +385,3 @@ export function DecisionForm({ objectives }: { objectives: Objective[] }) {
     </form>
   );
 }
-
-    
