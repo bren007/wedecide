@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { approveForMeeting } from './actions';
 import { IntelligentAssessment } from '@/components/intelligent-assessment';
-import { IntelligentImprovement } from '@/components/intelligent-improvement';
+import { IntelligentVetting } from '@/components/intelligent-vetting';
 import { RelatedDecisions } from '@/components/related-decisions';
 import { StrategicAlignment } from '@/components/strategic-alignment';
 import { CheckCircle2, Target, FileText, Download, ClipboardList, ThumbsUp, HelpCircle, ThumbsDown, MinusCircle, Clock, Menu, MessageSquareQuote } from 'lucide-react';
@@ -165,14 +165,14 @@ export default async function ReviewPage({ params }: { params: { id: string } })
               </Card>
               <div className="lg:hidden space-y-6">
                 <IntelligentAssessment decision={decision} />
-                <IntelligentImprovement decision={decision} />
+                <IntelligentVetting decision={decision} />
                 <SecretariatFeedback />
               </div>
             </div>
 
             <div className="lg:col-span-1 space-y-6 hidden lg:block">
                 <IntelligentAssessment decision={decision} />
-                <IntelligentImprovement decision={decision} />
+                <IntelligentVetting decision={decision} />
                 <SecretariatFeedback />
                 <RelatedDecisions decision={decision} allDecisions={allDecisions} />
             </div>
