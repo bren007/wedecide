@@ -121,7 +121,7 @@ const getPublicAPIDataTool = ai.defineTool(
 // Define the main prompt for the agent.
 const generateBriefPrompt = ai.definePrompt({
   name: 'generateInitialBriefPrompt',
-  input: { schema: GenerateInitialBriefInputSchema },
+  input: { schema: GenerateInitialBriefInputSchema.extend({strategicGoals: z.any()}) },
   output: { schema: GenerateInitialBriefOutputSchema },
   tools: [getSpreadsheetDataTool, getDatabaseDataTool, getPublicAPIDataTool],
   prompt: `You are an expert public sector advisor, skilled at drafting high-impact decision briefs. Your task is to take a user's initial goal and transform it into a structured, initial decision brief.

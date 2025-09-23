@@ -134,7 +134,7 @@ Your goal is to produce a more detailed, evidence-based, and robust version of t
 
 **Original Brief (JSON):**
 \`\`\`json
-{{{jsonStringify existingBrief}}}
+{{existingBrief}}
 \`\`\`
 
 **User's Answers:**
@@ -155,13 +155,7 @@ const refineBriefFlow = ai.defineFlow(
   async (input) => {
     console.log('AGENT: Starting refineBriefFlow with input:', input);
 
-    // The prompt needs the brief to be a string, so we serialize it.
-    const promptInput = {
-        ...input,
-        jsonStringify: (obj: any) => JSON.stringify(obj, null, 2),
-    };
-
-    const { output } = await refineBriefPrompt(promptInput);
+    const { output } = await refineBriefPrompt(input);
     
     if (!output) {
       throw new Error('The agent failed to generate a refined brief.');
