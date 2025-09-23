@@ -2,7 +2,6 @@
 'use server';
 
 import { initializeAdmin } from './server-admin';
-import { cookies } from 'next/headers';
 import type { AuthenticatedUser, UserProfile } from '@/lib/types';
 import type { DecodedIdToken } from 'firebase-admin/auth';
 
@@ -13,7 +12,7 @@ type AuthResult = {
 
 // This function gets the authenticated user from a session cookie value.
 // It's designed to be used in server-side components and server actions.
-export async function getAuthenticatedUser(sessionCookie?: string): Promise<AuthResult> {
+export async function getAuthenticatedUser(sessionCookie: string): Promise<AuthResult> {
   const { auth } = initializeAdmin();
 
   if (!sessionCookie) {

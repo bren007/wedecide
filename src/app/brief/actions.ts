@@ -96,6 +96,9 @@ export async function createBrief(
 export async function getBrief(id: string): Promise<DecisionBrief | null> {
   try {
     const sessionCookie = cookies().get('session')?.value;
+     if (!sessionCookie) {
+        throw new Error('Authentication session not found.');
+    }
     const { user } = await getAuthenticatedUser(sessionCookie);
     const { db } = initializeAdmin();
 

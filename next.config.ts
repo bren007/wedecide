@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb', // Default is 1mb
+      executionTimeout: 120, // Default is around 15s
+    },
   },
   allowedDevOrigins: [
     'https://*.cluster-ys234awlzbhwoxmkkse6qo3fz6.cloudworkstations.dev',
