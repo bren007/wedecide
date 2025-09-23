@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { seedFirstUser } from './actions';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,6 +23,31 @@ export default function LoginPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Special case to seed the first admin user
+    if (email === 'seed@we-decide.com') {
+      try {
+        await seedFirstUser();
+        toast({
+          title: 'Database Seeded',
+          description: 'The first admin user and organization have been created. Please log in with the credentials provided.',
+        });
+        setEmail('admin@we-decide.com');
+        setPassword('password'); // Pre-fill for convenience
+        setIsLoading(false);
+        return;
+      } catch (error: any) {
+        toast({
+          title: 'Seeding Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
+
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
@@ -52,7 +78,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+          <CardDescription>
+            Enter your credentials to access your account.
+            To set up the first user, enter `seed@we-decide.com` as the email.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignIn} className="space-y-4">
@@ -81,12 +110,6 @@ export default function LoginPage() {
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
-           <p className="mt-4 text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/signup" className="underline">
-                Sign up
-              </Link>
-            </p>
         </CardContent>
       </Card>
     </div>

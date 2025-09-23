@@ -1,0 +1,66 @@
+
+'use server';
+
+import { initializeAdmin } from '@/lib/firebase/server-admin';
+import type { UserProfile } from '@/lib/types';
+
+/**
+ * This is a one-time server action to "seed" the database with the first user and tenant.
+ * In a real B2B application, this would be handled by a secure, internal admin panel.
+ * For this prototype, we expose it as a server action triggered by a special login.
+ */
+export async function seedFirstUser() {
+  const { auth, db } = initializeAdmin();
+
+  const seedData = {
+    email: 'admin@we-decide.com',
+    password: 'password', // For simplicity in the prototype
+    displayName: 'Founding Admin',
+    tenantId: 'tenant-001',
+    tenantName: 'WeDecide Global Corp',
+  };
+  
+  // 1. Check if the user already exists
+  try {
+    await auth.getUserByEmail(seedData.email);
+    console.log('Seed user already exists. Skipping creation.');
+    return;
+  } catch (error: any) {
+    if (error.code !== 'auth/user-not-found') {
+      throw error; // Re-throw unexpected errors
+    }
+    // User does not exist, so we can proceed.
+  }
+
+  // 2. Create the user in Firebase Auth
+  console.log(`Creating user: ${seedData.email}`);
+  const userRecord = await auth.createUser({
+    email: seedData.email,
+    password: seedData.password,
+    displayName: seedData.displayName,
+  });
+
+  // 3. Set custom claims for role and tenant
+  console.log(`Setting custom claims for user: ${userRecord.uid}`);
+  await auth.setCustomUserClaims(userRecord.uid, {
+    role: 'admin',
+    tenantId: seedData.tenantId,
+  });
+
+  // 4. Create the user profile in Firestore
+  console.log(`Creating user profile in Firestore for UID: ${userRecord.uid}`);
+  const userProfile: UserProfile = {
+    uid: userRecord.uid,
+    email: seedData.email,
+    displayName: seedData.displayName,
+    role: 'admin',
+    tenantId: seedData.tenantId,
+    createdAt: new Date().toISOString(),
+  };
+  await db.collection('users').doc(userRecord.uid).set(userProfile);
+  
+  // 5. In a real app, we might also create the Tenant document itself.
+  // For now, the tenantId claim is sufficient for authorization.
+  
+  console.log('Database seeding successful.');
+}
