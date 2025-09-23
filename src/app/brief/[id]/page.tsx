@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import type { DecisionBrief } from '@/lib/types';
 import { AppLayout } from '@/components/app-sidebar';
@@ -22,18 +22,22 @@ type FormValues = {
   [key: string]: string;
 };
 
-export default function BriefPage({ params }: { params: { id: string } }) {
+export default function BriefPage() {
   const [brief, setBrief] = useState<DecisionBrief | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
+  const params = useParams();
   
-  const briefId = params.id;
+  const briefId = params.id as string;
 
-  const methods = useForm<FormValues>();
+  const methods = useForm<FormValues>({
+    mode: 'onChange'
+  });
 
   useEffect(() => {
+    if (!briefId) return;
     const fetchBrief = async () => {
       setIsLoading(true);
       const fetchedBrief = await getBrief(briefId);
