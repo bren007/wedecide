@@ -20,7 +20,7 @@ import { Info } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 type FormValues = {
-  [key: string]: string;
+  responses: Record<string, string>;
 };
 
 function RefineForm({ brief }: { brief: DecisionBrief }) {
@@ -35,22 +35,34 @@ function RefineForm({ brief }: { brief: DecisionBrief }) {
     if (!agentQuestions || agentQuestions.length === 0) {
       return z.object({});
     }
-    const schemaShape = agentQuestions.reduce((acc, q) => {
-      acc[q.question] = z.string().min(1, 'This field is required.');
+    const schemaShape = agentQuestions.reduce((acc, _q, index) => {
+      acc[index] = z.string().min(1, 'This field is required.');
       return acc;
     }, {} as Record<string, z.ZodString>);
-    return z.object(schemaShape);
+    
+    return z.object({
+      responses: z.object(schemaShape)
+    });
   }, [agentQuestions]);
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
     mode: 'onChange',
+    defaultValues: {
+      responses: {},
+    },
   });
 
   const onSubmit = async (data: FormValues) => {
+    // Transform the indexed responses back to the { question: answer } format
+    const userResponses = agentQuestions.reduce((acc, q, index) => {
+      acc[q.question] = data.responses[index];
+      return acc;
+    }, {} as Record<string, string>);
+
     startTransition(async () => {
       try {
-        await addBriefVersion(brief.id, data);
+        await addBriefVersion(brief.id, userResponses);
         toast({
           title: 'Brief Refined',
           description: 'The agent has updated the brief with your answers.',
@@ -83,7 +95,7 @@ function RefineForm({ brief }: { brief: DecisionBrief }) {
               <FormField
                 key={i}
                 control={methods.control}
-                name={q.question}
+                name={`responses.${i}`}
                 render={({ field }) => (
                   <FormItem>
                     <Label htmlFor={field.name} className="font-semibold text-sm">{q.question}</Label>
