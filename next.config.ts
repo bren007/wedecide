@@ -1,3 +1,4 @@
+
 import 'dotenv/config';
 import type {NextConfig} from 'next';
 
@@ -30,10 +31,10 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    allowedDevOrigins: [
-      'https://*.cluster-ys234awlzbhwoxmkkse6qo3fz6.cloudworkstations.dev',
-    ],
   },
+  allowedDevOrigins: [
+    'https://*.cluster-ys234awlzbhwoxmkkse6qo3fz6.cloudworkstations.dev',
+  ],
 };
 
 export default nextConfig;
