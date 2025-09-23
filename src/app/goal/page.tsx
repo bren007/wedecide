@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,32 +15,30 @@ export default function GoalPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [goal, setGoal] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!goal.trim() || !user) return;
     
-    console.log('handleSubmit: Starting...');
-    setIsLoading(true);
-    
-    try {
-      console.log('handleSubmit: Calling startBriefingProcess with goal:', goal);
-      // 1. Call the single, consolidated server action
-      const newBriefId = await startBriefingProcess(goal);
+    startTransition(async () => {
+      try {
+        console.log('handleSubmit: Calling startBriefingProcess with goal:', goal);
+        // 1. Call the single, consolidated server action
+        const newBriefId = await startBriefingProcess(goal);
 
-      console.log('handleSubmit: Success! Received new brief ID:', newBriefId);
-      // 2. Redirect to the new brief's page
-      router.push(`/brief/${newBriefId}`);
+        console.log('handleSubmit: Success! Received new brief ID:', newBriefId);
+        // 2. Redirect to the new brief's page
+        router.push(`/brief/${newBriefId}`);
 
-    } catch (error: any) {
-      console.error('handleSubmit: Caught an error', error);
-      toast({
-        title: 'Error',
-        description: `Failed to create the brief: ${error.message}`,
-        variant: 'destructive'
-      });
-      setIsLoading(false);
-    }
+      } catch (error: any) {
+        console.error('handleSubmit: Caught an error', error);
+        toast({
+          title: 'Error',
+          description: `Failed to create the brief: ${error.message}`,
+          variant: 'destructive'
+        });
+      }
+    });
   };
 
   return (
@@ -58,8 +57,8 @@ export default function GoalPage() {
                 rows={5}
                 className="text-lg"
               />
-              <Button onClick={handleSubmit} disabled={isLoading || !goal.trim()} size="lg">
-                {isLoading ? 'Agent is thinking...' : 'Start Brief'}
+              <Button onClick={handleSubmit} disabled={isPending || !goal.trim()} size="lg">
+                {isPending ? 'Agent is thinking...' : 'Start Brief'}
               </Button>
             </CardContent>
           </Card>
