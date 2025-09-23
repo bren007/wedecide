@@ -82,7 +82,7 @@ const getSpreadsheetDataTool = ai.defineTool(
   {
     name: 'getSpreadsheetData',
     description: 'Retrieves financial and KPI data from a spreadsheet for the specified project.',
-    inputSchema: z.object({}),
+    inputSchema: z.undefined(),
     outputSchema: SpreadsheetDataSchema,
   },
   async () => {
@@ -95,7 +95,7 @@ const getDatabaseDataTool = ai.defineTool(
   {
     name: 'getDatabaseData',
     description: 'Retrieves project details from an internal database.',
-    inputSchema: z.object({}),
+    inputSchema: z.undefined(),
     outputSchema: DatabaseDataSchema,
   },
   async () => {
@@ -108,7 +108,7 @@ const getPublicAPIDataTool = ai.defineTool(
   {
     name: 'getPublicAPIData',
     description: 'Retrieves public demographic and economic data from an external API.',
-    inputSchema: z.object({}),
+    inputSchema: z.undefined(),
     outputSchema: PublicAPIDataSchema,
   },
   async () => {
