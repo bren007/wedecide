@@ -11,9 +11,9 @@ type AuthResult = {
 
 // This function gets the authenticated user from the request cookies.
 // It's designed to be used in server-side components and server actions.
-export async function getAuthenticatedUser(): Promise<AuthResult> {
+export async function getAuthenticatedUser(sessionCookieValue?: string): Promise<AuthResult> {
   const { auth } = initializeAdmin();
-  const sessionCookie = cookies().get('session')?.value;
+  const sessionCookie = sessionCookieValue ?? cookies().get('session')?.value;
 
   if (!sessionCookie) {
     return { user: null, decodedToken: null };

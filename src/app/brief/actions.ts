@@ -7,6 +7,7 @@ import type { BriefVersion, DecisionBrief, DecisionBriefContent } from '@/lib/ty
 import { generateInitialBrief, type GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
 import { refineBrief } from '@/ai/flows/refine-brief';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 
 /**
  * A single server action that orchestrates the entire initial brief creation process.
@@ -23,6 +24,11 @@ export async function startBriefingProcess(goal: string): Promise<string> {
   }
   
   try {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) {
+      throw new Error('Authentication session not found.');
+    }
+
     // 1. Call the agentic AI flow
     console.log('startBriefingProcess: Calling generateInitialBrief...');
     const result = await generateInitialBrief({ goal });
@@ -30,7 +36,7 @@ export async function startBriefingProcess(goal: string): Promise<string> {
 
     // 2. Create the brief in the database
     console.log('startBriefingProcess: Calling createBrief...');
-    const newBriefId = await createBrief(result);
+    const newBriefId = await createBrief(result, sessionCookie);
     console.log('startBriefingProcess: createBrief successful. New ID:', newBriefId);
 
 
@@ -47,9 +53,10 @@ export async function startBriefingProcess(goal: string): Promise<string> {
 
 // This action creates a new Decision Brief document in Firestore.
 export async function createBrief(
-  briefData: GenerateInitialBriefOutput
+  briefData: GenerateInitialBriefOutput,
+  sessionCookie: string
 ): Promise<string> {
-  const { user } = await getAuthenticatedUser();
+  const { user } = await getAuthenticatedUser(sessionCookie);
   const { db } = initializeAdmin();
 
   if (!user || !user.profile.tenantId) {
@@ -115,7 +122,8 @@ export async function getBrief(id: string): Promise<DecisionBrief | null> {
 
 export async function addBriefVersion(briefId: string, userResponses: Record<string, string>) {
     console.log(`addBriefVersion: Action initiated for briefId: ${briefId}`);
-    const { user } = await getAuthenticatedUser();
+    const sessionCookie = cookies().get('session')?.value;
+    const { user } = await getAuthenticatedUser(sessionCookie);
     const { db } = initializeAdmin();
 
     if (!user || !user.profile.tenantId) {
