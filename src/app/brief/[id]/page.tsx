@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useTransition, useMemo } from 'react';
@@ -37,7 +36,7 @@ function RefineForm({ brief }: { brief: DecisionBrief }) {
       return z.object({});
     }
     const schemaShape = agentQuestions.reduce((acc, q) => {
-      acc[q.question] = z.string({required_error: "This field is required."}).min(1, 'This field is required.');
+      acc[q.question] = z.string().min(1, 'This field is required.');
       return acc;
     }, {} as Record<string, z.ZodString>);
     return z.object(schemaShape);
