@@ -6,7 +6,6 @@ import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import type { BriefVersion, DecisionBrief, DecisionBriefContent } from '@/lib/types';
 import { generateInitialBrief, type GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
 import { refineBrief } from '@/ai/flows/refine-brief';
-import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -41,7 +40,7 @@ export async function createBrief(
   const { user } = await getAuthenticatedUser();
   const { db } = initializeAdmin();
 
-  if (!user) {
+  if (!user || !user.profile.tenantId) {
     throw new Error('You must be logged in to create a brief.');
   }
 
@@ -73,14 +72,25 @@ export async function createBrief(
 
 export async function getBrief(id: string): Promise<DecisionBrief | null> {
   try {
+    const { user } = await getAuthenticatedUser();
     const { db } = initializeAdmin();
-    const briefDoc = await db.collection('decisionBriefs').doc(id).get();
 
-    if (!briefDoc.exists) {
+    if (!user || !user.profile.tenantId) {
+        throw new Error('Authentication required.');
+    }
+
+    const briefDoc = await db.collection('decisionBriefs')
+        .where('id', '==', id)
+        .where('tenantId', '==', user.profile.tenantId)
+        .limit(1)
+        .get();
+
+    if (briefDoc.empty) {
+      console.log(`No brief found with id ${id} for tenant ${user.profile.tenantId}`);
       return null;
     }
-    // Note: We're not doing RBAC/tenancy checks here yet, but will in middleware
-    return briefDoc.data() as DecisionBrief;
+    
+    return briefDoc.docs[0].data() as DecisionBrief;
   } catch (error) {
     console.error(`Failed to fetch brief ${id}`, error);
     return null;
@@ -91,18 +101,22 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
     const { user } = await getAuthenticatedUser();
     const { db } = initializeAdmin();
 
-    if (!user) {
+    if (!user || !user.profile.tenantId) {
         throw new Error('You must be logged in to refine a brief.');
     }
 
-    const briefRef = db.collection('decisionBriefs').doc(briefId);
-    const briefDoc = await briefRef.get();
-
-    if (!briefDoc.exists) {
-        throw new Error('Brief not found.');
+    const briefQuery = await db.collection('decisionBriefs')
+        .where('id', '==', briefId)
+        .where('tenantId', '==', user.profile.tenantId)
+        .limit(1)
+        .get();
+        
+    if (briefQuery.empty) {
+        throw new Error('Brief not found or you do not have permission to access it.');
     }
 
-    const existingBrief = briefDoc.data() as DecisionBrief;
+    const briefRef = briefQuery.docs[0].ref;
+    const existingBrief = briefQuery.docs[0].data() as DecisionBrief;
     const latestVersion = existingBrief.versions.at(-1);
 
     if (!latestVersion) {
@@ -120,16 +134,11 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
         createdAt: new Date().toISOString(),
         createdBy: user.uid,
         content: refinedContent,
-        // The refineBrief flow does not currently ask follow-up questions,
-        // but it could be extended to do so.
-        agentQuestions: [],
+        agentQuestions: [], // The refineBrief flow does not ask follow-up questions
         userResponses: userResponses,
     };
 
-    // Atomically update the versions array
-    // We need to first store the user responses on the *previous* version
-    // before adding the new one. This is tricky to do atomically with arrayUnion.
-    // A transaction is the robust way to handle this.
+    // A transaction is the robust way to handle this update.
     await db.runTransaction(async (transaction) => {
       const doc = await transaction.get(briefRef);
       if (!doc.exists) {
@@ -137,9 +146,12 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
       }
       const data = doc.data() as DecisionBrief;
       const currentVersions = data.versions;
+      
+      // The user responses should be stored with the version that *asked* the questions
       if (currentVersions.length > 0) {
         currentVersions[currentVersions.length - 1].userResponses = userResponses;
       }
+
       currentVersions.push(newVersion);
       transaction.update(briefRef, { versions: currentVersions });
     });

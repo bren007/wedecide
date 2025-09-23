@@ -1,34 +1,34 @@
 
+import type { NextRequest } from 'next/server';
 import { initializeAdmin } from './server-admin';
-import { cookies } from 'next/headers';
-import type { AuthenticatedUser, UserProfile } from '@/lib/types';
 import type { DecodedIdToken } from 'firebase-admin/auth';
+import type { AuthenticatedUser, UserProfile } from '../types';
 
 type AuthResult = {
   user: AuthenticatedUser | null;
   decodedToken: DecodedIdToken | null;
 };
 
-// This function gets the authenticated user from the request cookies.
-// It's designed to be used in server-side components and server actions.
-export async function getAuthenticatedUser(): Promise<AuthResult> {
+// This is a separate auth function specifically for usage in Next.js middleware.
+// It directly uses the `request` object, which is not available in Server Actions.
+export async function getAuthenticatedUser(request: NextRequest): Promise<AuthResult> {
   const { auth } = initializeAdmin();
-  const sessionCookie = cookies().get('session')?.value;
+  const session = request.cookies.get('session')?.value;
 
-  if (!sessionCookie) {
+  if (!session) {
     return { user: null, decodedToken: null };
   }
 
   try {
-    const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+    const decodedToken = await auth.verifySessionCookie(session, true);
     
     const userProfile: UserProfile = {
         uid: decodedToken.uid,
         email: decodedToken.email || '',
         displayName: decodedToken.name || '',
-        role: decodedToken.role || 'member', // Default to 'member' if not set
+        role: decodedToken.role || 'member',
         tenantId: decodedToken.tenantId || '',
-        createdAt: '', // Not available in token
+        createdAt: '',
     };
 
     const user: AuthenticatedUser = {
@@ -42,8 +42,8 @@ export async function getAuthenticatedUser(): Promise<AuthResult> {
       providerData: [], 
       metadata: {},
       profile: userProfile,
-      getIdToken: async () => sessionCookie,
-      getIdTokenResult: async () => ({ token: sessionCookie, claims: decodedToken, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
+      getIdToken: async () => session,
+      getIdTokenResult: async () => ({ token: session, claims: decodedToken, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
       reload: async () => {},
       delete: async () => {},
       toJSON: () => ({ ...decodedToken }),
@@ -51,7 +51,7 @@ export async function getAuthenticatedUser(): Promise<AuthResult> {
 
     return { user, decodedToken };
   } catch (error) {
-    console.warn('Could not verify session cookie. User is not authenticated.', error);
+    console.warn('Could not verify session cookie in middleware.', error);
     return { user: null, decodedToken: null };
   }
 }
