@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow for refining a decision brief based on user feedback.
@@ -134,7 +135,7 @@ Your goal is to produce a more detailed, evidence-based, and robust version of t
 
 **Original Brief (JSON):**
 \`\`\`json
-{{existingBrief}}
+{{{JSONstringify existingBrief}}}
 \`\`\`
 
 **User's Answers:**
@@ -154,8 +155,13 @@ const refineBriefFlow = ai.defineFlow(
   },
   async (input) => {
     console.log('AGENT: Starting refineBriefFlow with input:', input);
+    
+    const promptInput = {
+      ...input,
+      JSONstringify: (obj: any) => JSON.stringify(obj, null, 2),
+    };
 
-    const { output } = await refineBriefPrompt(input);
+    const { output } = await refineBriefPrompt(promptInput);
     
     if (!output) {
       throw new Error('The agent failed to generate a refined brief.');

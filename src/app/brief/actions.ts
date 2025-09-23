@@ -145,15 +145,18 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
         throw new Error("Document does not exist!");
       }
       const data = doc.data() as DecisionBrief;
-      const currentVersions = data.versions;
+      const currentVersions = data.versions || [];
       
       // The user responses should be stored with the version that *asked* the questions
       if (currentVersions.length > 0) {
-        currentVersions[currentVersions.length - 1].userResponses = userResponses;
+        const lastVersion = currentVersions[currentVersions.length - 1];
+        if (!lastVersion.userResponses) {
+            lastVersion.userResponses = userResponses;
+        }
       }
 
-      currentVersions.push(newVersion);
-      transaction.update(briefRef, { versions: currentVersions });
+      const updatedVersions = [...currentVersions, newVersion];
+      transaction.update(briefRef, { versions: updatedVersions });
     });
     
     // Invalidate the cache for the brief page
