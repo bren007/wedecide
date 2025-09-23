@@ -1,18 +1,24 @@
-
 'use client';
 
 import {
+  Sidebar,
   SidebarContent,
   SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarProvider,
+  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { LayoutDashboard, FilePlus2, ClipboardList, Landmark } from 'lucide-react';
+import { Target, Users, Landmark, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from './auth-provider';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Button } from './ui/button';
 
 function Logo() {
   return (
@@ -40,6 +46,7 @@ function Logo() {
 function NavLinks() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
+  const { user } = useAuth();
   const isActive = (path: string) => pathname === path;
 
   const handleLinkClick = () => {
@@ -49,52 +56,80 @@ function NavLinks() {
   return (
     <SidebarMenu>
         <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/submit')}>
-          <Link href="/submit" onClick={handleLinkClick}>
-            <FilePlus2 />
-            <span>Decision Preparation</span>
+        <SidebarMenuButton asChild isActive={isActive('/goal')}>
+          <Link href="/goal" onClick={handleLinkClick}>
+            <Target />
+            <span>New Brief</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/')}>
-          <Link href="/" onClick={handleLinkClick}>
-            <LayoutDashboard />
-            <span>Secretariat Dashboard</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/meeting')}>
-          <Link href="/meeting" onClick={handleLinkClick}>
-            <ClipboardList />
-            <span>Decision Making</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/past-decisions')}>
-          <Link href="/past-decisions" onClick={handleLinkClick}>
+        <SidebarMenuButton asChild isActive={isActive('/decision-bank')}>
+          <Link href="/decision-bank" onClick={handleLinkClick}>
             <Landmark />
             <span>Decision Bank</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
+      {user?.profile.role === 'admin' && (
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild isActive={isActive('/admin')}>
+            <Link href="/admin" onClick={handleLinkClick}>
+              <Users />
+              <span>Admin</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )}
     </SidebarMenu>
   );
 }
 
+function UserProfile() {
+    const { user, signOut } = useAuth();
+    if (!user) return null;
 
-export function AppSidebar() {
+    return (
+        <div className="mt-auto p-2">
+            <Separator className="mb-2" />
+            <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+                    <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 overflow-hidden">
+                    <p className="text-sm font-medium truncate">{user.displayName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={signOut} className="h-8 w-8">
+                    <LogOut className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+export function AppLayout({ children }: { children: React.ReactNode}) {
   return (
-    <>
-      <SidebarHeader>
-        <Logo />
-      </SidebarHeader>
-      <Separator />
-      <SidebarContent>
-        <NavLinks />
-      </SidebarContent>
-    </>
-  );
+    <SidebarProvider>
+        <Sidebar>
+            <SidebarHeader>
+                <Logo />
+            </SidebarHeader>
+            <Separator />
+            <SidebarContent>
+                <NavLinks />
+            </SidebarContent>
+            <UserProfile />
+        </Sidebar>
+        <SidebarInset>
+            <header className="p-4 md:hidden">
+                <SidebarTrigger />
+            </header>
+            <main className="flex-1 p-4 md:p-6 lg:p-8">
+                {children}
+            </main>
+        </SidebarInset>
+    </SidebarProvider>
+  )
 }
