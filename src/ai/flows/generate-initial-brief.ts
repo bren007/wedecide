@@ -146,6 +146,7 @@ const generateBriefPrompt = ai.definePrompt({
     *   To improve the brief, you must ask the user for more information.
     *   Generate a list of 3-5 specific, insightful questions that will help you flesh out the 'Strategic Case', 'Options Analysis', and other key sections in the next iteration.
     *   Focus your questions on understanding the nuances, risks, stakeholders, and desired outcomes. Avoid simple yes/no questions.
+    *   **Important**: For the 'agentQuestions' field, return only the array of questions.
 
 **Available Strategic Goals for Alignment:**
 {{#each strategicGoals}}
