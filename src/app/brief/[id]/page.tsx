@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { notFound, useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import type { DecisionBrief } from '@/lib/types';
 import { AppLayout } from '@/components/app-sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import LoadingBriefPage from './loading';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 type FormValues = {
   [key: string]: string;
@@ -27,27 +28,28 @@ export default function BriefPage({ params }: { params: { id: string } }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { isValid } } = useForm<FormValues>();
+  
+  const briefId = params.id;
+
+  const methods = useForm<FormValues>();
 
   useEffect(() => {
     const fetchBrief = async () => {
       setIsLoading(true);
-      const fetchedBrief = await getBrief(params.id);
+      const fetchedBrief = await getBrief(briefId);
       if (fetchedBrief) {
         setBrief(fetchedBrief);
       }
       setIsLoading(false);
     };
     fetchBrief();
-  }, [params.id]);
+  }, [briefId]);
 
   const onSubmit = async (data: FormValues) => {
     if (!brief) return;
     
-    console.log('BriefPage onSubmit: Starting transition...');
     startTransition(async () => {
       try {
-        console.log('BriefPage onSubmit: Calling addBriefVersion with data:', data);
         await addBriefVersion(brief.id, data);
         toast({
           title: 'Brief Refined',
@@ -55,16 +57,13 @@ export default function BriefPage({ params }: { params: { id: string } }) {
         });
         
         // Refetch data after mutation
-        console.log('BriefPage onSubmit: Refetching brief...');
-        const fetchedBrief = await getBrief(params.id);
+        const fetchedBrief = await getBrief(brief.id);
         if (fetchedBrief) {
             setBrief(fetchedBrief);
         }
         router.refresh();
-        console.log('BriefPage onSubmit: Transition complete.');
 
       } catch (error: any) {
-        console.error('BriefPage onSubmit: Caught an error', error);
         toast({
           title: 'Error',
           description: `Failed to refine the brief: ${error.message}`,
@@ -144,28 +143,41 @@ export default function BriefPage({ params }: { params: { id: string } }) {
                         <CardDescription>Answer the agent's questions to generate a more detailed version.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                            {agentQuestions.map((q, i) => (
-                                <div key={i} className="space-y-2">
-                                    <Label htmlFor={`question-${i}`} className="font-semibold text-sm">{q.question}</Label>
-                                    <Alert className="mt-2 text-sm">
-                                      <Info className="h-4 w-4" />
-                                      <AlertDescription>
-                                        <strong>Rationale:</strong> {q.rationale}
-                                      </AlertDescription>
-                                    </Alert>
-                                    <Textarea
-                                        id={`question-${i}`}
-                                        {...register(q.question, { required: true })}
-                                        placeholder="Your answer..."
-                                        rows={3}
-                                    />
-                                </div>
-                            ))}
-                            <Button type="submit" disabled={isPending || !isValid}>
-                                {isPending ? 'Agent is thinking...' : 'Refine Brief'}
-                            </Button>
-                        </form>
+                        <FormProvider {...methods}>
+                          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+                              {agentQuestions.map((q, i) => (
+                                <FormField
+                                  key={i}
+                                  control={methods.control}
+                                  name={q.question}
+                                  rules={{ required: 'This field is required.' }}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                       <Label htmlFor={field.name} className="font-semibold text-sm">{q.question}</Label>
+                                       <Alert className="mt-2 text-sm">
+                                          <Info className="h-4 w-4" />
+                                          <AlertDescription>
+                                            <strong>Rationale:</strong> {q.rationale}
+                                          </AlertDescription>
+                                       </Alert>
+                                      <FormControl>
+                                        <Textarea
+                                            id={field.name}
+                                            placeholder="Your answer..."
+                                            rows={3}
+                                            {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              ))}
+                              <Button type="submit" disabled={isPending || !methods.formState.isValid}>
+                                  {isPending ? 'Agent is thinking...' : 'Refine Brief'}
+                              </Button>
+                          </form>
+                        </FormProvider>
                     </CardContent>
                 </Card>
              )}
