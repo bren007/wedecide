@@ -11,11 +11,10 @@ type AuthResult = {
   decodedToken: DecodedIdToken | null;
 };
 
-// This function gets the authenticated user from the request cookies.
+// This function gets the authenticated user from a session cookie value.
 // It's designed to be used in server-side components and server actions.
-export async function getAuthenticatedUser(sessionCookieValue?: string): Promise<AuthResult> {
+export async function getAuthenticatedUser(sessionCookie?: string): Promise<AuthResult> {
   const { auth } = initializeAdmin();
-  const sessionCookie = sessionCookieValue ?? cookies().get('session')?.value;
 
   if (!sessionCookie) {
     return { user: null, decodedToken: null };

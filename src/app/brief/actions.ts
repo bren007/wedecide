@@ -34,7 +34,7 @@ export async function startBriefingProcess(goal: string): Promise<string> {
     const result = await generateInitialBrief({ goal });
     console.log('startBriefingProcess: generateInitialBrief successful.');
 
-    // 2. Create the brief in the database
+    // 2. Create the brief in the database, passing the session cookie explicitly
     console.log('startBriefingProcess: Calling createBrief...');
     const newBriefId = await createBrief(result, sessionCookie);
     console.log('startBriefingProcess: createBrief successful. New ID:', newBriefId);
@@ -95,7 +95,8 @@ export async function createBrief(
 
 export async function getBrief(id: string): Promise<DecisionBrief | null> {
   try {
-    const { user } = await getAuthenticatedUser();
+    const sessionCookie = cookies().get('session')?.value;
+    const { user } = await getAuthenticatedUser(sessionCookie);
     const { db } = initializeAdmin();
 
     if (!user || !user.profile.tenantId) {
