@@ -32,7 +32,10 @@ const GenerateInitialBriefOutputSchema = z.object({
     alignmentScore: z.number().describe("A score from 0 to 100 indicating how well the proposal aligns with strategic goals."),
     alignmentRationale: z.string().describe("A brief explanation for the alignment score, referencing specific strategic goals."),
   }),
-  agentQuestions: z.array(z.string()).describe("A list of 3-5 clarifying questions for the user to help refine the brief in the next step."),
+  agentQuestions: z.array(z.object({
+    question: z.string().describe("A specific, insightful question for the user."),
+    rationale: z.string().describe("A brief explanation of why this question is being asked and what information it will help clarify.")
+  })).describe("A list of 3-5 clarifying questions for the user to help refine the brief in the next step."),
 });
 export type GenerateInitialBriefOutput = z.infer<typeof GenerateInitialBriefOutputSchema>;
 
@@ -146,7 +149,7 @@ const generateBriefPrompt = ai.definePrompt({
     *   To improve the brief, you must ask the user for more information.
     *   Generate a list of 3-5 specific, insightful questions that will help you flesh out the 'Strategic Case', 'Options Analysis', and other key sections in the next iteration.
     *   Focus your questions on understanding the nuances, risks, stakeholders, and desired outcomes. Avoid simple yes/no questions.
-    *   **Important**: For the 'agentQuestions' field, return only the array of questions.
+    *   **Important**: For each question, provide both the question itself and a rationale for why you are asking it.
 
 **Available Strategic Goals for Alignment:**
 {{#each strategicGoals}}

@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import LoadingBriefPage from './loading';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 type FormValues = {
   [key: string]: string;
@@ -141,10 +143,16 @@ export default function BriefPage({ params }: { params: { id: string } }) {
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                             {agentQuestions.map((q, i) => (
                                 <div key={i} className="space-y-2">
-                                    <Label htmlFor={`question-${i}`} className="font-semibold text-sm">{q}</Label>
+                                    <Label htmlFor={`question-${i}`} className="font-semibold text-sm">{q.question}</Label>
+                                    <Alert className="mt-2 text-sm">
+                                      <Info className="h-4 w-4" />
+                                      <AlertDescription>
+                                        <strong>Rationale:</strong> {q.rationale}
+                                      </AlertDescription>
+                                    </Alert>
                                     <Textarea
                                         id={`question-${i}`}
-                                        {...register(q, { required: true })}
+                                        {...register(q.question, { required: true })}
                                         placeholder="Your answer..."
                                         rows={3}
                                     />

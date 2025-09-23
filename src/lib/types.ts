@@ -28,12 +28,17 @@ export type Objective = {
   description: string;
 };
 
+export type AgentQuestion = {
+  question: string;
+  rationale: string;
+}
+
 export type BriefVersion = {
   version: number;
   createdAt: string;
   createdBy: string;
   content: DecisionBriefContent;
-  agentQuestions?: string[];
+  agentQuestions?: AgentQuestion[];
   userResponses?: Record<string, string>;
 };
 
