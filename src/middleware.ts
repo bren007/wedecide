@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth-middleware';
 
 // Define paths that are public and don't require authentication
-const publicPaths = ['/login'];
+const publicPaths = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
