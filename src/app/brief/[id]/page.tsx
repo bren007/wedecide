@@ -1,36 +1,80 @@
-import { initializeAdmin } from '@/lib/firebase/server-admin';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { notFound, useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
 import type { DecisionBrief } from '@/lib/types';
-import { notFound } from 'next/navigation';
 import { AppLayout } from '@/components/app-sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { StrategicAlignment } from '@/components/strategic-alignment';
+import { getBrief, addBriefVersion } from '@/app/brief/actions';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import LoadingBriefPage from './loading';
 
-async function getBrief(id: string): Promise<DecisionBrief | null> {
-  try {
-    const { db } = initializeAdmin();
-    const briefDoc = await db.collection('decisionBriefs').doc(id).get();
+type FormValues = {
+  [key: string]: string;
+};
 
-    if (!briefDoc.exists) {
-      return null;
+export default function BriefPage({ params }: { params: { id: string } }) {
+  const [brief, setBrief] = useState<DecisionBrief | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { register, handleSubmit, formState: { isValid } } = useForm<FormValues>();
+
+  useEffect(() => {
+    const fetchBrief = async () => {
+      setIsLoading(true);
+      const fetchedBrief = await getBrief(params.id);
+      if (fetchedBrief) {
+        setBrief(fetchedBrief);
+      }
+      setIsLoading(false);
+    };
+    fetchBrief();
+  }, [params.id]);
+
+  const onSubmit = async (data: FormValues) => {
+    if (!brief) return;
+    setIsSubmitting(true);
+    try {
+      await addBriefVersion(brief.id, data);
+      toast({
+        title: 'Brief Refined',
+        description: 'The agent has updated the brief with your answers.',
+      });
+      // Refetch the data by refreshing the page
+      router.refresh();
+       const fetchedBrief = await getBrief(params.id);
+       if (fetchedBrief) {
+         setBrief(fetchedBrief);
+       }
+    } catch (error: any) {
+      console.error('Failed to refine brief', error);
+      toast({
+        title: 'Error',
+        description: `Failed to refine the brief: ${error.message}`,
+        variant: 'destructive',
+      });
     }
-    // Note: We're not doing RBAC/tenancy checks here yet, but will in middleware
-    return briefDoc.data() as DecisionBrief;
-  } catch (error) {
-    console.error(`Failed to fetch brief ${id}`, error);
-    return null;
+    setIsSubmitting(false);
+  };
+  
+  if (isLoading) {
+    return <LoadingBriefPage />;
   }
-}
-
-export default async function BriefPage({ params }: { params: { id: string } }) {
-  const brief = await getBrief(params.id);
 
   if (!brief) {
-    notFound();
+    return notFound();
   }
 
   const latestVersion = brief.versions.at(-1)!;
   const { content, agentQuestions } = latestVersion;
+  const hasQuestions = agentQuestions && agentQuestions.length > 0;
 
   return (
     <AppLayout>
@@ -83,20 +127,32 @@ export default async function BriefPage({ params }: { params: { id: string } }) 
           </div>
 
           <div className="space-y-6 lg:col-span-1">
-            <Card className="bg-amber-50 border-amber-200">
-                <CardHeader>
-                    <CardTitle>Agent's Questions for Clarification</CardTitle>
-                    <CardDescription>Answer these questions to help the agent refine the brief.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {agentQuestions?.map((q, i) => (
-                        <div key={i}>
-                            <p className="font-semibold text-sm">{q}</p>
-                            {/* We will add input fields here later */}
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
+             {hasQuestions && (
+                <Card className="bg-amber-50 border-amber-200">
+                    <CardHeader>
+                        <CardTitle>Refine the Brief</CardTitle>
+                        <CardDescription>Answer the agent's questions to generate a more detailed version.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                            {agentQuestions.map((q, i) => (
+                                <div key={i} className="space-y-2">
+                                    <Label htmlFor={`question-${i}`} className="font-semibold text-sm">{q}</Label>
+                                    <Textarea
+                                        id={`question-${i}`}
+                                        {...register(q, { required: true })}
+                                        placeholder="Your answer..."
+                                        rows={3}
+                                    />
+                                </div>
+                            ))}
+                            <Button type="submit" disabled={isSubmitting || !isValid}>
+                                {isSubmitting ? 'Agent is thinking...' : 'Refine Brief'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+             )}
           </div>
         </div>
       </div>
