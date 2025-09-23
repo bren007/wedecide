@@ -10,9 +10,12 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
 /**
- * A single server action that orchestrates the entire initial brief creation process.
- * 1. Calls the AI agent to generate the initial brief.
- * 2. Creates the brief document in Firestore.
+ * A server action that orchestrates the entire initial brief creation process.
+ * This is a more robust, two-step process to avoid losing auth context on long-running AI flows.
+ * 1. Creates an initial, empty brief document in Firestore to get a stable ID. This happens
+ *    within the authenticated user's context.
+ * 2. Calls the AI agent to generate the initial brief content.
+ * 3. Updates the previously created brief document with the AI-generated content.
  * @param goal The user's initial goal statement.
  * @returns The ID of the newly created brief.
  */
@@ -22,58 +25,70 @@ export async function startBriefingProcess(goal: string): Promise<string> {
     console.error('startBriefingProcess: Goal is empty.');
     throw new Error('Goal cannot be empty.');
   }
-  
-  try {
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) {
-      throw new Error('Authentication session not found.');
-    }
 
-    // 1. Call the agentic AI flow
-    console.log('startBriefingProcess: Calling generateInitialBrief...');
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) {
+    console.error('startBriefingProcess: Authentication session not found.');
+    throw new Error('Authentication session not found.');
+  }
+
+  try {
+    // 1. Create a placeholder brief first to get an ID and validate auth.
+    console.log('startBriefingProcess: Creating placeholder brief...');
+    const newBriefId = await createPlaceholderBrief(goal, sessionCookie);
+    console.log('startBriefingProcess: Placeholder brief created with ID:', newBriefId);
+
+    // 2. Call the agentic AI flow to generate content.
+    console.log('startBriefingProcess: Calling generateInitialBrief AI flow...');
     const result = await generateInitialBrief({ goal });
     console.log('startBriefingProcess: generateInitialBrief successful.');
 
-    // 2. Create the brief in the database, passing the session cookie explicitly
-    console.log('startBriefingProcess: Calling createBrief...');
-    const newBriefId = await createBrief(result, sessionCookie);
-    console.log('startBriefingProcess: createBrief successful. New ID:', newBriefId);
+    // 3. Update the placeholder brief with the AI-generated content.
+    console.log('startBriefingProcess: Updating brief with AI content...');
+    await updateBriefWithInitialContent(newBriefId, result, sessionCookie);
+    console.log('startBriefingProcess: Brief update successful.');
 
-
-    // 3. Revalidate path to ensure the new brief page is not stale (optional but good practice)
+    // 4. Revalidate path to ensure the new brief page is not stale.
     revalidatePath(`/brief/${newBriefId}`);
 
     return newBriefId;
   } catch (error) {
     console.error('startBriefingProcess: An error occurred.', error);
+    // In a real app, you might want to delete the placeholder brief if the AI call fails.
     throw error; // Re-throw the error to be caught by the client
   }
 }
 
-
-// This action creates a new Decision Brief document in Firestore.
-export async function createBrief(
-  briefData: GenerateInitialBriefOutput,
-  sessionCookie: string
-): Promise<string> {
+// This is a new function to create a preliminary brief.
+export async function createPlaceholderBrief(goal: string, sessionCookie: string): Promise<string> {
   const { user } = await getAuthenticatedUser(sessionCookie);
   const { db } = initializeAdmin();
 
   if (!user || !user.profile.tenantId) {
-    console.error('createBrief: User not authenticated or missing tenantId.');
     throw new Error('You must be logged in to create a brief.');
   }
-  console.log(`createBrief: Authenticated user ${user.uid} in tenant ${user.profile.tenantId}.`);
 
   const briefsCollection = db.collection('decisionBriefs');
   const newBriefRef = briefsCollection.doc();
+
+  // Create a minimal brief. The content will be populated by the AI later.
+  const placeholderContent: DecisionBriefContent = {
+    goal: goal,
+    title: `Drafting brief for: ${goal.substring(0, 50)}...`,
+    strategicCase: 'Generating...',
+    optionsAnalysis: 'Generating...',
+    recommendation: 'Generating...',
+    financialCase: 'Generating...',
+    alignmentScore: 0,
+    alignmentRationale: 'Generating...',
+  };
 
   const firstVersion: BriefVersion = {
     version: 1,
     createdAt: new Date().toISOString(),
     createdBy: user.uid,
-    content: briefData.brief,
-    agentQuestions: briefData.agentQuestions,
+    content: placeholderContent,
+    agentQuestions: [], // No questions yet
   };
 
   const newBrief: DecisionBrief = {
@@ -84,21 +99,66 @@ export async function createBrief(
     createdBy: user.uid,
     versions: [firstVersion],
   };
-  
-  console.log('createBrief: Preparing to set new brief document with ID:', newBriefRef.id);
-  await newBriefRef.set(newBrief);
-  console.log('createBrief: Document successfully created in Firestore.');
 
+  await newBriefRef.set(newBrief);
   return newBriefRef.id;
 }
 
 
+// This is a new function to update the brief with the AI's output.
+export async function updateBriefWithInitialContent(
+  briefId: string,
+  briefData: GenerateInitialBriefOutput,
+  sessionCookie: string
+): Promise<void> {
+  const { user } = await getAuthenticatedUser(sessionCookie);
+  const { db } = initializeAdmin();
+
+  if (!user || !user.profile.tenantId) {
+    throw new Error('You must be logged in to update a brief.');
+  }
+
+  const briefRef = db.collection('decisionBriefs').doc(briefId);
+  const briefDoc = await briefRef.get();
+
+  if (!briefDoc.exists || briefDoc.data()?.tenantId !== user.profile.tenantId) {
+    throw new Error('Brief not found or you do not have permission to access it.');
+  }
+  
+  const existingBrief = briefDoc.data() as DecisionBrief;
+
+  const firstVersion: BriefVersion = {
+    version: 1,
+    createdAt: existingBrief.versions[0].createdAt,
+    createdBy: existingBrief.versions[0].createdBy,
+    content: briefData.brief, // This is the full content from the AI
+    agentQuestions: briefData.agentQuestions,
+  };
+
+  // Replace the placeholder version with the real one.
+  await briefRef.update({
+    versions: [firstVersion]
+  });
+}
+
+// This function is no longer needed as its logic is split between createPlaceholderBrief and updateBriefWithInitialContent
+/*
+export async function createBrief(
+  briefData: GenerateInitialBriefOutput,
+  sessionCookie: string
+): Promise<string> {
+  // ...
+}
+*/
+
+
 export async function getBrief(id: string): Promise<DecisionBrief | null> {
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) {
+    throw new Error('Authentication session not found.');
+  }
+  
   try {
-    const sessionCookie = cookies().get('session')?.value;
-     if (!sessionCookie) {
-        throw new Error('Authentication session not found.');
-    }
     const { user } = await getAuthenticatedUser(sessionCookie);
     const { db } = initializeAdmin();
 
