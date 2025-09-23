@@ -1,4 +1,6 @@
 
+'use server';
+
 import { initializeAdmin } from './server-admin';
 import { cookies } from 'next/headers';
 import type { AuthenticatedUser, UserProfile } from '@/lib/types';

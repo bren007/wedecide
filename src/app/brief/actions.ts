@@ -123,6 +123,9 @@ export async function getBrief(id: string): Promise<DecisionBrief | null> {
 export async function addBriefVersion(briefId: string, userResponses: Record<string, string>) {
     console.log(`addBriefVersion: Action initiated for briefId: ${briefId}`);
     const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) {
+        throw new Error('Authentication session not found.');
+    }
     const { user } = await getAuthenticatedUser(sessionCookie);
     const { db } = initializeAdmin();
 
