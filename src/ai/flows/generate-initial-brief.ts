@@ -43,7 +43,9 @@ export type GenerateInitialBriefOutput = z.infer<typeof GenerateInitialBriefOutp
 export async function generateInitialBrief(input: GenerateInitialBriefInput): Promise<GenerateInitialBriefOutput> {
     const result = await generateInitialBriefFlow(input);
     // Ensure the original goal is passed through.
-    result.brief.goal = input.goal;
+    if (result.brief) {
+      result.brief.goal = input.goal;
+    }
     return result;
 }
 
