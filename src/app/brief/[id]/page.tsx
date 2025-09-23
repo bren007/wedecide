@@ -44,8 +44,10 @@ export default function BriefPage({ params }: { params: { id: string } }) {
   const onSubmit = async (data: FormValues) => {
     if (!brief) return;
     
+    console.log('BriefPage onSubmit: Starting transition...');
     startTransition(async () => {
       try {
+        console.log('BriefPage onSubmit: Calling addBriefVersion with data:', data);
         await addBriefVersion(brief.id, data);
         toast({
           title: 'Brief Refined',
@@ -53,14 +55,16 @@ export default function BriefPage({ params }: { params: { id: string } }) {
         });
         
         // Refetch data after mutation
+        console.log('BriefPage onSubmit: Refetching brief...');
         const fetchedBrief = await getBrief(params.id);
         if (fetchedBrief) {
             setBrief(fetchedBrief);
         }
         router.refresh();
+        console.log('BriefPage onSubmit: Transition complete.');
 
       } catch (error: any) {
-        console.error('Failed to refine brief', error);
+        console.error('BriefPage onSubmit: Caught an error', error);
         toast({
           title: 'Error',
           description: `Failed to refine the brief: ${error.message}`,

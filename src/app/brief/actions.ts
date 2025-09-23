@@ -16,20 +16,32 @@ import { revalidatePath } from 'next/cache';
  * @returns The ID of the newly created brief.
  */
 export async function startBriefingProcess(goal: string): Promise<string> {
+  console.log('startBriefingProcess: Action initiated with goal:', goal);
    if (!goal) {
+    console.error('startBriefingProcess: Goal is empty.');
     throw new Error('Goal cannot be empty.');
   }
   
-  // 1. Call the agentic AI flow
-  const result = await generateInitialBrief({ goal });
+  try {
+    // 1. Call the agentic AI flow
+    console.log('startBriefingProcess: Calling generateInitialBrief...');
+    const result = await generateInitialBrief({ goal });
+    console.log('startBriefingProcess: generateInitialBrief successful.');
 
-  // 2. Create the brief in the database
-  const newBriefId = await createBrief(result);
+    // 2. Create the brief in the database
+    console.log('startBriefingProcess: Calling createBrief...');
+    const newBriefId = await createBrief(result);
+    console.log('startBriefingProcess: createBrief successful. New ID:', newBriefId);
 
-  // 3. Revalidate path to ensure the new brief page is not stale (optional but good practice)
-  revalidatePath(`/brief/${newBriefId}`);
 
-  return newBriefId;
+    // 3. Revalidate path to ensure the new brief page is not stale (optional but good practice)
+    revalidatePath(`/brief/${newBriefId}`);
+
+    return newBriefId;
+  } catch (error) {
+    console.error('startBriefingProcess: An error occurred.', error);
+    throw error; // Re-throw the error to be caught by the client
+  }
 }
 
 
@@ -41,8 +53,10 @@ export async function createBrief(
   const { db } = initializeAdmin();
 
   if (!user || !user.profile.tenantId) {
+    console.error('createBrief: User not authenticated or missing tenantId.');
     throw new Error('You must be logged in to create a brief.');
   }
+  console.log(`createBrief: Authenticated user ${user.uid} in tenant ${user.profile.tenantId}.`);
 
   const briefsCollection = db.collection('decisionBriefs');
   const newBriefRef = briefsCollection.doc();
@@ -63,8 +77,10 @@ export async function createBrief(
     createdBy: user.uid,
     versions: [firstVersion],
   };
-
+  
+  console.log('createBrief: Preparing to set new brief document with ID:', newBriefRef.id);
   await newBriefRef.set(newBrief);
+  console.log('createBrief: Document successfully created in Firestore.');
 
   return newBriefRef.id;
 }
@@ -98,12 +114,15 @@ export async function getBrief(id: string): Promise<DecisionBrief | null> {
 }
 
 export async function addBriefVersion(briefId: string, userResponses: Record<string, string>) {
+    console.log(`addBriefVersion: Action initiated for briefId: ${briefId}`);
     const { user } = await getAuthenticatedUser();
     const { db } = initializeAdmin();
 
     if (!user || !user.profile.tenantId) {
+        console.error('addBriefVersion: User not authenticated or missing tenantId.');
         throw new Error('You must be logged in to refine a brief.');
     }
+     console.log(`addBriefVersion: Authenticated user ${user.uid} in tenant ${user.profile.tenantId}.`);
 
     const briefQuery = await db.collection('decisionBriefs')
         .where('id', '==', briefId)
@@ -112,6 +131,7 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
         .get();
         
     if (briefQuery.empty) {
+        console.error(`addBriefVersion: Brief not found with ID ${briefId} for tenant ${user.profile.tenantId}.`);
         throw new Error('Brief not found or you do not have permission to access it.');
     }
 
@@ -120,14 +140,17 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
     const latestVersion = existingBrief.versions.at(-1);
 
     if (!latestVersion) {
+        console.error(`addBriefVersion: Cannot refine a brief with no versions (ID: ${briefId}).`);
         throw new Error('Cannot refine a brief with no versions.');
     }
     
     // Call the AI agent to get the refined content
+    console.log('addBriefVersion: Calling refineBrief flow...');
     const refinedContent: DecisionBriefContent = await refineBrief({
         existingBrief: latestVersion.content,
         userResponses,
     });
+     console.log('addBriefVersion: refineBrief flow successful.');
 
     const newVersion: BriefVersion = {
         version: existingBrief.versions.length + 1,
@@ -137,27 +160,13 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
         agentQuestions: [], // The refineBrief flow does not ask follow-up questions
         userResponses: userResponses,
     };
-
-    // A transaction is the robust way to handle this update.
-    await db.runTransaction(async (transaction) => {
-      const doc = await transaction.get(briefRef);
-      if (!doc.exists) {
-        throw new Error("Document does not exist!");
-      }
-      const data = doc.data() as DecisionBrief;
-      const currentVersions = data.versions || [];
-      
-      // The user responses should be stored with the version that *asked* the questions
-      if (currentVersions.length > 0) {
-        const lastVersion = currentVersions[currentVersions.length - 1];
-        if (!lastVersion.userResponses) {
-            lastVersion.userResponses = userResponses;
-        }
-      }
-
-      const updatedVersions = [...currentVersions, newVersion];
-      transaction.update(briefRef, { versions: updatedVersions });
+    
+    console.log(`addBriefVersion: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
+    // Atomically add the new version to the versions array.
+    await briefRef.update({
+        versions: [...existingBrief.versions, newVersion]
     });
+    console.log(`addBriefVersion: Successfully added new version to brief ${briefId}.`);
     
     // Invalidate the cache for the brief page
     revalidatePath(`/brief/${briefId}`);

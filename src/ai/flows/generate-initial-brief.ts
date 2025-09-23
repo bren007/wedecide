@@ -177,6 +177,7 @@ const generateInitialBriefFlow = ai.defineFlow(
     const { output } = await generateBriefPrompt(promptInput);
 
     if (!output) {
+      console.error('AGENT: The generateBriefPrompt returned no output.');
       throw new Error('The agent failed to generate a brief.');
     }
     

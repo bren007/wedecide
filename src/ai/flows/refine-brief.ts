@@ -72,7 +72,7 @@ const getSpreadsheetDataTool = ai.defineTool(
     outputSchema: SpreadsheetDataSchema,
   },
   async () => {
-    console.log('AGENT: Calling getSpreadsheetDataTool');
+    console.log('AGENT (refine): Calling getSpreadsheetDataTool');
     return await getMockSpreadsheetData();
   }
 );
@@ -85,7 +85,7 @@ const getDatabaseDataTool = ai.defineTool(
     outputSchema: DatabaseDataSchema,
   },
   async () => {
-    console.log('AGENT: Calling getDatabaseDataTool');
+    console.log('AGENT (refine): Calling getDatabaseDataTool');
     return await getMockDatabaseData();
   }
 );
@@ -98,7 +98,7 @@ const getPublicAPIDataTool = ai.defineTool(
     outputSchema: PublicAPIDataSchema,
   },
   async () => {
-    console.log('AGENT: Calling getPublicAPIDataTool');
+    console.log('AGENT (refine): Calling getPublicAPIDataTool');
     return await getMockPublicAPIData();
   }
 );
@@ -133,7 +133,7 @@ Your goal is to produce a more detailed, evidence-based, and robust version of t
 3.  **Re-evaluate and Refine:** Update all sections of the brief with the new information. Ensure the options analysis is thorough and the recommendation is well-justified.
 4.  **Do Not Ask More Questions:** Your task is to provide a refined brief, not to continue the conversation. Do not generate new clarification questions.
 
-**Original Brief (JSON):**
+**Original Brief:**
 \`\`\`json
 {{{JSONstringify existingBrief}}}
 \`\`\`
@@ -164,6 +164,7 @@ const refineBriefFlow = ai.defineFlow(
     const { output } = await refineBriefPrompt(promptInput);
     
     if (!output) {
+      console.error('AGENT: The refineBriefPrompt returned no output.');
       throw new Error('The agent failed to generate a refined brief.');
     }
     

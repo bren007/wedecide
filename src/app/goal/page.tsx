@@ -18,16 +18,21 @@ export default function GoalPage() {
 
   const handleSubmit = async () => {
     if (!goal.trim() || !user) return;
+    
+    console.log('handleSubmit: Starting...');
     setIsLoading(true);
+    
     try {
+      console.log('handleSubmit: Calling startBriefingProcess with goal:', goal);
       // 1. Call the single, consolidated server action
       const newBriefId = await startBriefingProcess(goal);
 
+      console.log('handleSubmit: Success! Received new brief ID:', newBriefId);
       // 2. Redirect to the new brief's page
       router.push(`/brief/${newBriefId}`);
 
     } catch (error: any) {
-      console.error('Failed to generate or create brief', error);
+      console.error('handleSubmit: Caught an error', error);
       toast({
         title: 'Error',
         description: `Failed to create the brief: ${error.message}`,
