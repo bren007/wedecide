@@ -1,9 +1,11 @@
 
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, useMemo } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import type { DecisionBrief } from '@/lib/types';
 import { AppLayout } from '@/components/app-sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,8 +34,25 @@ export default function BriefPage() {
   
   const briefId = params.id as string;
 
+  const latestVersion = brief?.versions.at(-1);
+  const agentQuestions = latestVersion?.agentQuestions || [];
+
+  // Dynamically create the validation schema based on the agent questions
+  const validationSchema = useMemo(() => {
+    if (!agentQuestions || agentQuestions.length === 0) {
+      return z.object({});
+    }
+    const schemaShape = agentQuestions.reduce((acc, q) => {
+      acc[q.question] = z.string().min(1, 'This field is required.');
+      return acc;
+    }, {} as Record<string, z.ZodString>);
+    return z.object(schemaShape);
+  }, [agentQuestions]);
+
+
   const methods = useForm<FormValues>({
-    mode: 'onChange'
+    resolver: zodResolver(validationSchema),
+    mode: 'onChange' // Validate on change to enable the button as soon as the form is valid
   });
 
   useEffect(() => {
@@ -64,6 +83,7 @@ export default function BriefPage() {
         const fetchedBrief = await getBrief(brief.id);
         if (fetchedBrief) {
             setBrief(fetchedBrief);
+            methods.reset(); // Reset form state after successful submission
         }
         router.refresh();
 
@@ -84,9 +104,8 @@ export default function BriefPage() {
   if (!brief) {
     return notFound();
   }
-
-  const latestVersion = brief.versions.at(-1)!;
-  const { content, agentQuestions } = latestVersion;
+  
+  const { content } = latestVersion!;
   const hasQuestions = agentQuestions && agentQuestions.length > 0;
 
   return (
@@ -154,7 +173,6 @@ export default function BriefPage() {
                                   key={i}
                                   control={methods.control}
                                   name={q.question}
-                                  rules={{ required: 'This field is required.' }}
                                   render={({ field }) => (
                                     <FormItem>
                                        <Label htmlFor={field.name} className="font-semibold text-sm">{q.question}</Label>
