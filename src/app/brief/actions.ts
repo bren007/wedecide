@@ -1,12 +1,38 @@
+
 'use server';
 
 import { initializeAdmin } from '@/lib/firebase/server-admin';
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
-import type { BriefVersion, DecisionBrief } from '@/lib/types';
-import type { GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
+import type { BriefVersion, DecisionBrief, DecisionBriefContent } from '@/lib/types';
+import { generateInitialBrief, type GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
 import { refineBrief } from '@/ai/flows/refine-brief';
 import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
+
+/**
+ * A single server action that orchestrates the entire initial brief creation process.
+ * 1. Calls the AI agent to generate the initial brief.
+ * 2. Creates the brief document in Firestore.
+ * @param goal The user's initial goal statement.
+ * @returns The ID of the newly created brief.
+ */
+export async function startBriefingProcess(goal: string): Promise<string> {
+   if (!goal) {
+    throw new Error('Goal cannot be empty.');
+  }
+  
+  // 1. Call the agentic AI flow
+  const result = await generateInitialBrief({ goal });
+
+  // 2. Create the brief in the database
+  const newBriefId = await createBrief(result);
+
+  // 3. Revalidate path to ensure the new brief page is not stale (optional but good practice)
+  revalidatePath(`/brief/${newBriefId}`);
+
+  return newBriefId;
+}
+
 
 // This action creates a new Decision Brief document in Firestore.
 export async function createBrief(
@@ -83,11 +109,8 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
         throw new Error('Cannot refine a brief with no versions.');
     }
     
-    // Mark the previous version with the user's responses
-    latestVersion.userResponses = userResponses;
-
     // Call the AI agent to get the refined content
-    const refinedContent = await refineBrief({
+    const refinedContent: DecisionBriefContent = await refineBrief({
         existingBrief: latestVersion.content,
         userResponses,
     });
@@ -99,12 +122,26 @@ export async function addBriefVersion(briefId: string, userResponses: Record<str
         content: refinedContent,
         // The refineBrief flow does not currently ask follow-up questions,
         // but it could be extended to do so.
-        agentQuestions: [], 
+        agentQuestions: [],
+        userResponses: userResponses,
     };
 
-    // Atomically add the new version to the array
-    await briefRef.update({
-        versions: FieldValue.arrayUnion(newVersion)
+    // Atomically update the versions array
+    // We need to first store the user responses on the *previous* version
+    // before adding the new one. This is tricky to do atomically with arrayUnion.
+    // A transaction is the robust way to handle this.
+    await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(briefRef);
+      if (!doc.exists) {
+        throw new Error("Document does not exist!");
+      }
+      const data = doc.data() as DecisionBrief;
+      const currentVersions = data.versions;
+      if (currentVersions.length > 0) {
+        currentVersions[currentVersions.length - 1].userResponses = userResponses;
+      }
+      currentVersions.push(newVersion);
+      transaction.update(briefRef, { versions: currentVersions });
     });
     
     // Invalidate the cache for the brief page

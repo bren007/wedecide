@@ -1,14 +1,14 @@
+
 'use client';
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { generateInitialBrief } from '@/ai/flows/generate-initial-brief';
 import { useAuth } from '@/components/auth-provider';
 import { AppLayout } from '@/components/app-sidebar';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { createBrief } from '@/app/brief/actions';
+import { startBriefingProcess } from '@/app/brief/actions';
 
 export default function GoalPage() {
   const { user } = useAuth();
@@ -21,13 +21,10 @@ export default function GoalPage() {
     if (!goal.trim() || !user) return;
     setIsLoading(true);
     try {
-      // 1. Call the agentic AI flow
-      const result = await generateInitialBrief({ goal });
+      // 1. Call the single, consolidated server action
+      const newBriefId = await startBriefingProcess(goal);
 
-      // 2. Create the brief in the database via a server action
-      const newBriefId = await createBrief(result);
-
-      // 3. Redirect to the new brief's page
+      // 2. Redirect to the new brief's page
       router.push(`/brief/${newBriefId}`);
 
     } catch (error: any) {

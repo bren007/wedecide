@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { DecisionBrief } from '@/lib/types';
@@ -21,7 +22,7 @@ type FormValues = {
 export default function BriefPage({ params }: { params: { id: string } }) {
   const [brief, setBrief] = useState<DecisionBrief | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
   const { register, handleSubmit, formState: { isValid } } = useForm<FormValues>();
@@ -40,28 +41,31 @@ export default function BriefPage({ params }: { params: { id: string } }) {
 
   const onSubmit = async (data: FormValues) => {
     if (!brief) return;
-    setIsSubmitting(true);
-    try {
-      await addBriefVersion(brief.id, data);
-      toast({
-        title: 'Brief Refined',
-        description: 'The agent has updated the brief with your answers.',
-      });
-      // Refetch the data by refreshing the page
-      router.refresh();
-       const fetchedBrief = await getBrief(params.id);
-       if (fetchedBrief) {
-         setBrief(fetchedBrief);
-       }
-    } catch (error: any) {
-      console.error('Failed to refine brief', error);
-      toast({
-        title: 'Error',
-        description: `Failed to refine the brief: ${error.message}`,
-        variant: 'destructive',
-      });
-    }
-    setIsSubmitting(false);
+    
+    startTransition(async () => {
+      try {
+        await addBriefVersion(brief.id, data);
+        toast({
+          title: 'Brief Refined',
+          description: 'The agent has updated the brief with your answers.',
+        });
+        
+        // Refetch data after mutation
+        const fetchedBrief = await getBrief(params.id);
+        if (fetchedBrief) {
+            setBrief(fetchedBrief);
+        }
+        router.refresh();
+
+      } catch (error: any) {
+        console.error('Failed to refine brief', error);
+        toast({
+          title: 'Error',
+          description: `Failed to refine the brief: ${error.message}`,
+          variant: 'destructive',
+        });
+      }
+    });
   };
   
   if (isLoading) {
@@ -128,7 +132,7 @@ export default function BriefPage({ params }: { params: { id: string } }) {
 
           <div className="space-y-6 lg:col-span-1">
              {hasQuestions && (
-                <Card className="bg-amber-50 border-amber-200">
+                <Card className="bg-amber-50 border-amber-200 dark:bg-amber-950/50 dark:border-amber-800">
                     <CardHeader>
                         <CardTitle>Refine the Brief</CardTitle>
                         <CardDescription>Answer the agent's questions to generate a more detailed version.</CardDescription>
@@ -146,8 +150,8 @@ export default function BriefPage({ params }: { params: { id: string } }) {
                                     />
                                 </div>
                             ))}
-                            <Button type="submit" disabled={isSubmitting || !isValid}>
-                                {isSubmitting ? 'Agent is thinking...' : 'Refine Brief'}
+                            <Button type="submit" disabled={isPending || !isValid}>
+                                {isPending ? 'Agent is thinking...' : 'Refine Brief'}
                             </Button>
                         </form>
                     </CardContent>
