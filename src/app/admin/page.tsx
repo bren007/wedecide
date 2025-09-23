@@ -1,3 +1,4 @@
+
 import { AppLayout } from "@/components/app-sidebar";
 
 export default function AdminPage() {
