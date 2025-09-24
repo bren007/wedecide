@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useTransition, useMemo, FC } from 'react';
@@ -16,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import LoadingBriefPage from './loading';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, FileText, Briefcase, Bot } from 'lucide-react';
+import { Info, FileText, Briefcase, Bot, Wand2, Group } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 type FormValues = {
@@ -140,6 +141,7 @@ const DiscoveryForm: FC<{ brief: DecisionBriefV2 }> = ({ brief }) => {
 function DraftView({ brief }: { brief: DecisionBriefV2 }) {
     const latestVersion = brief.versions.at(-1)!;
     const { brief: briefContent, fullArtifact } = latestVersion;
+    const [refinementInstruction, setRefinementInstruction] = useState('');
 
     if (!briefContent || !fullArtifact) return null;
 
@@ -205,6 +207,31 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
                          <StrategicAlignment score={briefContent.alignmentScore} />
                     </CardContent>
                  </Card>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Next Steps</CardTitle>
+                        <CardDescription>Refine the draft with further instructions or move it to the next stage.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                             <Label htmlFor="refinement-instruction">Refinement Instruction</Label>
+                             <Textarea 
+                                id="refinement-instruction"
+                                placeholder="e.g., 'Expand on the financial model' or 'Add more detail to the risk section...'"
+                                value={refinementInstruction}
+                                onChange={(e) => setRefinementInstruction(e.target.value)}
+                             />
+                        </div>
+                        <Button disabled={!refinementInstruction}>
+                            <Wand2 className="mr-2 h-4 w-4" />
+                            Refine Draft
+                        </Button>
+                        <Button variant="outline" className="w-full" disabled>
+                            <Group className="mr-2 h-4 w-4" />
+                           Ready for Deliberation
+                        </Button>
+                    </CardContent>
+                 </Card>
             </div>
         </>
     )
@@ -214,6 +241,7 @@ export default function BriefPage() {
   const [brief, setBrief] = useState<DecisionBriefV2 | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const params = useParams();
+  const router = useRouter();
 
   useEffect(() => {
     const briefId = params.id as string;
@@ -231,7 +259,7 @@ export default function BriefPage() {
       }
     };
     fetchBrief();
-  }, [params.id]);
+  }, [params.id, router]);
 
   if (isLoading) {
     return <LoadingBriefPage />;
