@@ -1,9 +1,9 @@
-
 'use server';
 
 import { initializeAdmin } from './server-admin';
 import type { AuthenticatedUser, UserProfile } from '@/lib/types';
 import type { DecodedIdToken } from 'firebase-admin/auth';
+import { cookies } from 'next/headers';
 
 type AuthResult = {
   user: AuthenticatedUser | null;
