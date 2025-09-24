@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition, useMemo } from 'react';
+import { useEffect, useState, useTransition, useMemo, FC } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +24,7 @@ type FormValues = {
 };
 
 // Stage 1: Component to answer the agent's initial questions
-function DiscoveryForm({ brief }: { brief: DecisionBriefV2 }) {
+const DiscoveryForm: FC<{ brief: DecisionBriefV2 }> = ({ brief }) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
@@ -35,15 +35,21 @@ function DiscoveryForm({ brief }: { brief: DecisionBriefV2 }) {
 
   const validationSchema = useMemo(() => {
     const shape = agentQuestions.reduce((acc, _q, index) => {
-      acc[index] = z.string().min(1, 'An answer is required.');
+      acc[index.toString()] = z.string().min(1, 'An answer is required.');
       return acc;
     }, {} as Record<string, z.ZodString>);
     return z.object({ responses: z.object(shape) });
   }, [agentQuestions]);
-
-  const methods = useForm<FormValues>({
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
     mode: 'onChange',
+    defaultValues: {
+      responses: agentQuestions.reduce((acc, _, index) => {
+        acc[index.toString()] = '';
+        return acc;
+      }, {} as Record<string, string>),
+    },
   });
 
   const onSubmit = (data: FormValues) => {
@@ -95,12 +101,12 @@ function DiscoveryForm({ brief }: { brief: DecisionBriefV2 }) {
           <CardDescription>Answer the questions below to generate the draft document.</CardDescription>
         </CardHeader>
         <CardContent>
-          <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {agentQuestions.map((q, i) => (
                 <FormField
                   key={i}
-                  control={methods.control}
+                  control={form.control}
                   name={`responses.${i}`}
                   render={({ field }) => (
                     <FormItem>
@@ -119,11 +125,11 @@ function DiscoveryForm({ brief }: { brief: DecisionBriefV2 }) {
                   )}
                 />
               ))}
-              <Button type="submit" disabled={isPending || !methods.formState.isValid}>
+              <Button type="submit" disabled={isPending || !form.formState.isValid}>
                 {isPending ? 'Agent is thinking...' : 'Generate Draft'}
               </Button>
             </form>
-          </FormProvider>
+          </Form>
         </CardContent>
       </Card>
     </div>
