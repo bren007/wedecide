@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import type { BriefVersionV2, DecisionBriefV2 } from '@/lib/types';
 import { generateInitialBrief, type GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
 import { generateDraftAndSummarize } from '@/ai/flows/refine-brief';
+import { refineBrief } from '@/ai/flows/refine-brief';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
@@ -145,25 +146,77 @@ export async function generateDraft(briefId: string, userResponses: Record<strin
 
     // Create a new version containing the generated content
     const newVersion: BriefVersionV2 = {
+        ...latestVersion,
         version: existingBrief.versions.length + 1,
         createdAt: new Date().toISOString(),
         createdBy: user.uid,
         userResponses: userResponses, // Store the answers that generated this version
         brief: draftOutput.brief,
         fullArtifact: draftOutput.fullArtifact,
-        // Carry over questions from the previous version for context
-        agentQuestions: latestVersion.agentQuestions,
-        identifiedSources: latestVersion.identifiedSources,
     };
     
     console.log(`generateDraft: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
-    // Atomically add the new version and update the brief's status
     await briefRef.update({
         versions: [...existingBrief.versions, newVersion],
         status: 'Draft',
     });
     console.log(`generateDraft: Successfully added new version to brief ${briefId}.`);
     
+    revalidatePath(`/brief/${briefId}`);
+}
+
+/**
+ * Stage 2 Refinement: Refines an existing draft based on user instructions.
+ * @param briefId The ID of the brief to refine.
+ * @param instruction The user's text instruction for refinement.
+ */
+export async function refineDraft(briefId: string, instruction: string) {
+    console.log(`refineDraft: Action initiated for briefId: ${briefId} with instruction: "${instruction}"`);
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) throw new Error('Authentication session not found.');
+    const { user } = await getAuthenticatedUser(sessionCookie);
+    if (!user) throw new Error('User not authenticated.');
+
+    const { db } = initializeAdmin();
+    const briefRef = db.collection('decisionBriefs').doc(briefId);
+    const briefDoc = await briefRef.get();
+
+    if (!briefDoc.exists || briefDoc.data()?.tenantId !== user.profile.tenantId) {
+        throw new Error('Brief not found or you do not have permission to access it.');
+    }
+
+    const existingBrief = briefDoc.data() as DecisionBriefV2;
+    const latestVersion = existingBrief.versions.at(-1);
+
+    if (existingBrief.status !== 'Draft' || !latestVersion?.brief || !latestVersion.fullArtifact) {
+        throw new Error('Can only refine a brief that is in the "Draft" status and has content.');
+    }
+
+    console.log('refineDraft: Calling refineBrief flow...');
+    const refinedOutput = await refineBrief({
+        instruction: instruction,
+        existingBrief: latestVersion.brief,
+        existingArtifact: latestVersion.fullArtifact,
+    });
+    console.log('refineDraft: refineBrief flow successful.');
+
+    // Create a new version with the refined content
+    const newVersion: BriefVersionV2 = {
+        ...latestVersion,
+        version: existingBrief.versions.length + 1,
+        createdAt: new Date().toISOString(),
+        createdBy: user.uid,
+        refinementInstruction: instruction,
+        brief: refinedOutput.brief,
+        fullArtifact: refinedOutput.fullArtifact,
+    };
+
+    console.log(`refineDraft: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
+    await briefRef.update({
+        versions: [...existingBrief.versions, newVersion],
+    });
+    console.log(`refineDraft: Successfully added new refined version to brief ${briefId}.`);
+
     revalidatePath(`/brief/${briefId}`);
 }
 

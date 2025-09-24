@@ -11,7 +11,7 @@ import type { DecisionBriefV2, AgentQuestion } from '@/lib/types';
 import { AppLayout } from '@/components/app-sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StrategicAlignment } from '@/components/strategic-alignment';
-import { getBrief, generateDraft } from '@/app/brief/actions';
+import { getBrief, generateDraft, refineDraft } from '@/app/brief/actions';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -144,6 +144,31 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
     const latestVersion = brief.versions.at(-1)!;
     const { brief: briefContent, fullArtifact } = latestVersion;
     const [refinementInstruction, setRefinementInstruction] = useState('');
+    const [isRefining, startRefinementTransition] = useTransition();
+    const router = useRouter();
+    const { toast } = useToast();
+
+    const handleRefine = () => {
+        if (!refinementInstruction.trim()) return;
+
+        startRefinementTransition(async () => {
+            try {
+                await refineDraft(brief.id, refinementInstruction);
+                toast({
+                    title: 'Draft Refined',
+                    description: 'The agent has created a new version of your brief.',
+                });
+                setRefinementInstruction('');
+                router.refresh();
+            } catch (error: any) {
+                toast({
+                    title: 'Error Refining Draft',
+                    description: error.message,
+                    variant: 'destructive',
+                });
+            }
+        });
+    };
 
     if (!briefContent || !fullArtifact) return null;
 
@@ -234,9 +259,11 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
                                 onChange={(e) => setRefinementInstruction(e.target.value)}
                              />
                         </div>
-                        <Button disabled={!refinementInstruction}>
-                            <Wand2 className="mr-2 h-4 w-4" />
-                            Refine Draft
+                        <Button onClick={handleRefine} disabled={isRefining || !refinementInstruction.trim()}>
+                            {isRefining ? 'Agent is refining...' : <>
+                                <Wand2 className="mr-2 h-4 w-4" />
+                                Refine Draft
+                            </>}
                         </Button>
                         <Button variant="outline" className="w-full" disabled>
                             <Group className="mr-2 h-4 w-4" />

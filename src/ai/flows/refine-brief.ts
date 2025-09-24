@@ -1,28 +1,17 @@
 
 'use server';
 /**
- * @fileOverview A Genkit flow for generating the main document artifact and its summary brief.
- * This flow is triggered after the user answers the initial clarification questions.
+ * @fileOverview A Genkit flow for refining an existing decision brief based on user instructions.
  *
- * - generateDraftAndSummarize - A function that handles the document generation.
- * - GenerateDraftInput - The input type for the function.
- * - GenerateDraftOutput - The return type for the function.
+ * - refineBrief - A function that handles the document refinement.
+ * - RefineBriefInput - The input type for the function.
+ * - RefineBriefOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {
-  getMockDatabaseData,
-  getMockPublicAPIData,
-  getMockSpreadsheetData,
-  strategicGoals,
-} from '@/lib/data';
+import type { BriefContent, FullArtifactContent } from '@/lib/types';
 
-const GenerateDraftInputSchema = z.object({
-  goal: z.string().describe("The user's original goal."),
-  userResponses: z.record(z.string()).describe("The user's answers to the agent's clarification questions."),
-});
-export type GenerateDraftInput = z.infer<typeof GenerateDraftInputSchema>;
 
 const BriefContentSchema = z.object({
   title: z.string().describe("A clear, concise title for the decision brief."),
@@ -40,107 +29,80 @@ const FullArtifactContentSchema = z.object({
   financialCase: z.string().describe("A detailed summary of the financial implications, including budget impact and potential return on investment, based on the data retrieved from tools."),
 });
 
-const GenerateDraftOutputSchema = z.object({
-  brief: BriefContentSchema.describe('The concise summary layer of the document.'),
-  fullArtifact: FullArtifactContentSchema.describe('The comprehensive, detailed layer of the document.'),
-});
-export type GenerateDraftOutput = z.infer<typeof GenerateDraftOutputSchema>;
 
-// This is the main exported function that will be called by the server action.
-export async function generateDraftAndSummarize(input: GenerateDraftInput): Promise<GenerateDraftOutput> {
-  return generateDraftAndSummarizeFlow(input);
+const RefineBriefInputSchema = z.object({
+  instruction: z.string().describe("The user's instruction for how to refine the document."),
+  existingBrief: BriefContentSchema.describe('The existing concise summary layer of the document.'),
+  existingArtifact: FullArtifactContentSchema.describe('The existing comprehensive, detailed layer of the document.'),
+});
+export type RefineBriefInput = z.infer<typeof RefineBriefInputSchema>;
+
+
+const RefineBriefOutputSchema = z.object({
+  brief: BriefContentSchema.describe('The new, refined concise summary layer of the document.'),
+  fullArtifact: FullArtifactContentSchema.describe('The new, refined comprehensive, detailed layer of the document.'),
+});
+export type RefineBriefOutput = z.infer<typeof RefineBriefOutputSchema>;
+
+
+export async function refineBrief(input: RefineBriefInput): Promise<RefineBriefOutput> {
+  return refineBriefFlow(input);
 }
 
-// Define the Zod schema for the tools' output.
-const SpreadsheetDataSchema = z.object({
-  financials: z.object({ year: z.number(), budget: z.number(), spend: z.number() }),
-  kpis: z.array(z.object({ name: z.string(), value: z.string(), trend: z.string() })),
-});
 
-const DatabaseDataSchema = z.object({
-    project: z.object({ id: z.string(), name: z.string(), status: z.string(), manager: z.string() })
-});
+const refineBriefPrompt = ai.definePrompt({
+  name: 'refineBriefPrompt',
+  input: { schema: RefineBriefInputSchema },
+  output: { schema: RefineBriefOutputSchema },
+  prompt: `You are an expert public sector advisor. You have already written a draft decision document which has two layers: a concise 'brief' and a detailed 'fullArtifact'.
 
-const PublicAPIDataSchema = z.object({
-    region: z.object({ name: z.string(), population: z.number(), gdp_per_capita: z.number() })
-});
+The user has provided a new instruction to refine this document.
 
-// Define the tools that the agent can use to gather information.
-const getSpreadsheetDataTool = ai.defineTool({
-    name: 'getSpreadsheetData',
-    description: 'Retrieves financial and KPI data from a spreadsheet.',
-    inputSchema: z.undefined(),
-    outputSchema: SpreadsheetDataSchema,
-  }, async () => await getMockSpreadsheetData());
+**User's Instruction:** "{{instruction}}"
 
-const getDatabaseDataTool = ai.defineTool({
-    name: 'getDatabaseData',
-    description: 'Retrieves project details from an internal database.',
-    inputSchema: z.undefined(),
-    outputSchema: DatabaseDataSchema,
-  }, async () => await getMockDatabaseData());
+**Your Task:**
 
-const getPublicAPIDataTool = ai.defineTool({
-    name: 'getPublicAPIData',
-    description: 'Retrieves public demographic and economic data from an external API.',
-    inputSchema: z.undefined(),
-    outputSchema: PublicAPIDataSchema,
-  }, async () => await getMockPublicAPIData());
+1.  Read the user's instruction carefully.
+2.  Generate a new, improved version of the **fullArtifact** that incorporates the user's feedback. You MUST NOT just repeat the old content; you must modify it based on the instruction.
+3.  After generating the new full artifact, you MUST then generate a new **brief** that is a concise and accurate summary of your newly created full artifact. The two layers must be consistent.
+4.  Maintain the same JSON output structure.
 
+**Existing Document Content:**
 
-// Define the main prompt for the agent.
-const generateDraftPrompt = ai.definePrompt({
-  name: 'generateDraftPrompt',
-  input: { schema: GenerateDraftInputSchema.extend({ strategicGoals: z.any() }) },
-  output: { schema: GenerateDraftOutputSchema },
-  tools: [getSpreadsheetDataTool, getDatabaseDataTool, getPublicAPIDataTool],
-  prompt: `You are an expert public sector advisor. Your task is to write a comprehensive decision artifact and a concise summary brief based on a user's goal and their answers to your clarifying questions.
+**Brief:**
+\`\`\`json
+{{{JSONstringify existingBrief}}}
+\`\`\`
 
-**User's Goal:** "{{goal}}"
-
-**User's Answers:**
-{{#each userResponses}}
-- **Question:** "{{@key}}"
-- **Answer:** "{{this}}"
-{{/each}}
-
-**Your Process:**
-
-1.  **Use Your Tools:** You MUST use your tools to gather financial, project, and public data to create a detailed, evidence-based artifact.
-2.  **Generate the Full Artifact:** Create the comprehensive 'fullArtifact' document. It must be detailed and structured with the following sections: Title, Strategic Case, Options Analysis, Recommendation, and Financial Case.
-3.  **Generate the Brief:** After creating the full artifact, create the 'brief' document. The brief MUST be a concise summary of the full artifact. It should contain: Title, Strategic Case (summarized), Recommendation (summarized), and the Strategic Alignment Score/Rationale.
-4.  **Strategic Alignment:** For both documents, compare the user's goal against the provided list of strategic organizational goals to determine the most relevant one, calculate an alignment score (0-100), and provide a rationale.
-
-**Available Strategic Goals for Alignment:**
-{{#each strategicGoals}}
-- **{{name}}**: {{description}}
-{{/each}}
+**Full Artifact:**
+\`\`\`json
+{{{JSONstringify existingArtifact}}}
+\`\`\`
 `,
 });
 
-// Define the Genkit flow.
-const generateDraftAndSummarizeFlow = ai.defineFlow(
+
+const refineBriefFlow = ai.defineFlow(
   {
-    name: 'generateDraftAndSummarizeFlow',
-    inputSchema: GenerateDraftInputSchema,
-    outputSchema: GenerateDraftOutputSchema,
+    name: 'refineBriefFlow',
+    inputSchema: RefineBriefInputSchema,
+    outputSchema: RefineBriefOutputSchema,
   },
   async (input) => {
-    console.log('AGENT: Starting generateDraftAndSummarizeFlow with input:', input);
-    
+    console.log('AGENT: Starting refineBriefFlow with instruction:', input.instruction);
+
     const promptInput = {
       ...input,
-      strategicGoals,
       JSONstringify: (obj: any) => JSON.stringify(obj, null, 2),
     };
-
-    const { output } = await generateDraftPrompt(promptInput);
+    
+    const { output } = await refineBriefPrompt(promptInput);
     
     if (!output) {
-      throw new Error('The agent failed to generate a draft document.');
+      throw new Error('The agent failed to refine the document.');
     }
     
-    console.log('AGENT: Successfully generated draft document.');
+    console.log('AGENT: Successfully refined document.');
     return output;
   }
 );
