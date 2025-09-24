@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useTransition, useMemo, FC } from 'react';
@@ -19,6 +20,7 @@ import LoadingBriefPage from './loading';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info, FileText, Briefcase, Bot, Wand2, Group } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type FormValues = {
   responses: Record<string, string>;
@@ -148,54 +150,64 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
     return (
         <>
             <div className="space-y-6 lg:col-span-2">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Briefcase /> Decision Brief</CardTitle>
-                        <CardDescription>A concise summary of the full artifact, suitable for executive review.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <h4 className="font-semibold mb-1">Title</h4>
-                            <p className="text-sm text-muted-foreground">{briefContent.title}</p>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-1">Strategic Case</h4>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.strategicCase}</p>
-                        </div>
-                         <div>
-                            <h4 className="font-semibold mb-1">Recommendation</h4>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.recommendation}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><FileText /> Full Artifact</CardTitle>
-                        <CardDescription>The comprehensive, detailed decision document.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <h4 className="font-semibold mb-1">Title</h4>
-                            <p className="text-sm text-muted-foreground">{fullArtifact.title}</p>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-1">Strategic Case</h4>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.strategicCase}</p>
-                        </div>
-                         <div>
-                            <h4 className="font-semibold mb-1">Options Analysis</h4>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.optionsAnalysis}</p>
-                        </div>
-                         <div>
-                            <h4 className="font-semibold mb-1">Financial Case</h4>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.financialCase}</p>
-                        </div>
-                         <div>
-                            <h4 className="font-semibold mb-1">Recommendation</h4>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.recommendation}</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                <Tabs defaultValue="brief" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="brief">Decision Brief</TabsTrigger>
+                        <TabsTrigger value="artifact">Full Artifact</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="brief">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><Briefcase /> Decision Brief</CardTitle>
+                                <CardDescription>A concise summary of the full artifact, suitable for executive review.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <h4 className="font-semibold mb-1">Title</h4>
+                                    <p className="text-sm text-muted-foreground">{briefContent.title}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-1">Strategic Case</h4>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.strategicCase}</p>
+                                </div>
+                                 <div>
+                                    <h4 className="font-semibold mb-1">Recommendation</h4>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.recommendation}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="artifact">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><FileText /> Full Artifact</CardTitle>
+                                <CardDescription>The comprehensive, detailed decision document.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <h4 className="font-semibold mb-1">Title</h4>
+                                    <p className="text-sm text-muted-foreground">{fullArtifact.title}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-1">Strategic Case</h4>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.strategicCase}</p>
+                                </div>
+                                 <div>
+                                    <h4 className="font-semibold mb-1">Options Analysis</h4>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.optionsAnalysis}</p>
+                                 </div>
+                                 <div>
+                                    <h4 className="font-semibold mb-1">Financial Case</h4>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.financialCase}</p>
+                                 </div>
+                                 <div>
+                                    <h4 className="font-semibold mb-1">Recommendation</h4>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.recommendation}</p>
+                                 </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
             <div className="space-y-6 lg:col-span-1">
                  <Card>
