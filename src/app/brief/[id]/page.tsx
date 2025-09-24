@@ -71,7 +71,7 @@ function DiscoveryForm({ brief }: { brief: DecisionBriefV2 }) {
   };
 
   return (
-    <div className="space-y-6 lg:col-span-1">
+    <div className="space-y-6 lg:col-span-3">
       <Alert>
         <Bot className="h-4 w-4" />
         <AlertTitle>Agent Discovery</AlertTitle>
