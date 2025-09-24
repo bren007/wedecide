@@ -5,17 +5,15 @@ import { initializeAdmin } from '@/lib/firebase/server-admin';
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import type { BriefVersionV2, DecisionBriefV2 } from '@/lib/types';
 import { generateInitialBrief, type GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
-import { generateDraftAndSummarize } from '@/ai/flows/refine-brief';
 import { refineBrief } from '@/ai/flows/refine-brief';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
 /**
  * Creates an initial, empty brief document in Firestore.
- * This is a separate function to ensure it runs quickly and within the
- * primary server action context where authentication is available.
  */
 async function createPlaceholderBrief(goal: string, uid: string, tenantId: string): Promise<string> {
+  console.log('actions.createPlaceholderBrief: Creating placeholder for tenant', tenantId);
   const { db } = initializeAdmin();
   const newBriefRef = db.collection('decisionBriefs').doc();
 
@@ -26,10 +24,11 @@ async function createPlaceholderBrief(goal: string, uid: string, tenantId: strin
     goal: goal,
     createdAt: new Date().toISOString(),
     createdBy: uid,
-    versions: [], // Starts with no versions
+    versions: [],
   };
 
   await newBriefRef.set(initialBrief);
+  console.log('actions.createPlaceholderBrief: Placeholder created with ID:', newBriefRef.id);
   return newBriefRef.id;
 }
 
@@ -37,6 +36,7 @@ async function createPlaceholderBrief(goal: string, uid: string, tenantId: strin
  * Updates the brief with the discovery output from the AI agent.
  */
 async function updateBriefWithDiscovery(briefId: string, discoveryOutput: GenerateInitialBriefOutput, uid: string) {
+  console.log(`actions.updateBriefWithDiscovery: Updating brief ${briefId} with discovery output.`);
   const { db } = initializeAdmin();
   const briefRef = db.collection('decisionBriefs').doc(briefId);
   
@@ -51,71 +51,44 @@ async function updateBriefWithDiscovery(briefId: string, discoveryOutput: Genera
   await briefRef.update({
     versions: [firstVersion],
   });
+   console.log(`actions.updateBriefWithDiscovery: Successfully updated brief ${briefId}.`);
 }
 
 
 /**
  * Stage 1: Kicks off the briefing process.
- * This is a two-step process to avoid authentication context issues with long-running AI flows.
- * 1. Quickly create a placeholder document in Firestore.
- * 2. Asynchronously run the AI discovery flow and update the document.
- * @param goal The user's initial goal statement.
- * @returns The ID of the newly created brief.
  */
 export async function startBriefingProcess(goal: string): Promise<string> {
-  console.log('startBriefingProcess: Action initiated with goal:', goal);
+  console.log('actions.startBriefingProcess: Initiated with goal:', goal);
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) {
-    throw new Error('Authentication session not found.');
-  }
+  if (!sessionCookie) throw new Error('Authentication session not found.');
+  
   const { user } = await getAuthenticatedUser(sessionCookie);
-  if (!user || !user.profile.tenantId) {
-    throw new Error('User not authenticated or tenant ID is missing.');
-  }
+  if (!user || !user.profile.tenantId) throw new Error('User not authenticated or tenant ID is missing.');
 
   try {
-    // 1. Immediately create a placeholder brief to get an ID.
-    console.log('startBriefingProcess: Creating placeholder brief...');
     const briefId = await createPlaceholderBrief(goal, user.uid, user.profile.tenantId);
-    console.log('startBriefingProcess: Placeholder brief created with ID:', briefId);
+    
+    console.log('AGENT: Calling generateInitialBrief flow...');
+    const discoveryOutput = await generateInitialBrief({ goal });
+    await updateBriefWithDiscovery(briefId, discoveryOutput, user.uid);
+    console.log('AGENT: Updated brief with discovery output.');
 
-    // 2. Now, call the agentic AI flow (this may take longer).
-    // We will NOT await this. The client will be redirected immediately.
-    // The AI will update the document in the background.
-    console.log('startBriefingProcess: Calling generateInitialBrief (Discovery) AI flow...');
-    generateInitialBrief({ goal }).then(discoveryOutput => {
-      console.log(`startBriefingProcess: AI flow complete for brief ${briefId}. Updating document.`);
-      // 3. Update the placeholder brief with the AI's discovery output.
-      return updateBriefWithDiscovery(briefId, discoveryOutput, user.uid);
-    }).catch(error => {
-        // In a real app, you'd have more robust error handling, maybe updating
-        // the brief's status to 'Failed' so the UI can show it.
-        console.error(`startBriefingProcess: AI flow failed for brief ${briefId}`, error);
-    });
-
-    // 4. Revalidate and return the ID to the client immediately.
     revalidatePath(`/brief/${briefId}`);
     return briefId;
 
   } catch (error) {
-    console.error('startBriefingProcess: An error occurred.', error);
-    // Ensure we throw the error to be caught by the client-side transition
-    if (error instanceof Error) {
-        throw new Error(error.message);
-    }
+    console.error('actions.startBriefingProcess: An error occurred.', error);
+    if (error instanceof Error) throw new Error(error.message);
     throw new Error('An unexpected error occurred during the briefing process.');
   }
 }
 
 /**
  * Stage 2: Generates the draft document.
- * Takes the user's answers, calls the AI to generate the full artifact and summary brief,
- * and adds this as a new version to the existing brief document.
- * @param briefId The ID of the brief to update.
- * @param userResponses The user's answers to the agent's questions.
  */
 export async function generateDraft(briefId: string, userResponses: Record<string, string>) {
-    console.log(`generateDraft: Action initiated for briefId: ${briefId}`);
+    console.log(`actions.generateDraft: Initiated for briefId: ${briefId}`);
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
@@ -136,42 +109,43 @@ export async function generateDraft(briefId: string, userResponses: Record<strin
         throw new Error('Cannot generate draft for a brief with no versions.');
     }
     
-    // Call the AI agent to get the generated artifact and summary
-    console.log('generateDraft: Calling generateDraftAndSummarize flow...');
-    const draftOutput = await generateDraftAndSummarize({
-        goal: existingBrief.goal,
-        userResponses,
+    // Combine goal and responses into a single instruction for the agent.
+    const instruction = `Based on my goal "${existingBrief.goal}" and my answers to your questions, please generate the first draft of the document. My answers were: ${JSON.stringify(userResponses)}`;
+    
+    console.log('actions.generateDraft: Calling refineBrief flow for initial draft...');
+    const draftOutput = await refineBrief({
+        instruction: instruction,
+        // For the first draft, there's no existing content.
+        existingBrief: { title: '', strategicCase: '', recommendation: '', alignmentScore: 0, alignmentRationale: '' },
+        existingArtifact: { title: '', strategicCase: '', optionsAnalysis: '', recommendation: '', financialCase: '' },
     });
-    console.log('generateDraft: generateDraftAndSummarize flow successful.');
+    console.log('actions.generateDraft: refineBrief flow successful.');
 
-    // Create a new version containing the generated content
     const newVersion: BriefVersionV2 = {
         ...latestVersion,
         version: existingBrief.versions.length + 1,
         createdAt: new Date().toISOString(),
         createdBy: user.uid,
-        userResponses: userResponses, // Store the answers that generated this version
+        userResponses: userResponses,
         brief: draftOutput.brief,
         fullArtifact: draftOutput.fullArtifact,
     };
     
-    console.log(`generateDraft: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
+    console.log(`actions.generateDraft: Adding version ${newVersion.version} to brief ${briefId}.`);
     await briefRef.update({
         versions: [...existingBrief.versions, newVersion],
         status: 'Draft',
     });
-    console.log(`generateDraft: Successfully added new version to brief ${briefId}.`);
+    console.log(`actions.generateDraft: Successfully added new version to brief ${briefId}.`);
     
     revalidatePath(`/brief/${briefId}`);
 }
 
 /**
  * Stage 2 Refinement: Refines an existing draft based on user instructions.
- * @param briefId The ID of the brief to refine.
- * @param instruction The user's text instruction for refinement.
  */
 export async function refineDraft(briefId: string, instruction: string) {
-    console.log(`refineDraft: Action initiated for briefId: ${briefId} with instruction: "${instruction}"`);
+    console.log(`actions.refineDraft: Initiated for briefId: ${briefId} with instruction: "${instruction}"`);
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
@@ -192,15 +166,14 @@ export async function refineDraft(briefId: string, instruction: string) {
         throw new Error('Can only refine a brief that is in the "Draft" status and has content.');
     }
 
-    console.log('refineDraft: Calling refineBrief flow...');
+    console.log('actions.refineDraft: Calling refineBrief flow...');
     const refinedOutput = await refineBrief({
         instruction: instruction,
         existingBrief: latestVersion.brief,
         existingArtifact: latestVersion.fullArtifact,
     });
-    console.log('refineDraft: refineBrief flow successful.');
+    console.log('actions.refineDraft: refineBrief flow successful.');
 
-    // Create a new version with the refined content
     const newVersion: BriefVersionV2 = {
         ...latestVersion,
         version: existingBrief.versions.length + 1,
@@ -211,11 +184,11 @@ export async function refineDraft(briefId: string, instruction: string) {
         fullArtifact: refinedOutput.fullArtifact,
     };
 
-    console.log(`refineDraft: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
+    console.log(`actions.refineDraft: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
     await briefRef.update({
         versions: [...existingBrief.versions, newVersion],
     });
-    console.log(`refineDraft: Successfully added new refined version to brief ${briefId}.`);
+    console.log(`actions.refineDraft: Successfully added new refined version to brief ${briefId}.`);
 
     revalidatePath(`/brief/${briefId}`);
 }
