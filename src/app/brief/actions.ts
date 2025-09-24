@@ -10,58 +10,99 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
 /**
+ * Creates an initial, empty brief document in Firestore.
+ * This is a separate function to ensure it runs quickly and within the
+ * primary server action context where authentication is available.
+ */
+async function createPlaceholderBrief(goal: string, uid: string, tenantId: string): Promise<string> {
+  const { db } = initializeAdmin();
+  const newBriefRef = db.collection('decisionBriefs').doc();
+
+  const initialBrief: DecisionBriefV2 = {
+    id: newBriefRef.id,
+    tenantId: tenantId,
+    status: 'Discovery',
+    goal: goal,
+    createdAt: new Date().toISOString(),
+    createdBy: uid,
+    versions: [], // Starts with no versions
+  };
+
+  await newBriefRef.set(initialBrief);
+  return newBriefRef.id;
+}
+
+/**
+ * Updates the brief with the discovery output from the AI agent.
+ */
+async function updateBriefWithDiscovery(briefId: string, discoveryOutput: GenerateInitialBriefOutput, uid: string) {
+  const { db } = initializeAdmin();
+  const briefRef = db.collection('decisionBriefs').doc(briefId);
+  
+  const firstVersion: BriefVersionV2 = {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    createdBy: uid,
+    agentQuestions: discoveryOutput.agentQuestions,
+    identifiedSources: discoveryOutput.identifiedSources,
+  };
+
+  await briefRef.update({
+    versions: [firstVersion],
+  });
+}
+
+
+/**
  * Stage 1: Kicks off the briefing process.
- * Calls the AI agent to perform initial discovery (identify sources, ask questions).
- * Creates the main brief document in Firestore with the "Discovery" status and stores
- * the agent's questions.
+ * This is a two-step process to avoid authentication context issues with long-running AI flows.
+ * 1. Quickly create a placeholder document in Firestore.
+ * 2. Asynchronously run the AI discovery flow and update the document.
  * @param goal The user's initial goal statement.
  * @returns The ID of the newly created brief.
  */
 export async function startBriefingProcess(goal: string): Promise<string> {
   console.log('startBriefingProcess: Action initiated with goal:', goal);
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) throw new Error('Authentication session not found.');
-  
+  if (!sessionCookie) {
+    throw new Error('Authentication session not found.');
+  }
   const { user } = await getAuthenticatedUser(sessionCookie);
-  if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
+  if (!user || !user.profile.tenantId) {
+    throw new Error('User not authenticated or tenant ID is missing.');
+  }
 
   try {
-    // 1. Call the agentic AI flow to generate discovery questions.
+    // 1. Immediately create a placeholder brief to get an ID.
+    console.log('startBriefingProcess: Creating placeholder brief...');
+    const briefId = await createPlaceholderBrief(goal, user.uid, user.profile.tenantId);
+    console.log('startBriefingProcess: Placeholder brief created with ID:', briefId);
+
+    // 2. Now, call the agentic AI flow (this may take longer).
+    // We will NOT await this. The client will be redirected immediately.
+    // The AI will update the document in the background.
     console.log('startBriefingProcess: Calling generateInitialBrief (Discovery) AI flow...');
-    const discoveryOutput = await generateInitialBrief({ goal });
+    generateInitialBrief({ goal }).then(discoveryOutput => {
+      console.log(`startBriefingProcess: AI flow complete for brief ${briefId}. Updating document.`);
+      // 3. Update the placeholder brief with the AI's discovery output.
+      return updateBriefWithDiscovery(briefId, discoveryOutput, user.uid);
+    }).catch(error => {
+        // In a real app, you'd have more robust error handling, maybe updating
+        // the brief's status to 'Failed' so the UI can show it.
+        console.error(`startBriefingProcess: AI flow failed for brief ${briefId}`, error);
+    });
 
-    // 2. Create the brief document in Firestore with the discovery output.
-    console.log('startBriefingProcess: Creating brief document in Firestore...');
-    const { db } = initializeAdmin();
-    const newBriefRef = db.collection('decisionBriefs').doc();
-
-    const firstVersion: BriefVersionV2 = {
-      version: 1,
-      createdAt: new Date().toISOString(),
-      createdBy: user.uid,
-      agentQuestions: discoveryOutput.agentQuestions,
-      identifiedSources: discoveryOutput.identifiedSources,
-    };
-
-    const newBrief: DecisionBriefV2 = {
-      id: newBriefRef.id,
-      tenantId: user.profile.tenantId,
-      status: 'Discovery',
-      goal: goal,
-      createdAt: new Date().toISOString(),
-      createdBy: user.uid,
-      versions: [firstVersion],
-    };
-
-    await newBriefRef.set(newBrief);
-    console.log('startBriefingProcess: Brief created with ID:', newBriefRef.id);
-
-    revalidatePath(`/brief/${newBriefRef.id}`);
-    return newBriefRef.id;
+    // 4. Revalidate and return the ID to the client immediately.
+    revalidatePath(`/brief/${briefId}`);
+    return briefId;
 
   } catch (error) {
     console.error('startBriefingProcess: An error occurred.', error);
-    throw error;
+    // Ensure we throw the error to be caught by the client-side transition
+    if (error instanceof Error) {
+        throw new Error(error.message);
+    }
+    throw new Error('An unexpected error occurred during the briefing process.');
   }
 }
 
@@ -148,4 +189,3 @@ export async function getBrief(id: string): Promise<DecisionBriefV2 | null> {
     return null;
   }
 }
-
