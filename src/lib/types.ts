@@ -33,6 +33,18 @@ export type AgentQuestion = {
   rationale: string;
 }
 
+// --- V1 Brief Types (Pre-refactor) ---
+export type DecisionBriefContent = {
+  goal: string;
+  title: string;
+  strategicCase: string; 
+  optionsAnalysis: string;
+  recommendation: string; 
+  financialCase: string; 
+  alignmentScore: number;
+  alignmentRationale: string;
+};
+
 export type BriefVersion = {
   version: number;
   createdAt: string;
@@ -42,24 +54,60 @@ export type BriefVersion = {
   userResponses?: Record<string, string>;
 };
 
-export type DecisionBriefContent = {
-  goal: string;
-  title: string;
-  strategicCase: string; // User-editable
-  optionsAnalysis: string; // AI-generated
-  recommendation: string; // AI-generated
-  financialCase: string; // AI-generated
-  alignmentScore: number;
-  alignmentRationale: string;
-};
-
 export type DecisionBrief = {
-  id: string; // Firestore document ID
+  id: string; 
   tenantId: string;
   status: 'Draft' | 'InReview' | 'Scheduled' | 'Decided' | 'Archived';
   finalDecision?: string;
   amendments?: string;
   createdAt: string;
-  createdBy: string; // UID
+  createdBy: string; 
   versions: BriefVersion[];
+};
+
+
+// --- V2 Brief Types (Post-refactor for new agentic flow) ---
+
+export type BriefContent = {
+  title: string;
+  strategicCase: string;
+  recommendation: string;
+  alignmentScore: number;
+  alignmentRationale: string;
+};
+
+export type FullArtifactContent = {
+  title: string;
+  strategicCase: string;
+  optionsAnalysis: string;
+  recommendation: string;
+  financialCase: string;
+};
+
+export type DecisionBriefV2 = {
+  id: string;
+  tenantId: string;
+  status: 'Discovery' | 'Draft' | 'InReview' | 'Deliberation' | 'Decided' | 'Archived';
+  goal: string;
+  createdAt: string;
+  createdBy: string; // UID
+  versions: BriefVersionV2[];
+};
+
+export type BriefVersionV2 = {
+  version: number;
+  createdAt: string;
+  createdBy: string; // UID of user who triggered this version
+  
+  // Stage 1: Discovery output
+  identifiedSources?: string[];
+  agentQuestions?: AgentQuestion[];
+  userResponses?: Record<string, string>; // User answers to agentQuestions
+
+  // Stage 2: Generated content
+  brief?: BriefContent;
+  fullArtifact?: FullArtifactContent;
+
+  // Stage 2 refinement instruction
+  refinementInstruction?: string;
 };

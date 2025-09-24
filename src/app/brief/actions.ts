@@ -3,246 +3,147 @@
 
 import { initializeAdmin } from '@/lib/firebase/server-admin';
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
-import type { BriefVersion, DecisionBrief, DecisionBriefContent } from '@/lib/types';
+import type { BriefVersionV2, DecisionBriefV2 } from '@/lib/types';
 import { generateInitialBrief, type GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
-import { refineBrief } from '@/ai/flows/refine-brief';
+import { generateDraftAndSummarize } from '@/ai/flows/refine-brief';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
 /**
- * A server action that orchestrates the entire initial brief creation process.
- * This is a more robust, two-step process to avoid losing auth context on long-running AI flows.
- * 1. Creates an initial, empty brief document in Firestore to get a stable ID. This happens
- *    within the authenticated user's context.
- * 2. Calls the AI agent to generate the initial brief content.
- * 3. Updates the previously created brief document with the AI-generated content.
+ * Stage 1: Kicks off the briefing process.
+ * Calls the AI agent to perform initial discovery (identify sources, ask questions).
+ * Creates the main brief document in Firestore with the "Discovery" status and stores
+ * the agent's questions.
  * @param goal The user's initial goal statement.
  * @returns The ID of the newly created brief.
  */
 export async function startBriefingProcess(goal: string): Promise<string> {
   console.log('startBriefingProcess: Action initiated with goal:', goal);
-   if (!goal) {
-    console.error('startBriefingProcess: Goal is empty.');
-    throw new Error('Goal cannot be empty.');
-  }
-
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) {
-    console.error('startBriefingProcess: Authentication session not found.');
-    throw new Error('Authentication session not found.');
-  }
+  if (!sessionCookie) throw new Error('Authentication session not found.');
+  const { user } = await getAuthenticatedUser(sessionCookie);
+  if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
   try {
-    // 1. Create a placeholder brief first to get an ID and validate auth.
-    console.log('startBriefingProcess: Creating placeholder brief...');
-    const newBriefId = await createPlaceholderBrief(goal, sessionCookie);
-    console.log('startBriefingProcess: Placeholder brief created with ID:', newBriefId);
+    // 1. Call the agentic AI flow to generate discovery questions.
+    console.log('startBriefingProcess: Calling generateInitialBrief (Discovery) AI flow...');
+    const discoveryOutput = await generateInitialBrief({ goal });
 
-    // 2. Call the agentic AI flow to generate content.
-    console.log('startBriefingProcess: Calling generateInitialBrief AI flow...');
-    const result = await generateInitialBrief({ goal });
-    console.log('startBriefingProcess: generateInitialBrief successful.');
+    // 2. Create the brief document in Firestore with the discovery output.
+    console.log('startBriefingProcess: Creating brief document in Firestore...');
+    const { db } = initializeAdmin();
+    const newBriefRef = db.collection('decisionBriefs').doc();
 
-    // 3. Update the placeholder brief with the AI-generated content.
-    console.log('startBriefingProcess: Updating brief with AI content...');
-    await updateBriefWithInitialContent(newBriefId, result, sessionCookie);
-    console.log('startBriefingProcess: Brief update successful.');
+    const firstVersion: BriefVersionV2 = {
+      version: 1,
+      createdAt: new Date().toISOString(),
+      createdBy: user.uid,
+      agentQuestions: discoveryOutput.agentQuestions,
+      identifiedSources: discoveryOutput.identifiedSources,
+    };
 
-    // 4. Revalidate path to ensure the new brief page is not stale.
-    revalidatePath(`/brief/${newBriefId}`);
+    const newBrief: DecisionBriefV2 = {
+      id: newBriefRef.id,
+      tenantId: user.profile.tenantId,
+      status: 'Discovery',
+      goal: goal,
+      createdAt: new Date().toISOString(),
+      createdBy: user.uid,
+      versions: [firstVersion],
+    };
 
-    return newBriefId;
+    await newBriefRef.set(newBrief);
+    console.log('startBriefingProcess: Brief created with ID:', newBriefRef.id);
+
+    revalidatePath(`/brief/${newBriefRef.id}`);
+    return newBriefRef.id;
+
   } catch (error) {
     console.error('startBriefingProcess: An error occurred.', error);
-    // In a real app, you might want to delete the placeholder brief if the AI call fails.
-    throw error; // Re-throw the error to be caught by the client
+    throw error;
   }
 }
 
-// This is a new function to create a preliminary brief.
-export async function createPlaceholderBrief(goal: string, sessionCookie: string): Promise<string> {
-  const { user } = await getAuthenticatedUser(sessionCookie);
-  const { db } = initializeAdmin();
-
-  if (!user || !user.profile.tenantId) {
-    throw new Error('You must be logged in to create a brief.');
-  }
-
-  const briefsCollection = db.collection('decisionBriefs');
-  const newBriefRef = briefsCollection.doc();
-
-  // Create a minimal brief. The content will be populated by the AI later.
-  const placeholderContent: DecisionBriefContent = {
-    goal: goal,
-    title: `Drafting brief for: ${goal.substring(0, 50)}...`,
-    strategicCase: 'Generating...',
-    optionsAnalysis: 'Generating...',
-    recommendation: 'Generating...',
-    financialCase: 'Generating...',
-    alignmentScore: 0,
-    alignmentRationale: 'Generating...',
-  };
-
-  const firstVersion: BriefVersion = {
-    version: 1,
-    createdAt: new Date().toISOString(),
-    createdBy: user.uid,
-    content: placeholderContent,
-    agentQuestions: [], // No questions yet
-  };
-
-  const newBrief: DecisionBrief = {
-    id: newBriefRef.id,
-    tenantId: user.profile.tenantId,
-    status: 'Draft',
-    createdAt: new Date().toISOString(),
-    createdBy: user.uid,
-    versions: [firstVersion],
-  };
-
-  await newBriefRef.set(newBrief);
-  return newBriefRef.id;
-}
-
-
-// This is a new function to update the brief with the AI's output.
-export async function updateBriefWithInitialContent(
-  briefId: string,
-  briefData: GenerateInitialBriefOutput,
-  sessionCookie: string
-): Promise<void> {
-  const { user } = await getAuthenticatedUser(sessionCookie);
-  const { db } = initializeAdmin();
-
-  if (!user || !user.profile.tenantId) {
-    throw new Error('You must be logged in to update a brief.');
-  }
-
-  const briefRef = db.collection('decisionBriefs').doc(briefId);
-  const briefDoc = await briefRef.get();
-
-  if (!briefDoc.exists || briefDoc.data()?.tenantId !== user.profile.tenantId) {
-    throw new Error('Brief not found or you do not have permission to access it.');
-  }
-  
-  const existingBrief = briefDoc.data() as DecisionBrief;
-
-  const firstVersion: BriefVersion = {
-    version: 1,
-    createdAt: existingBrief.versions[0].createdAt,
-    createdBy: existingBrief.versions[0].createdBy,
-    content: briefData.brief, // This is the full content from the AI
-    agentQuestions: briefData.agentQuestions,
-  };
-
-  // Replace the placeholder version with the real one.
-  await briefRef.update({
-    versions: [firstVersion]
-  });
-}
-
-// This function is no longer needed as its logic is split between createPlaceholderBrief and updateBriefWithInitialContent
-/*
-export async function createBrief(
-  briefData: GenerateInitialBriefOutput,
-  sessionCookie: string
-): Promise<string> {
-  // ...
-}
-*/
-
-
-export async function getBrief(id: string): Promise<DecisionBrief | null> {
-  const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) {
-    throw new Error('Authentication session not found.');
-  }
-  
-  try {
+/**
+ * Stage 2: Generates the draft document.
+ * Takes the user's answers, calls the AI to generate the full artifact and summary brief,
+ * and adds this as a new version to the existing brief document.
+ * @param briefId The ID of the brief to update.
+ * @param userResponses The user's answers to the agent's questions.
+ */
+export async function generateDraft(briefId: string, userResponses: Record<string, string>) {
+    console.log(`generateDraft: Action initiated for briefId: ${briefId}`);
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
+    if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
+
     const { db } = initializeAdmin();
+    const briefRef = db.collection('decisionBriefs').doc(briefId);
+    const briefDoc = await briefRef.get();
 
-    if (!user || !user.profile.tenantId) {
-        throw new Error('Authentication required.');
+    if (!briefDoc.exists || briefDoc.data()?.tenantId !== user.profile.tenantId) {
+        throw new Error('Brief not found or you do not have permission to access it.');
     }
+    
+    const existingBrief = briefDoc.data() as DecisionBriefV2;
+    const latestVersion = existingBrief.versions.at(-1);
 
-    const briefDoc = await db.collection('decisionBriefs')
-        .where('id', '==', id)
-        .where('tenantId', '==', user.profile.tenantId)
-        .limit(1)
-        .get();
+    if (!latestVersion) {
+        throw new Error('Cannot generate draft for a brief with no versions.');
+    }
+    
+    // Call the AI agent to get the generated artifact and summary
+    console.log('generateDraft: Calling generateDraftAndSummarize flow...');
+    const draftOutput = await generateDraftAndSummarize({
+        goal: existingBrief.goal,
+        userResponses,
+    });
+    console.log('generateDraft: generateDraftAndSummarize flow successful.');
 
-    if (briefDoc.empty) {
+    // Create a new version containing the generated content
+    const newVersion: BriefVersionV2 = {
+        version: existingBrief.versions.length + 1,
+        createdAt: new Date().toISOString(),
+        createdBy: user.uid,
+        userResponses: userResponses, // Store the answers that generated this version
+        brief: draftOutput.brief,
+        fullArtifact: draftOutput.fullArtifact,
+        // Carry over questions from the previous version for context
+        agentQuestions: latestVersion.agentQuestions,
+        identifiedSources: latestVersion.identifiedSources,
+    };
+    
+    console.log(`generateDraft: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
+    // Atomically add the new version and update the brief's status
+    await briefRef.update({
+        versions: [...existingBrief.versions, newVersion],
+        status: 'Draft',
+    });
+    console.log(`generateDraft: Successfully added new version to brief ${briefId}.`);
+    
+    revalidatePath(`/brief/${briefId}`);
+}
+
+
+export async function getBrief(id: string): Promise<DecisionBriefV2 | null> {
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) throw new Error('Authentication session not found.');
+  const { user } = await getAuthenticatedUser(sessionCookie);
+  if (!user || !user.profile.tenantId) throw new Error('Authentication required.');
+
+  try {
+    const { db } = initializeAdmin();
+    const briefDoc = await db.collection('decisionBriefs').doc(id).get();
+
+    if (!briefDoc.exists || briefDoc.data()?.tenantId !== user.profile.tenantId) {
       console.log(`No brief found with id ${id} for tenant ${user.profile.tenantId}`);
       return null;
     }
     
-    return briefDoc.docs[0].data() as DecisionBrief;
+    return briefDoc.data() as DecisionBriefV2;
   } catch (error) {
     console.error(`Failed to fetch brief ${id}`, error);
     return null;
   }
-}
-
-export async function addBriefVersion(briefId: string, userResponses: Record<string, string>) {
-    console.log(`addBriefVersion: Action initiated for briefId: ${briefId}`);
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) {
-        throw new Error('Authentication session not found.');
-    }
-    const { user } = await getAuthenticatedUser(sessionCookie);
-    const { db } = initializeAdmin();
-
-    if (!user || !user.profile.tenantId) {
-        console.error('addBriefVersion: User not authenticated or missing tenantId.');
-        throw new Error('You must be logged in to refine a brief.');
-    }
-     console.log(`addBriefVersion: Authenticated user ${user.uid} in tenant ${user.profile.tenantId}.`);
-
-    const briefQuery = await db.collection('decisionBriefs')
-        .where('id', '==', briefId)
-        .where('tenantId', '==', user.profile.tenantId)
-        .limit(1)
-        .get();
-        
-    if (briefQuery.empty) {
-        console.error(`addBriefVersion: Brief not found with ID ${briefId} for tenant ${user.profile.tenantId}.`);
-        throw new Error('Brief not found or you do not have permission to access it.');
-    }
-
-    const briefRef = briefQuery.docs[0].ref;
-    const existingBrief = briefQuery.docs[0].data() as DecisionBrief;
-    const latestVersion = existingBrief.versions.at(-1);
-
-    if (!latestVersion) {
-        console.error(`addBriefVersion: Cannot refine a brief with no versions (ID: ${briefId}).`);
-        throw new Error('Cannot refine a brief with no versions.');
-    }
-    
-    // Call the AI agent to get the refined content
-    console.log('addBriefVersion: Calling refineBrief flow...');
-    const refinedContent: DecisionBriefContent = await refineBrief({
-        existingBrief: latestVersion.content,
-        userResponses,
-    });
-     console.log('addBriefVersion: refineBrief flow successful.');
-
-    const newVersion: BriefVersion = {
-        version: existingBrief.versions.length + 1,
-        createdAt: new Date().toISOString(),
-        createdBy: user.uid,
-        content: refinedContent,
-        agentQuestions: [], // The refineBrief flow does not ask follow-up questions
-        userResponses: userResponses,
-    };
-    
-    console.log(`addBriefVersion: Preparing to add version ${newVersion.version} to brief ${briefId}.`);
-    // Atomically add the new version to the versions array.
-    await briefRef.update({
-        versions: [...existingBrief.versions, newVersion]
-    });
-    console.log(`addBriefVersion: Successfully added new version to brief ${briefId}.`);
-    
-    // Invalidate the cache for the brief page
-    revalidatePath(`/brief/${briefId}`);
 }
