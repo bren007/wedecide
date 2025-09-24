@@ -21,6 +21,7 @@ export async function startBriefingProcess(goal: string): Promise<string> {
   console.log('startBriefingProcess: Action initiated with goal:', goal);
   const sessionCookie = cookies().get('session')?.value;
   if (!sessionCookie) throw new Error('Authentication session not found.');
+  
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
@@ -147,3 +148,4 @@ export async function getBrief(id: string): Promise<DecisionBriefV2 | null> {
     return null;
   }
 }
+
