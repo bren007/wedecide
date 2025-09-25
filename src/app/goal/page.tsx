@@ -11,7 +11,8 @@ import { AppLayout } from '@/components/app-sidebar';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { startBriefingProcess } from '@/app/brief/actions';
-import { clarifyGoal, type ClarificationQuestion } from './actions';
+import { clarifyGoal } from './actions';
+import type { ClarificationQuestion } from './actions';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
