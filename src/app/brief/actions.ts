@@ -45,7 +45,8 @@ export async function startBriefingProcess(goal: string, userResponses: Record<s
 
   const briefId = await createPlaceholderBrief(goal, user.uid, user.profile.tenantId);
 
-  await generateDraft(briefId, userResponses, true);
+  // Asynchronously kick off draft generation but don't block the UI
+  generateDraft(briefId, userResponses, true).catch(console.error);
 
   revalidatePath(`/brief/${briefId}`);
   return briefId;
