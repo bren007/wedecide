@@ -26,7 +26,8 @@ const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
-  model: flash, // Explicitly use the correctly defined model.
+  // By removing the model parameter here, we rely on the default set in `genkit.ts`.
+  // This was the source of the persistent error.
   prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
 
 **User's Goal:** "{{userGoal}}"

@@ -1,17 +1,21 @@
+'use server';
+
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import 'dotenv/config';
 
-// Explicitly define the model we want to use.
-// This provides a clear, unambiguous reference and avoids resolution issues.
+// This explicit definition is the key to resolving the model resolution error.
+// It creates an unambiguous reference to the correct, stable model identifier.
 export const flash = googleAI.model('gemini-1.5-flash');
 
 export const ai = genkit({
   plugins: [
     googleAI({
+      // Ensure the API key is passed correctly.
       apiKey: process.env.GEMINI_API_KEY,
     }),
   ],
-  // Set the default model for the app to our explicitly defined 'flash' model.
+  // Setting the default model for the entire application to our explicitly
+  // defined and correctly resolved `flash` model.
   model: flash,
 });
