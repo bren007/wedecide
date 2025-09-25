@@ -4,7 +4,7 @@ import 'dotenv/config';
 
 // Explicitly define the model we want to use.
 // This provides a clear, unambiguous reference and avoids resolution issues.
-const flash = googleAI.model('gemini-1.5-flash');
+export const flash = googleAI.model('gemini-1.5-flash');
 
 export const ai = genkit({
   plugins: [

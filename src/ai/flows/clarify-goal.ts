@@ -6,7 +6,7 @@
  * - clarifyGoal - A function that generates questions.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, flash } from '@/ai/genkit';
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -20,12 +20,13 @@ export async function clarifyGoal(
   return clarifyGoalFlow(input);
 }
 
-// Rewritten prompt that does NOT specify a model,
-// allowing it to inherit the correct default from `src/ai/genkit.ts`.
+// This prompt now explicitly uses the 'flash' model defined in genkit.ts,
+// ensuring the correct model is always used and avoiding resolution errors.
 const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
+  model: flash, // Explicitly use the correctly defined model.
   prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
 
 **User's Goal:** "{{userGoal}}"
