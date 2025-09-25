@@ -57,15 +57,17 @@ const clarifyGoalFlow = ai.defineFlow(
   },
   async (input) => {
     console.log('AGENT: Starting clarifyGoalFlow with goal:', input.userGoal);
-
+    
+    console.log('AGENT: Calling LLM prompt...');
     const { output } = await prompt(input);
+    console.log('AGENT: Received response from LLM.');
 
     if (!output) {
-      console.error('AGENT: The clarifyGoalPrompt returned no output.');
+      console.error('AGENT ERROR: The clarifyGoalPrompt returned no output.');
       throw new Error('The agent failed to generate clarification questions.');
     }
 
-    console.log('AGENT: Successfully generated clarification questions.');
+    console.log('AGENT: Successfully generated clarification questions.', output);
     return output;
   }
 );
