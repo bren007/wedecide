@@ -60,9 +60,6 @@ const clarifyGoalFlow = ai.defineFlow(
     
     console.log('AGENT: Calling LLM prompt...');
     
-    // DIAGNOSTIC LOG: Print the entire prompt object to see its configuration at runtime.
-    console.log('DIAGNOSTIC: PROMPT OBJECT CONFIGURATION:', JSON.stringify(prompt, null, 2));
-
     const { output } = await prompt(input);
     console.log('AGENT: Received response from LLM.');
 
