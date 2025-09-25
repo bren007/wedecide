@@ -4,7 +4,6 @@
 import { initializeAdmin } from '@/lib/firebase/server-admin';
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import type { BriefVersionV2, DecisionBriefV2 } from '@/lib/types';
-import { generateInitialBrief, type GenerateInitialBriefOutput } from '@/ai/flows/generate-initial-brief';
 import { refineBrief } from '@/ai/flows/refine-brief';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
@@ -20,7 +19,7 @@ async function createPlaceholderBrief(goal: string, uid: string, tenantId: strin
   const initialBrief: DecisionBriefV2 = {
     id: newBriefRef.id,
     tenantId: tenantId,
-    status: 'Discovery',
+    status: 'Discovery', // Will be updated to 'Draft' after first generation
     goal: goal,
     createdAt: new Date().toISOString(),
     createdBy: uid,
@@ -32,33 +31,11 @@ async function createPlaceholderBrief(goal: string, uid: string, tenantId: strin
   return newBriefRef.id;
 }
 
-/**
- * Updates the brief with the discovery output from the AI agent.
- */
-async function updateBriefWithDiscovery(briefId: string, discoveryOutput: GenerateInitialBriefOutput, uid: string) {
-  console.log(`actions.updateBriefWithDiscovery: Updating brief ${briefId} with discovery output.`);
-  const { db } = initializeAdmin();
-  const briefRef = db.collection('decisionBriefs').doc(briefId);
-  
-  const firstVersion: BriefVersionV2 = {
-    version: 1,
-    createdAt: new Date().toISOString(),
-    createdBy: uid,
-    agentQuestions: discoveryOutput.agentQuestions,
-    identifiedSources: discoveryOutput.identifiedSources,
-  };
-
-  await briefRef.update({
-    versions: [firstVersion],
-  });
-   console.log(`actions.updateBriefWithDiscovery: Successfully updated brief ${briefId}.`);
-}
-
 
 /**
- * Stage 1: Kicks off the briefing process.
+ * Kicks off the briefing process by creating a placeholder and then generating the first draft.
  */
-export async function startBriefingProcess(goal: string): Promise<string> {
+export async function startBriefingProcess(goal: string, userResponses: Record<string, string>): Promise<string> {
   console.log('actions.startBriefingProcess: Initiated with goal:', goal);
   const sessionCookie = cookies().get('session')?.value;
   if (!sessionCookie) throw new Error('Authentication session not found.');
@@ -66,28 +43,18 @@ export async function startBriefingProcess(goal: string): Promise<string> {
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('User not authenticated or tenant ID is missing.');
 
-  try {
-    const briefId = await createPlaceholderBrief(goal, user.uid, user.profile.tenantId);
-    
-    console.log('AGENT: Calling generateInitialBrief flow...');
-    const discoveryOutput = await generateInitialBrief({ goal });
-    await updateBriefWithDiscovery(briefId, discoveryOutput, user.uid);
-    console.log('AGENT: Updated brief with discovery output.');
+  const briefId = await createPlaceholderBrief(goal, user.uid, user.profile.tenantId);
 
-    revalidatePath(`/brief/${briefId}`);
-    return briefId;
+  await generateDraft(briefId, userResponses, true);
 
-  } catch (error) {
-    console.error('actions.startBriefingProcess: An error occurred.', error);
-    if (error instanceof Error) throw new Error(error.message);
-    throw new Error('An unexpected error occurred during the briefing process.');
-  }
+  revalidatePath(`/brief/${briefId}`);
+  return briefId;
 }
 
 /**
- * Stage 2: Generates the draft document.
+ * Stage 2: Generates the first draft of the document.
  */
-export async function generateDraft(briefId: string, userResponses: Record<string, string>) {
+export async function generateDraft(briefId: string, userResponses: Record<string, string>, isFirstDraft = false) {
     console.log(`actions.generateDraft: Initiated for briefId: ${briefId}`);
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) throw new Error('Authentication session not found.');
@@ -103,14 +70,9 @@ export async function generateDraft(briefId: string, userResponses: Record<strin
     }
     
     const existingBrief = briefDoc.data() as DecisionBriefV2;
-    const latestVersion = existingBrief.versions.at(-1);
-
-    if (!latestVersion) {
-        throw new Error('Cannot generate draft for a brief with no versions.');
-    }
     
     // Combine goal and responses into a single instruction for the agent.
-    const instruction = `Based on my goal "${existingBrief.goal}" and my answers to your questions, please generate the first draft of the document. My answers were: ${JSON.stringify(userResponses)}`;
+    const instruction = `My primary goal is: "${existingBrief.goal}". I have answered your clarifying questions. Based on my goal and my answers, please generate the first draft of the document. My answers were: ${JSON.stringify(userResponses)}`;
     
     console.log('actions.generateDraft: Calling refineBrief flow for initial draft...');
     const draftOutput = await refineBrief({
@@ -122,8 +84,7 @@ export async function generateDraft(briefId: string, userResponses: Record<strin
     console.log('actions.generateDraft: refineBrief flow successful.');
 
     const newVersion: BriefVersionV2 = {
-        ...latestVersion,
-        version: existingBrief.versions.length + 1,
+        version: 1,
         createdAt: new Date().toISOString(),
         createdBy: user.uid,
         userResponses: userResponses,
@@ -133,7 +94,7 @@ export async function generateDraft(briefId: string, userResponses: Record<strin
     
     console.log(`actions.generateDraft: Adding version ${newVersion.version} to brief ${briefId}.`);
     await briefRef.update({
-        versions: [...existingBrief.versions, newVersion],
+        versions: [newVersion],
         status: 'Draft',
     });
     console.log(`actions.generateDraft: Successfully added new version to brief ${briefId}.`);

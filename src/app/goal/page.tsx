@@ -1,41 +1,88 @@
 
 'use client';
 import { useState, useTransition } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/components/auth-provider';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/app-sidebar';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { startBriefingProcess } from '@/app/brief/actions';
+import { clarifyGoal, type ClarificationQuestion } from './actions';
+import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+
+type FormValues = {
+  responses: Record<string, string>;
+};
 
 export default function GoalPage() {
-  const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  
+  const [step, setStep] = useState<'enterGoal' | 'clarifyGoal'>('enterGoal');
   const [goal, setGoal] = useState('');
-  const [isPending, startTransition] = useTransition();
+  const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
+  const [isClarifying, startClarifyTransition] = useTransition();
+  const [isGenerating, startGeneratingTransition] = useTransition();
 
-  const handleSubmit = () => {
-    if (!goal.trim() || !user) return;
-    
-    startTransition(async () => {
+  const validationSchema = z.object({
+    responses: z.object(
+      questions.reduce((acc, q) => {
+        acc[q.category] = z.string().min(1, 'An answer is required.');
+        return acc;
+      }, {} as Record<string, z.ZodString>)
+    ),
+  });
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(validationSchema),
+    mode: 'onChange',
+  });
+
+  const handleGoalSubmit = () => {
+    if (!goal.trim()) return;
+
+    startClarifyTransition(async () => {
       try {
-        console.log('handleSubmit: Calling startBriefingProcess with goal:', goal);
-        // 1. Call the single, consolidated server action
-        const newBriefId = await startBriefingProcess(goal);
-
-        console.log('handleSubmit: Success! Received new brief ID:', newBriefId);
-        // 2. Redirect to the new brief's page
-        router.push(`/brief/${newBriefId}`);
-
+        const result = await clarifyGoal(goal);
+        setQuestions(result);
+        form.reset(
+          {
+            responses: result.reduce((acc, q) => {
+              acc[q.category] = '';
+              return acc;
+            }, {} as Record<string, string>)
+          }
+        );
+        setStep('clarifyGoal');
       } catch (error: any) {
-        console.error('handleSubmit: Caught an error', error);
         toast({
-          title: 'Error',
-          description: `Failed to create the brief: ${error.message}`,
-          variant: 'destructive'
+          title: 'Error Clarifying Goal',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+    });
+  };
+
+  const handleClarificationSubmit = (data: FormValues) => {
+    startGeneratingTransition(async () => {
+      try {
+        const newBriefId = await startBriefingProcess(goal, data.responses);
+        toast({
+          title: 'Brief Generation Started',
+          description: 'The agent is now creating your draft.',
+        });
+        router.push(`/brief/${newBriefId}`);
+      } catch (error: any) {
+        toast({
+          title: 'Error Generating Brief',
+          description: error.message,
+          variant: 'destructive',
         });
       }
     });
@@ -45,23 +92,62 @@ export default function GoalPage() {
     <AppLayout>
       <div className="flex h-full flex-col items-center justify-center">
         <div className="w-full max-w-3xl">
-          <Card>
-            <CardHeader>
-              <CardTitle>What is your goal?</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                placeholder="Describe the outcome you want to achieve or the problem you are trying to solve..."
-                rows={5}
-                className="text-lg"
-              />
-              <Button onClick={handleSubmit} disabled={isPending || !goal.trim()} size="lg">
-                {isPending ? 'Agent is thinking...' : 'Start Brief'}
-              </Button>
-            </CardContent>
-          </Card>
+          {step === 'enterGoal' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>What is your goal?</CardTitle>
+                <CardDescription>Describe the outcome you want to achieve or the problem you are trying to solve. The more detail, the better.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  placeholder="e.g., 'Draft a business case for a new public-facing portal that improves citizen access to services...'"
+                  rows={5}
+                  className="text-lg"
+                />
+                <Button onClick={handleGoalSubmit} disabled={isClarifying || !goal.trim()} size="lg">
+                  {isClarifying ? 'Agent is thinking...' : 'Start Brief'}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {step === 'clarifyGoal' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Let's Refine Your Goal</CardTitle>
+                <CardDescription>
+                  To create the best possible draft, I have a few clarifying questions. Your answers will help me tailor the brief to your specific needs.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleClarificationSubmit)} className="space-y-6">
+                    {questions.map((q, i) => (
+                      <FormField
+                        key={i}
+                        control={form.control}
+                        name={`responses.${q.category}`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <Label className="font-semibold text-sm">{q.question}</Label>
+                            <FormControl>
+                              <Textarea placeholder="Your answer..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                    <Button type="submit" disabled={isGenerating || !form.formState.isValid} size="lg">
+                      {isGenerating ? 'Agent is generating...' : 'Generate Brief'}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </AppLayout>
