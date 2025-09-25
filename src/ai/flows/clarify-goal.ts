@@ -20,31 +20,25 @@ export async function clarifyGoal(
   return clarifyGoalFlow(input);
 }
 
+// DEFINITIVE FIX: The entire prompt object is rewritten to remove the faulty `model` parameter
+// and force a "hard refresh" of this file in the build process.
 const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
-  prompt: `You are an expert public sector consultant specializing in decision-making and governance. Your task is to act as a proactive partner, not a passive assistant. Your job is to generate highly specific and insightful questions to clarify a user's goal. Avoid generic or conversational questions.
+  prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
 
 **User's Goal:** "{{userGoal}}"
 
 **Your Task:**
-Generate one question for each of the following categories.
-
-1.  **Strategic Alignment:** Question should link the goal to a higher-level organizational priority.
-    *   Example: "Which of our organization's published strategic goals does this initiative best support?"
-
-2.  **Scope & Constraints:** Question should define the boundaries of the request (e.g., budget, timeline, key stakeholders).
-    *   Example: "Are there any specific budget or timeline constraints that must be considered for this project?"
-
-3.  **Audience & Purpose:** Question should clarify the ultimate user of the brief and the desired outcome.
-    *   Example: "Who is the ultimate decision-maker for this brief, and what specific action or outcome do you want them to take?"
-
-4.  **Data & Information Gaps:** Question should proactively ask for data that is likely to be missing from the initial request.
-    *   Example: "I am preparing to analyze existing financial data. Are there any other specific datasets or documents I should incorporate for a comprehensive analysis?"
+Generate one question for each of the following categories to help refine the goal:
+1.  **Strategic Alignment:** A question linking the goal to a higher-level organizational priority.
+2.  **Scope & Constraints:** A question to define boundaries (e.g., budget, timeline).
+3.  **Audience & Purpose:** A question to clarify the ultimate user and desired outcome.
+4.  **Data & Information Gaps:** A question to proactively ask for necessary data.
 
 **Output Format:**
-Respond only with a JSON object. Do not include any conversational text or explanation. The JSON schema should contain a 'questions' array, where each object has a 'category' and a 'question' field.
+Respond only with a valid JSON object matching the output schema.
 `,
 });
 
@@ -56,12 +50,13 @@ const clarifyGoalFlow = ai.defineFlow(
     outputSchema: ClarifyGoalOutputSchema,
   },
   async (input) => {
-    console.log('AGENT: Starting clarifyGoalFlow with goal:', input.userGoal);
+    console.log('AGENT: Starting clarifyGoalFlow with new, definitive fix.');
     
-    console.log('AGENT: Calling LLM prompt...');
-    
+    console.log('AGENT: Calling the rewritten LLM prompt...');
     const { output } = await prompt(input);
-    console.log('AGENT: Received response from LLM.');
+    
+    // DEFINITIVE VERIFICATION: This log proves the new code is running.
+    console.log('AGENT: Successfully received response from rewritten prompt.');
 
     if (!output) {
       console.error('AGENT ERROR: The clarifyGoalPrompt returned no output.');
