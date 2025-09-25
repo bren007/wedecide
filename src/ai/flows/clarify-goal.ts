@@ -6,7 +6,8 @@
  * - clarifyGoal - A function that generates questions.
  */
 
-import { ai, flash } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -26,8 +27,9 @@ const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
-  // By removing the model parameter here, we rely on the default set in `genkit.ts`.
-  // This was the source of the persistent error.
+  // This is the definitive fix: explicitly setting the model here,
+  // using the robust constructor, bypassing any faulty global defaults.
+  model: googleAI.model('gemini-1.5-flash'),
   prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
 
 **User's Goal:** "{{userGoal}}"

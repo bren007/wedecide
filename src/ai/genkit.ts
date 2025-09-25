@@ -14,7 +14,4 @@ export const ai = genkit({
       apiKey: process.env.GEMINI_API_KEY,
     }),
   ],
-  // Setting the default model for the entire application to our explicitly
-  // defined and correctly resolved `flash` model.
-  model: flash,
 });
