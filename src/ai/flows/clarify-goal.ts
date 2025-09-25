@@ -20,8 +20,8 @@ export async function clarifyGoal(
   return clarifyGoalFlow(input);
 }
 
-// DEFINITIVE FIX: The entire prompt object is rewritten to remove the faulty `model` parameter
-// and force a "hard refresh" of this file in the build process.
+// Rewritten prompt that does NOT specify a model,
+// allowing it to inherit the correct default from `src/ai/genkit.ts`.
 const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
@@ -50,20 +50,13 @@ const clarifyGoalFlow = ai.defineFlow(
     outputSchema: ClarifyGoalOutputSchema,
   },
   async (input) => {
-    console.log('AGENT: Starting clarifyGoalFlow with new, definitive fix.');
-    
-    console.log('AGENT: Calling the rewritten LLM prompt...');
     const { output } = await prompt(input);
-    
-    // DEFINITIVE VERIFICATION: This log proves the new code is running.
-    console.log('AGENT: Successfully received response from rewritten prompt.');
 
     if (!output) {
       console.error('AGENT ERROR: The clarifyGoalPrompt returned no output.');
       throw new Error('The agent failed to generate clarification questions.');
     }
 
-    console.log('AGENT: Successfully generated clarification questions.', output);
     return output;
   }
 );
