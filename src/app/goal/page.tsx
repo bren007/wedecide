@@ -12,7 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { startBriefingProcess } from '@/app/brief/actions';
 import { clarifyGoal } from './actions';
-import type { ClarificationQuestion } from './actions';
+import type { ClarificationQuestion } from '@/ai/flows/clarify-goal';
+import { ClarificationQuestionSchema } from '@/ai/flows/clarify-goal';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 

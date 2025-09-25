@@ -3,8 +3,6 @@
 
 import { clarifyGoal as clarifyGoalFlow, type ClarificationQuestion } from '@/ai/flows/clarify-goal';
 
-export type { ClarificationQuestion };
-
 /**
  * Stage 1: Calls the AI agent to get clarifying questions for a user's goal.
  */
