@@ -36,9 +36,6 @@ const nextConfig: NextConfig = {
       executionTimeout: 120, // Default is around 15s
     },
   },
-  env: {
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-  },
   allowedDevOrigins: [
     'https://*.cluster-ys234awlzbhwoxmkkse6qo3fz6.cloudworkstations.dev',
   ],
