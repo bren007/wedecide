@@ -1,14 +1,17 @@
 
 'use server';
 
-import { clarifyGoal as clarifyGoalFlow, type ClarificationQuestion } from '@/ai/flows/clarify-goal';
+import { clarifyGoal as clarifyGoalFlow } from '@/ai/flows/clarify-goal';
+import type { ClarificationQuestion } from '@/lib/schema/clarify-goal-schema';
 
 /**
  * Stage 1: Calls the AI agent to get clarifying questions for a user's goal.
  */
-export async function clarifyGoal(goal: string): Promise<ClarificationQuestion[]> {
+export async function clarifyGoal(
+  goal: string
+): Promise<ClarificationQuestion[]> {
   console.log('actions.clarifyGoal: Initiated with goal:', goal);
-  
+
   try {
     const result = await clarifyGoalFlow({ userGoal: goal });
     console.log('actions.clarifyGoal: Received questions from agent.');

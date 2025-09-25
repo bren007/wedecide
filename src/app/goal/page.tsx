@@ -6,16 +6,30 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { AppLayout } from '@/components/app-sidebar';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { startBriefingProcess } from '@/app/brief/actions';
 import { clarifyGoal } from './actions';
-import type { ClarificationQuestion } from '@/ai/flows/clarify-goal';
-import { ClarificationQuestionSchema } from '@/ai/flows/clarify-goal';
+import {
+  ClarificationQuestionSchema,
+  type ClarificationQuestion,
+} from '@/lib/schema/clarify-goal-schema';
 import { Label } from '@/components/ui/label';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
 
 type FormValues = {
   responses: Record<string, string>;
@@ -24,7 +38,7 @@ type FormValues = {
 export default function GoalPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const [step, setStep] = useState<'enterGoal' | 'clarifyGoal'>('enterGoal');
   const [goal, setGoal] = useState('');
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
@@ -33,10 +47,13 @@ export default function GoalPage() {
 
   const validationSchema = z.object({
     responses: z.object(
-      questions.reduce((acc, q) => {
-        acc[q.category] = z.string().min(1, 'An answer is required.');
-        return acc;
-      }, {} as Record<string, z.ZodString>)
+      questions.reduce(
+        (acc, q) => {
+          acc[q.category] = z.string().min(1, 'An answer is required.');
+          return acc;
+        },
+        {} as Record<string, z.ZodString>
+      )
     ),
   });
 
@@ -52,14 +69,15 @@ export default function GoalPage() {
       try {
         const result = await clarifyGoal(goal);
         setQuestions(result);
-        form.reset(
-          {
-            responses: result.reduce((acc, q) => {
+        form.reset({
+          responses: result.reduce(
+            (acc, q) => {
               acc[q.category] = '';
               return acc;
-            }, {} as Record<string, string>)
-          }
-        );
+            },
+            {} as Record<string, string>
+          ),
+        });
         setStep('clarifyGoal');
       } catch (error: any) {
         toast({
@@ -98,7 +116,10 @@ export default function GoalPage() {
             <Card>
               <CardHeader>
                 <CardTitle>What is your goal?</CardTitle>
-                <CardDescription>Describe the outcome you want to achieve or the problem you are trying to solve. The more detail, the better.</CardDescription>
+                <CardDescription>
+                  Describe the outcome you want to achieve or the problem you
+                  are trying to solve. The more detail, the better.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
@@ -108,7 +129,11 @@ export default function GoalPage() {
                   rows={5}
                   className="text-lg"
                 />
-                <Button onClick={handleGoalSubmit} disabled={isClarifying || !goal.trim()} size="lg">
+                <Button
+                  onClick={handleGoalSubmit}
+                  disabled={isClarifying || !goal.trim()}
+                  size="lg"
+                >
                   {isClarifying ? 'Agent is thinking...' : 'Start Brief'}
                 </Button>
               </CardContent>
@@ -120,12 +145,17 @@ export default function GoalPage() {
               <CardHeader>
                 <CardTitle>Let's Refine Your Goal</CardTitle>
                 <CardDescription>
-                  To create the best possible draft, I have a few clarifying questions. Your answers will help me tailor the brief to your specific needs.
+                  To create the best possible draft, I have a few clarifying
+                  questions. Your answers will help me tailor the brief to your
+                  specific needs.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleClarificationSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={form.handleSubmit(handleClarificationSubmit)}
+                    className="space-y-6"
+                  >
                     {questions.map((q, i) => (
                       <FormField
                         key={i}
@@ -133,7 +163,9 @@ export default function GoalPage() {
                         name={`responses.${q.category}`}
                         render={({ field }) => (
                           <FormItem>
-                            <Label className="font-semibold text-sm">{q.question}</Label>
+                            <Label className="font-semibold text-sm">
+                              {q.question}
+                            </Label>
                             <FormControl>
                               <Textarea placeholder="Your answer..." {...field} />
                             </FormControl>
@@ -142,8 +174,14 @@ export default function GoalPage() {
                         )}
                       />
                     ))}
-                    <Button type="submit" disabled={isGenerating || !form.formState.isValid} size="lg">
-                      {isGenerating ? 'Agent is generating...' : 'Generate Brief'}
+                    <Button
+                      type="submit"
+                      disabled={isGenerating || !form.formState.isValid}
+                      size="lg"
+                    >
+                      {isGenerating
+                        ? 'Agent is generating...'
+                        : 'Generate Brief'}
                     </Button>
                   </form>
                 </Form>
