@@ -7,7 +7,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai'; // Explicit import for the fix.
+import { googleAI } from '@genkit-ai/googleai';
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -18,7 +18,6 @@ import {
 export async function clarifyGoal(
   input: ClarifyGoalInput
 ): Promise<ClarifyGoalOutput> {
-  // Good logging to see what's happening.
   console.log('AGENT: Starting clarifyGoal flow.');
   return clarifyGoalFlow(input);
 }
