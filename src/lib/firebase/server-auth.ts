@@ -11,13 +11,13 @@ type AuthResult = {
 };
 
 /**
- * Verifies a session cookie and returns the authenticated user.
+ * Verifies a session cookie string and returns the authenticated user's data.
  * Throws an error if the user is not authenticated.
- * This is a pure helper function that accepts a cookie string.
+ * This is a pure helper function that does not use any Next.js dynamic APIs.
  */
 export async function getAuthenticatedUser(sessionCookie: string | undefined): Promise<AuthResult> {
   if (!sessionCookie) {
-    throw new Error('Authentication session not found.');
+    throw new Error('Authentication session cookie not found.');
   }
 
   const { auth, db } = initializeAdmin();
@@ -53,6 +53,6 @@ export async function getAuthenticatedUser(sessionCookie: string | undefined): P
     return { user, decodedToken };
   } catch (error: any) {
     console.error('Could not verify session cookie. User is not authenticated.', error.message);
-    throw new Error('Authentication failed.');
+    throw new Error('Authentication failed. Please log in again.');
   }
 }

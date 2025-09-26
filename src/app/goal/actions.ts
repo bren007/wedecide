@@ -3,9 +3,7 @@
 
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
-import {
-  generateClarifyingQuestions,
-} from '@/ai/flows/generate-clarifying-questions';
+import { generateClarifyingQuestions } from '@/ai/flows/generate-clarifying-questions';
 import type { ClarifyGoalInput, ClarifyGoalOutput } from '@/lib/types';
 
 /**

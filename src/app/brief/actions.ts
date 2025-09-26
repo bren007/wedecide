@@ -56,8 +56,10 @@ async function generateInitialDraft(
   userResponses: Record<string, string>,
   goal: string
 ) {
+  // Since this is called from a Server Action, we need to read the cookie again.
   const sessionCookie = cookies().get('session')?.value;
   const { user } = await getAuthenticatedUser(sessionCookie);
+
   console.log(
     `actions.generateInitialDraft: Initiated for briefId: ${briefId}`
   );
