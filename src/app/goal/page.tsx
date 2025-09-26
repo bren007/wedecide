@@ -18,10 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { startBriefingProcess } from '@/app/brief/actions';
 import { clarifyGoal } from './actions';
-import {
-  type ClarifyGoalOutput,
-  type ClarificationQuestion,
-} from '@/lib/schema/clarify-goal-schema';
+import type { ClarificationQuestion } from '@/ai/flows/generate-clarifying-questions';
 import { Label } from '@/components/ui/label';
 import {
   Form,
@@ -67,8 +64,8 @@ export default function GoalPage() {
   const handleGoalSubmit = () => {
     if (!goal.trim() || !user) {
       toast({
-        title: 'Authentication Error',
-        description: 'You must be logged in to start a new brief.',
+        title: 'Goal Required',
+        description: 'Please enter a goal to start the process.',
         variant: 'destructive',
       });
       return;
@@ -99,20 +96,12 @@ export default function GoalPage() {
   };
 
   const handleClarificationSubmit = (data: FormValues) => {
-    if (!user) {
-      toast({
-        title: 'Authentication Error',
-        description: 'You must be logged in to generate a brief.',
-        variant: 'destructive',
-      });
-      return;
-    }
     startGeneratingTransition(async () => {
       try {
         const newBriefId = await startBriefingProcess(goal, data.responses);
         toast({
           title: 'Brief Generation Started',
-          description: 'The agent is now creating your draft.',
+          description: "The agent is now creating your draft. You'll be redirected shortly.",
         });
         router.push(`/brief/${newBriefId}`);
       } catch (error: any) {
@@ -162,8 +151,8 @@ export default function GoalPage() {
               <CardHeader>
                 <CardTitle>Let's Refine Your Goal</CardTitle>
                 <CardDescription>
-                  To create the best possible draft, I have a few clarifying
-                  questions. Your answers will help me tailor the brief to your
+                  To create the best possible draft, the agent has a few clarifying
+                  questions. Your answers will help tailor the brief to your
                   specific needs.
                 </CardDescription>
               </CardHeader>

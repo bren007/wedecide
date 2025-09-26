@@ -1,50 +1,31 @@
+
 'use server';
 
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
-import type {
-  ClarifyGoalOutput,
-  ClarificationQuestion,
-} from '@/lib/schema/clarify-goal-schema';
 import { cookies } from 'next/headers';
+import {
+  ClarifyGoalOutput,
+  generateClarifyingQuestions,
+} from '@/ai/flows/generate-clarifying-questions';
 
 /**
- * Stage 1: Returns a hardcoded set of clarifying questions.
- * This is a stable workaround to bypass a persistent environment issue with the Genkit flow.
+ * Stage 1: Calls a Genkit flow to generate dynamic, targeted clarifying questions
+ * based on the user's initial goal.
  */
 export async function clarifyGoal(goal: string): Promise<ClarifyGoalOutput> {
-  console.log(
-    'actions.clarifyGoal: Bypassing AI call and returning hardcoded questions for goal:',
-    goal
-  );
+  console.log('actions.clarifyGoal: Initiating AI clarification for goal:', goal);
 
   const sessionCookie = cookies().get('session')?.value;
-  // We check for an authenticated user to ensure the action is secure.
+  // This action is secure because it verifies the user before proceeding.
   await getAuthenticatedUser(sessionCookie);
 
-  const hardcodedQuestions: { questions: ClarificationQuestion[] } = {
-    questions: [
-      {
-        category: 'Strategic Alignment',
-        question:
-          "How does this goal align with our organization's primary strategic objectives?",
-      },
-      {
-        category: 'Scope and Constraints',
-        question:
-          'What are the key constraints for this project, such as budget, timeline, or available resources?',
-      },
-      {
-        category: 'Audience and Purpose',
-        question:
-          'Who is the primary audience for this brief, and what is the main purpose you want it to achieve?',
-      },
-      {
-        category: 'Information Gaps',
-        question:
-          'What key information or data might be missing that would be critical for making a decision?',
-      },
-    ],
-  };
+  const clarifyingQuestions = await generateClarifyingQuestions({
+    userGoal: goal,
+  });
 
-  return Promise.resolve(hardcodedQuestions);
+  if (!clarifyingQuestions?.questions || clarifyingQuestions.questions.length === 0) {
+    throw new Error('The agent failed to generate clarifying questions.');
+  }
+
+  return clarifyingQuestions;
 }

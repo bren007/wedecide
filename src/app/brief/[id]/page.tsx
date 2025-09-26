@@ -15,12 +15,9 @@ import { useToast } from '@/hooks/use-toast';
 import LoadingBriefPage from './loading';
 import { Briefcase, FileText, Wand2, Group } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/components/auth-provider';
 
-
-// Stage 2: Component to display and refine the generated draft
+// Component to display and refine the generated draft
 function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () => void }) {
-    const { user } = useAuth();
     const latestVersion = brief.versions.at(-1)!;
     const { brief: briefContent, fullArtifact } = latestVersion;
     const [refinementInstruction, setRefinementInstruction] = useState('');
@@ -28,7 +25,7 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
     const { toast } = useToast();
 
     const handleRefine = () => {
-        if (!refinementInstruction.trim() || !user) return;
+        if (!refinementInstruction.trim()) return;
 
         startRefinementTransition(async () => {
             try {
@@ -38,7 +35,7 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
                     description: 'The agent has created a new version of your brief.',
                 });
                 setRefinementInstruction('');
-                onRefine(); // This will trigger a router.refresh() in the parent
+                onRefine();
             } catch (error: any) {
                 toast({
                     title: 'Error Refining Draft',
@@ -145,7 +142,7 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
                                 onChange={(e) => setRefinementInstruction(e.target.value)}
                              />
                         </div>
-                        <Button onClick={handleRefine} disabled={isRefining || !refinementInstruction.trim() || !user}>
+                        <Button onClick={handleRefine} disabled={isRefining || !refinementInstruction.trim()}>
                             {isRefining ? 'Agent is refining...' : <>
                                 <Wand2 className="mr-2 h-4 w-4" />
                                 Refine Draft
@@ -167,69 +164,66 @@ export default function BriefPage() {
   const [isLoading, setIsLoading] = useState(true);
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
-  const [isPolling, setIsPolling] = useState(false);
-
+  
   const briefId = params.id as string;
   
-  // This function is passed to child components to trigger a refresh
   const handleDataRefresh = () => {
     router.refresh();
   };
 
   useEffect(() => {
-    if (!briefId || !user) return;
-
     let isCancelled = false;
 
     const fetchBriefData = async () => {
-      if (!isCancelled) setIsLoading(true);
+      if (isCancelled) return;
+      setIsLoading(true);
       try {
         const fetchedBrief = await getBrief(briefId);
         if (!isCancelled) {
           setBrief(fetchedBrief);
-          // If the draft isn't ready, start polling
-          const draftIsReady = fetchedBrief?.versions?.at(-1)?.brief;
-          if (!draftIsReady && !isPolling) {
-            setIsPolling(true);
-          } else if (draftIsReady) {
-            setIsPolling(false);
-          }
         }
       } catch (error) {
         console.error("Failed to fetch brief", error);
+        if (!isCancelled) {
+          setBrief(null); // Explicitly set to null on error
+        }
       } finally {
-        if (!isCancelled) setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
     
-    fetchBriefData();
+    if (briefId) {
+      fetchBriefData();
+    }
 
     return () => {
       isCancelled = true;
     };
-  }, [briefId, user, isPolling]); // Depend on isPolling to re-run the fetch
+  }, [briefId]);
 
+  // Set up polling with useEffect to check for draft readiness
   useEffect(() => {
-    if (!isPolling) return;
+    const draftIsReady = brief?.versions?.length ?? 0 > 0;
+    if (draftIsReady || !briefId) {
+      return; // Stop polling if the draft is ready or there's no ID
+    }
 
-    const interval = setInterval(() => {
-      console.log('Polling for brief data...');
+    console.log('Polling for brief data...');
+    const intervalId = setInterval(() => {
       router.refresh();
-    }, 5000);
+    }, 5000); // Poll every 5 seconds
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [isPolling, router]);
+    return () => clearInterval(intervalId);
+  }, [brief, briefId, router]);
 
 
-  if (isLoading && !brief) {
+  if (isLoading) {
     return <LoadingBriefPage />;
   }
 
   if (!brief) {
-    // This can happen if getBrief returns null (e.g., permissions error)
     return notFound();
   }
 

@@ -13,8 +13,7 @@ type AuthResult = {
 /**
  * Verifies a session cookie and returns the authenticated user.
  * Throws an error if the user is not authenticated.
- * This function is a pure helper and should be called by Server Actions
- * that have already retrieved the session cookie.
+ * This is a pure helper function that accepts a cookie string.
  */
 export async function getAuthenticatedUser(sessionCookie: string | undefined): Promise<AuthResult> {
   if (!sessionCookie) {
@@ -26,7 +25,6 @@ export async function getAuthenticatedUser(sessionCookie: string | undefined): P
   try {
     const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
     
-    // Fetch the full user profile from Firestore to get the most up-to-date roles.
     const userDoc = await db.collection('users').doc(decodedToken.uid).get();
     if (!userDoc.exists) {
         throw new Error('User profile not found in database.');
@@ -40,10 +38,10 @@ export async function getAuthenticatedUser(sessionCookie: string | undefined): P
       photoURL: decodedToken.picture,
       emailVerified: decodedToken.email_verified || false,
       isAnonymous: false,
-      tenantId: userProfile.tenantId, // Use tenantId from profile
+      tenantId: userProfile.tenantId,
       providerData: [], 
       metadata: {},
-      profile: userProfile, // Attach the full, up-to-date profile
+      profile: userProfile,
       // Mock client-side methods that are not available on the server
       getIdToken: async () => sessionCookie,
       getIdTokenResult: async () => ({ token: sessionCookie, claims: decodedToken, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
