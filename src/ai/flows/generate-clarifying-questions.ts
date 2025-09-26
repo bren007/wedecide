@@ -8,25 +8,12 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { ClarifyGoalInput, ClarifyGoalOutput, ClarificationQuestion } from '@/lib/types';
-
-// Define Zod schemas that correspond to the types in /src/lib/types.ts
-const ClarifyGoalInputSchema = z.object({
-  userGoal: z.string().describe("The user's initial goal or problem statement."),
-});
-
-const ClarificationQuestionSchema = z.object({
-  category: z
-    .string()
-    .describe("The category of the question (e.g., 'Strategic Alignment', 'Scope and Constraints')."),
-  question: z.string().describe('A specific, insightful question for the user.'),
-});
-
-const ClarifyGoalOutputSchema = z.object({
-  questions: z
-    .array(ClarificationQuestionSchema)
-    .describe('A list of focused clarifying questions for the user to help confirm intent and fill gaps.'),
-});
+import {
+  ClarifyGoalInputSchema,
+  ClarifyGoalOutputSchema,
+  type ClarifyGoalInput,
+  type ClarifyGoalOutput,
+} from '@/lib/types';
 
 /**
  * The main exported function that clients will call.
@@ -73,12 +60,25 @@ const clarifyGoalFlow = ai.defineFlow(
     outputSchema: ClarifyGoalOutputSchema,
   },
   async (input) => {
-    console.log('AGENT: Generating clarifying questions for goal:', input.userGoal);
+    console.log(
+      'AGENT (clarifyGoalFlow): Received goal. Generating clarifying questions...'
+    );
+    console.log(`AGENT (clarifyGoalFlow): Goal: "${input.userGoal}"`);
+
     const { output } = await prompt(input);
-    if (!output) {
+
+    if (!output?.questions || output.questions.length === 0) {
+      console.error(
+        'AGENT (clarifyGoalFlow): Failed to generate questions from LLM.'
+      );
       throw new Error('The agent failed to generate a response.');
     }
-    console.log('AGENT: Successfully generated questions.');
+
+    console.log('AGENT (clarifyGoalFlow): Successfully generated questions:');
+    output.questions.forEach((q) =>
+      console.log(`  - [${q.category}]: ${q.question}`)
+    );
+
     return output;
   }
 );

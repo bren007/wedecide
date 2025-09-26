@@ -16,10 +16,10 @@ export async function startBriefingProcess(
   goal: string,
   userResponses: Record<string, string>
 ): Promise<string> {
+  console.log('AGENT (startBriefingProcess): Initiated.');
   const sessionCookie = cookies().get('session')?.value;
   const { user } = await getAuthenticatedUser(sessionCookie);
-
-  console.log('actions.startBriefingProcess: Initiated with goal:', goal);
+  console.log(`AGENT (startBriefingProcess): User ${user.email} authenticated.`);
 
   const { db } = initializeAdmin();
   const newBriefRef = db.collection('decisionBriefs').doc();
@@ -36,15 +36,20 @@ export async function startBriefingProcess(
 
   await newBriefRef.set(initialBrief);
   console.log(
-    'actions.startBriefingProcess: Placeholder created with ID:',
-    newBriefRef.id
+    `AGENT (startBriefingProcess): Placeholder brief created with ID: ${newBriefRef.id}.`
   );
 
   // Asynchronously kick off draft generation but don't block the UI
-  generateInitialDraft(newBriefRef.id, userResponses, goal).catch(
-    console.error
-  );
+  generateInitialDraft(newBriefRef.id, userResponses, goal).catch((err) => {
+    console.error(
+      'AGENT (startBriefingProcess): CRITICAL - Initial draft generation failed.',
+      err
+    );
+  });
 
+  console.log(
+    `AGENT (startBriefingProcess): Returning brief ID to client and letting draft generation run in background.`
+  );
   return newBriefRef.id;
 }
 
@@ -57,20 +62,22 @@ async function generateInitialDraft(
   goal: string
 ) {
   // Since this is called from a Server Action, we need to read the cookie again.
+  console.log(
+    `AGENT (generateInitialDraft): Initiated for briefId: ${briefId}.`
+  );
   const sessionCookie = cookies().get('session')?.value;
   const { user } = await getAuthenticatedUser(sessionCookie);
-
-  console.log(
-    `actions.generateInitialDraft: Initiated for briefId: ${briefId}`
-  );
 
   // Combine goal and responses into a single instruction for the agent.
   const instruction = `My primary goal is: "${goal}". I have answered your clarifying questions. Based on my goal and my answers, please generate the first draft of the document. My answers were: ${JSON.stringify(
     userResponses
   )}`;
+  console.log(
+    `AGENT (generateInitialDraft): Constructed instruction for AI: "${instruction}"`
+  );
 
   console.log(
-    'actions.generateInitialDraft: Calling refineBrief for initial draft...'
+    'AGENT (generateInitialDraft): Calling refineBrief for initial draft...'
   );
   const draftOutput = await refineBrief({
     instruction: instruction,
@@ -90,7 +97,9 @@ async function generateInitialDraft(
       financialCase: '',
     },
   });
-  console.log('actions.generateInitialDraft: refineBrief flow successful.');
+  console.log(
+    'AGENT (generateInitialDraft): refineBrief flow successful. Received draft from AI.'
+  );
 
   const newVersion: BriefVersionV2 = {
     version: 1,
@@ -105,13 +114,15 @@ async function generateInitialDraft(
   const briefRef = db.collection('decisionBriefs').doc(briefId);
 
   console.log(
-    `actions.generateInitialDraft: Adding version 1 to brief ${briefId}.`
+    `AGENT (generateInitialDraft): Updating brief ${briefId} in Firestore with version 1.`
   );
   await briefRef.update({
     versions: [newVersion],
     status: 'Draft',
   });
-  console.log(`actions.generateInitialDraft: Successfully added new version.`);
+  console.log(
+    `AGENT (generateInitialDraft): Successfully added new version. Revalidating path /brief/${briefId}.`
+  );
 
   revalidatePath(`/brief/${briefId}`);
 }
@@ -120,10 +131,10 @@ async function generateInitialDraft(
  * Refines an existing draft based on user instructions.
  */
 export async function refineDraft(briefId: string, instruction: string) {
+  console.log(`AGENT (refineDraft): Initiated for briefId: ${briefId}.`);
   const sessionCookie = cookies().get('session')?.value;
   const { user } = await getAuthenticatedUser(sessionCookie);
-
-  console.log(`actions.refineDraft: Initiated for briefId: ${briefId}`);
+  console.log(`AGENT (refineDraft): User ${user.email} authenticated.`);
 
   const { db } = initializeAdmin();
   const briefRef = db.collection('decisionBriefs').doc(briefId);
@@ -147,14 +158,19 @@ export async function refineDraft(briefId: string, instruction: string) {
       'Can only refine a brief that is in the "Draft" status and has content.'
     );
   }
+  console.log(
+    `AGENT (refineDraft): Brief is in valid state for refinement. Latest version is ${latestVersion.version}.`
+  );
 
-  console.log('actions.refineDraft: Calling refineBrief flow...');
+  console.log('AGENT (refineDraft): Calling refineBrief flow...');
   const refinedOutput = await refineBrief({
     instruction: instruction,
     existingBrief: latestVersion.brief,
     existingArtifact: latestVersion.fullArtifact,
   });
-  console.log('actions.refineDraft: refineBrief flow successful.');
+  console.log(
+    'AGENT (refineDraft): refineBrief flow successful. Received refined draft from AI.'
+  );
 
   const newVersion: BriefVersionV2 = {
     version: existingBrief.versions.length + 1,
@@ -165,11 +181,14 @@ export async function refineDraft(briefId: string, instruction: string) {
     fullArtifact: refinedOutput.fullArtifact,
   };
 
+  console.log(
+    `AGENT (refineDraft): Updating brief ${briefId} in Firestore with new version ${newVersion.version}.`
+  );
   await briefRef.update({
     versions: [...existingBrief.versions, newVersion],
   });
   console.log(
-    `actions.refineDraft: Successfully added new version to brief ${briefId}.`
+    `AGENT (refineDraft): Successfully added new version. Revalidating path /brief/${briefId}.`
   );
 
   revalidatePath(`/brief/${briefId}`);

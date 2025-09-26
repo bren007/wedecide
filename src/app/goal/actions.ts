@@ -3,8 +3,11 @@
 
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
-import { generateClarifyingQuestions } from '@/ai/flows/generate-clarifying-questions';
+import {
+  generateClarifyingQuestions,
+} from '@/ai/flows/generate-clarifying-questions';
 import type { ClarifyGoalInput, ClarifyGoalOutput } from '@/lib/types';
+
 
 /**
  * Stage 1: Calls a Genkit flow to generate dynamic, targeted clarifying questions
@@ -13,20 +16,24 @@ import type { ClarifyGoalInput, ClarifyGoalOutput } from '@/lib/types';
 export async function clarifyGoal(
   input: ClarifyGoalInput
 ): Promise<ClarifyGoalOutput> {
+  console.log('AGENT (clarifyGoal): Initiated.');
   const sessionCookie = cookies().get('session')?.value;
   // This action is secure because it verifies the user before proceeding.
-  await getAuthenticatedUser(sessionCookie);
+  const { user } = await getAuthenticatedUser(sessionCookie);
+  console.log(`AGENT (clarifyGoal): User ${user.email} authenticated.`);
 
-  console.log('AGENT: Generating clarifying questions for goal:', input.userGoal);
 
+  console.log('AGENT (clarifyGoal): Calling generateClarifyingQuestions flow...');
   const clarifyingQuestions = await generateClarifyingQuestions(input);
 
   if (
     !clarifyingQuestions?.questions ||
     clarifyingQuestions.questions.length === 0
   ) {
+    console.error('AGENT (clarifyGoal): AI flow failed to return questions.');
     throw new Error('The agent failed to generate clarifying questions.');
   }
-  console.log('AGENT: Successfully generated questions.');
+
+  console.log('AGENT (clarifyGoal): Successfully received questions from AI.');
   return clarifyingQuestions;
 }

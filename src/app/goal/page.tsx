@@ -33,13 +33,23 @@ type FormValues = {
   responses: Record<string, string>;
 };
 
+// Sample data for rapid testing
+const SAMPLE_GOAL = "Draft a business case using the better business case format. The business case should seek funding to construct a new call centre system for the department's customer helpdesk. The call centre system must be up and running before Q3 2028 and cost no more than $5m to implement. The system should provide 10% efficiency gains and support a 15% increase in customer satisfaction.";
+const SAMPLE_RESPONSES = {
+    'Strategic Alignment': 'This primarily supports our "Improve Public Service Delivery" objective by enhancing efficiency and satisfaction.',
+    'Scope and Constraints': 'The brief should focus on the business case for funding approval, including high-level timelines and resource needs, but defer detailed implementation planning.',
+    'Data and Information Gaps': 'Please incorporate the attached "2024 Customer Satisfaction Report" and the "Current Call Centre Operating Costs" spreadsheet.',
+    'Audience and Purpose': 'The ultimate decision-maker is the "Strategic Investment Board", and the purpose is to secure the $5m funding allocation for the project.'
+};
+
+
 export default function GoalPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
 
   const [step, setStep] = useState<'enterGoal' | 'clarifyGoal'>('enterGoal');
-  const [goal, setGoal] = useState('');
+  const [goal, setGoal] = useState(SAMPLE_GOAL);
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
   const [isClarifying, startClarifyTransition] = useTransition();
   const [isGenerating, startGeneratingTransition] = useTransition();
@@ -73,17 +83,16 @@ export default function GoalPage() {
 
     startClarifyTransition(async () => {
       try {
-        const result = await clarifyGoal(goal);
+        const result = await clarifyGoal({ userGoal: goal });
         setQuestions(result.questions);
-        form.reset({
-          responses: result.questions.reduce(
-            (acc, q) => {
-              acc[q.category] = '';
-              return acc;
-            },
-            {} as Record<string, string>
-          ),
-        });
+        
+        // Pre-fill form with sample answers for speed
+        const initialResponses = result.questions.reduce((acc, q) => {
+            acc[q.category] = SAMPLE_RESPES[q.category as keyof typeof SAMPLE_RESPES] || '';
+            return acc;
+        }, {} as Record<string, string>);
+
+        form.reset({ responses: initialResponses });
         setStep('clarifyGoal');
       } catch (error: any) {
         toast({
@@ -124,7 +133,7 @@ export default function GoalPage() {
                 <CardTitle>What is your goal?</CardTitle>
                 <CardDescription>
                   Describe the outcome you want to achieve or the problem you
-                  are trying to solve. The more detail, the better.
+                  are trying to solve. The more detail, the better. (This is pre-filled for speed).
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -132,8 +141,8 @@ export default function GoalPage() {
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   placeholder="e.g., 'Draft a business case for a new public-facing portal that improves citizen access to services...'"
-                  rows={5}
-                  className="text-lg"
+                  rows={8}
+                  className="text-base"
                 />
                 <Button
                   onClick={handleGoalSubmit}
@@ -153,7 +162,7 @@ export default function GoalPage() {
                 <CardDescription>
                   To create the best possible draft, the agent has a few clarifying
                   questions. Your answers will help tailor the brief to your
-                  specific needs.
+                  specific needs. (These are pre-filled for speed).
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -176,6 +185,7 @@ export default function GoalPage() {
                               <Textarea
                                 placeholder="Your answer..."
                                 {...field}
+                                rows={3}
                               />
                             </FormControl>
                             <FormMessage />
