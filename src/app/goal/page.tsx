@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { startBriefingProcess } from '@/app/brief/actions';
 import { clarifyGoal } from './actions';
 import {
-  ClarificationQuestionSchema,
+  type ClarifyGoalOutput,
   type ClarificationQuestion,
 } from '@/lib/schema/clarify-goal-schema';
 import { Label } from '@/components/ui/label';
@@ -68,9 +68,9 @@ export default function GoalPage() {
     startClarifyTransition(async () => {
       try {
         const result = await clarifyGoal(goal);
-        setQuestions(result);
+        setQuestions(result.questions);
         form.reset({
-          responses: result.reduce(
+          responses: result.questions.reduce(
             (acc, q) => {
               acc[q.category] = '';
               return acc;

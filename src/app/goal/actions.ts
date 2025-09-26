@@ -1,7 +1,7 @@
 
 'use server';
 
-import type { ClarifyGoalOutput } from '@/lib/schema/clarify-goal-schema';
+import { ClarifyGoalOutput } from '@/lib/schema/clarify-goal-schema';
 // import { clarifyGoalFlow } from '@/ai/flows/clarify-goal';
 
 /**
@@ -17,7 +17,7 @@ export async function clarifyGoal(
     questions: [
       {
         category: 'Strategic Alignment',
-        question: 'How does this goal align with our organization\'s primary strategic objectives?',
+        question: "How does this goal align with our organization's primary strategic objectives?",
       },
       {
         category: 'Scope and Constraints',
