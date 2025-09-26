@@ -61,14 +61,14 @@ async function generateInitialDraft(
   userResponses: Record<string, string>,
   goal: string
 ) {
-  // Since this is called from a Server Action, we need to read the cookie again.
   console.log(
     `AGENT (generateInitialDraft): Initiated for briefId: ${briefId}.`
   );
+  // Since this is a non-exported helper, it inherits the auth context from the calling Server Action.
+  // For robustness, we re-verify auth here.
   const sessionCookie = cookies().get('session')?.value;
   const { user } = await getAuthenticatedUser(sessionCookie);
 
-  // Combine goal and responses into a single instruction for the agent.
   const instruction = `My primary goal is: "${goal}". I have answered your clarifying questions. Based on my goal and my answers, please generate the first draft of the document. My answers were: ${JSON.stringify(
     userResponses
   )}`;
@@ -81,7 +81,6 @@ async function generateInitialDraft(
   );
   const draftOutput = await refineBrief({
     instruction: instruction,
-    // For the first draft, there's no existing content.
     existingBrief: {
       title: '',
       strategicCase: '',
