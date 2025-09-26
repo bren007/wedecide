@@ -1,7 +1,8 @@
+
 'use server';
 
 import type { ClarifyGoalOutput } from '@/lib/schema/clarify-goal-schema';
-import { clarifyGoal as clarifyGoalFlow } from '@/ai/flows/clarify-goal';
+// import { clarifyGoalFlow } from '@/ai/flows/clarify-goal';
 
 /**
  * Stage 1: Returns a hardcoded set of clarifying questions to bypass the failing AI call.
