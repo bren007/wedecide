@@ -50,11 +50,7 @@ export async function startBriefingProcess(
 ): Promise<string> {
   console.log('actions.startBriefingProcess: Initiated with goal:', goal);
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) throw new Error('Authentication session not found.');
-
   const { user } = await getAuthenticatedUser(sessionCookie);
-  if (!user || !user.profile.tenantId)
-    throw new Error('User not authenticated or tenant ID is missing.');
 
   const briefId = await createPlaceholderBrief(
     goal,
@@ -74,14 +70,11 @@ export async function startBriefingProcess(
  */
 export async function generateDraft(
   briefId: string,
-  userResponses: Record<string, string>,
-  isFirstDraft = false
+  userResponses: Record<string, string>
 ) {
   console.log(`actions.generateDraft: Initiated for briefId: ${briefId}`);
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) throw new Error('Authentication session not found.');
   const { user } = await getAuthenticatedUser(sessionCookie);
-  if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
   const { db } = initializeAdmin();
   const briefRef = db.collection('decisionBriefs').doc(briefId);
@@ -150,9 +143,7 @@ export async function refineDraft(briefId: string, instruction: string) {
     `actions.refineDraft: Initiated for briefId: ${briefId} with instruction: "${instruction}"`
   );
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) throw new Error('Authentication session not found.');
   const { user } = await getAuthenticatedUser(sessionCookie);
-  if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
   const { db } = initializeAdmin();
   const briefRef = db.collection('decisionBriefs').doc(briefId);
@@ -208,9 +199,7 @@ export async function refineDraft(briefId: string, instruction: string) {
 
 export async function getBrief(id: string): Promise<DecisionBriefV2 | null> {
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) throw new Error('Authentication session not found.');
   const { user } = await getAuthenticatedUser(sessionCookie);
-  if (!user || !user.profile.tenantId) throw new Error('Authentication required.');
 
   try {
     const { db } = initializeAdmin();

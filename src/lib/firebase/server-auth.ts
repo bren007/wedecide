@@ -1,35 +1,36 @@
+
 'use server';
 
 import { initializeAdmin } from './server-admin';
 import type { AuthenticatedUser, UserProfile } from '@/lib/types';
 import type { DecodedIdToken } from 'firebase-admin/auth';
-import { cookies } from 'next/headers';
 
 type AuthResult = {
-  user: AuthenticatedUser | null;
-  decodedToken: DecodedIdToken | null;
+  user: AuthenticatedUser;
+  decodedToken: DecodedIdToken;
 };
 
-// This function gets the authenticated user from a session cookie value.
-// It's designed to be used in server-side components and server actions.
-export async function getAuthenticatedUser(sessionCookie: string): Promise<AuthResult> {
-  const { auth } = initializeAdmin();
-
+/**
+ * Verifies a session cookie and returns the authenticated user.
+ * Throws an error if the user is not authenticated.
+ * This function is designed to be used in server-side components and server actions.
+ */
+export async function getAuthenticatedUser(sessionCookie: string | undefined): Promise<AuthResult> {
   if (!sessionCookie) {
-    return { user: null, decodedToken: null };
+    throw new Error('Authentication session not found.');
   }
+
+  const { auth, db } = initializeAdmin();
 
   try {
     const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
     
-    const userProfile: UserProfile = {
-        uid: decodedToken.uid,
-        email: decodedToken.email || '',
-        displayName: decodedToken.name || '',
-        role: decodedToken.role || 'member', // Default to 'member' if not set
-        tenantId: decodedToken.tenantId || '',
-        createdAt: '', // Not available in token
-    };
+    // Fetch the full user profile from Firestore to get the most up-to-date roles.
+    const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+    if (!userDoc.exists) {
+        throw new Error('User profile not found in database.');
+    }
+    const userProfile = userDoc.data() as UserProfile;
 
     const user: AuthenticatedUser = {
       uid: decodedToken.uid,
@@ -38,10 +39,11 @@ export async function getAuthenticatedUser(sessionCookie: string): Promise<AuthR
       photoURL: decodedToken.picture,
       emailVerified: decodedToken.email_verified || false,
       isAnonymous: false,
-      tenantId: userProfile.tenantId,
+      tenantId: userProfile.tenantId, // Use tenantId from profile
       providerData: [], 
       metadata: {},
-      profile: userProfile,
+      profile: userProfile, // Attach the full, up-to-date profile
+      // Mock client-side methods that are not available on the server
       getIdToken: async () => sessionCookie,
       getIdTokenResult: async () => ({ token: sessionCookie, claims: decodedToken, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
       reload: async () => {},
@@ -50,8 +52,8 @@ export async function getAuthenticatedUser(sessionCookie: string): Promise<AuthR
     };
 
     return { user, decodedToken };
-  } catch (error) {
-    console.warn('Could not verify session cookie. User is not authenticated.', error);
-    return { user: null, decodedToken: null };
+  } catch (error: any) {
+    console.error('Could not verify session cookie. User is not authenticated.', error.message);
+    throw new Error('Authentication failed.');
   }
 }

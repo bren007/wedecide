@@ -4,6 +4,7 @@
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import type {
   ClarifyGoalOutput,
+  ClarificationQuestion,
 } from '@/lib/schema/clarify-goal-schema';
 import { cookies } from 'next/headers';
 
@@ -18,15 +19,10 @@ export async function clarifyGoal(goal: string): Promise<ClarifyGoalOutput> {
   );
 
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) {
-    throw new Error('Authentication session not found.');
-  }
+  // We check for an authenticated user to ensure the action is secure.
+  await getAuthenticatedUser(sessionCookie);
 
-  // We still check for an authenticated user to ensure the action is secure.
-  const { user } = await getAuthenticatedUser(sessionCookie);
-  if (!user) throw new Error('Authentication session not found.');
-
-  const hardcodedQuestions = {
+  const hardcodedQuestions: { questions: ClarificationQuestion[] } = {
     questions: [
       {
         category: 'Strategic Alignment',

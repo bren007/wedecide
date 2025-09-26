@@ -19,13 +19,12 @@ import { useAuth } from '@/components/auth-provider';
 
 
 // Stage 2: Component to display and refine the generated draft
-function DraftView({ brief }: { brief: DecisionBriefV2 }) {
+function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () => void }) {
     const { user } = useAuth();
     const latestVersion = brief.versions.at(-1)!;
     const { brief: briefContent, fullArtifact } = latestVersion;
     const [refinementInstruction, setRefinementInstruction] = useState('');
     const [isRefining, startRefinementTransition] = useTransition();
-    const router = useRouter();
     const { toast } = useToast();
 
     const handleRefine = () => {
@@ -39,7 +38,7 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
                     description: 'The agent has created a new version of your brief.',
                 });
                 setRefinementInstruction('');
-                router.refresh();
+                onRefine(); // This will trigger a router.refresh() in the parent
             } catch (error: any) {
                 toast({
                     title: 'Error Refining Draft',
@@ -52,9 +51,9 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
 
     if (!briefContent || !fullArtifact) {
       return (
-        <div className="text-center text-muted-foreground">
-          <p>The agent is generating the draft...</p>
-          <p>This page will refresh automatically when it's ready.</p>
+        <div className="lg:col-span-3 text-center text-muted-foreground p-8">
+            <p>The agent is creating your draft based on your answers.</p>
+            <p>This page will automatically update when it's ready.</p>
         </div>
       )
     };
@@ -169,52 +168,68 @@ export default function BriefPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const [isPolling, setIsPolling] = useState(false);
+
+  const briefId = params.id as string;
+  
+  // This function is passed to child components to trigger a refresh
+  const handleDataRefresh = () => {
+    router.refresh();
+  };
 
   useEffect(() => {
-    const briefId = params.id as string;
     if (!briefId || !user) return;
-    
+
     let isCancelled = false;
 
-    const fetchBrief = async () => {
-      setIsLoading(true);
+    const fetchBriefData = async () => {
+      if (!isCancelled) setIsLoading(true);
       try {
         const fetchedBrief = await getBrief(briefId);
         if (!isCancelled) {
           setBrief(fetchedBrief);
+          // If the draft isn't ready, start polling
+          const draftIsReady = fetchedBrief?.versions?.at(-1)?.brief;
+          if (!draftIsReady && !isPolling) {
+            setIsPolling(true);
+          } else if (draftIsReady) {
+            setIsPolling(false);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch brief", error);
       } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
+        if (!isCancelled) setIsLoading(false);
       }
     };
-    fetchBrief();
-
-    // Set up a poller to refresh data every 5 seconds until draft is ready
-    const interval = setInterval(() => {
-      // Don't poll if we already have a draft
-      if (brief && brief.versions.length > 0 && brief.versions.at(-1)?.brief) {
-        clearInterval(interval);
-        return;
-      }
-       router.refresh();
-    }, 5000);
     
+    fetchBriefData();
+
     return () => {
       isCancelled = true;
+    };
+  }, [briefId, user, isPolling]); // Depend on isPolling to re-run the fetch
+
+  useEffect(() => {
+    if (!isPolling) return;
+
+    const interval = setInterval(() => {
+      console.log('Polling for brief data...');
+      router.refresh();
+    }, 5000);
+
+    return () => {
       clearInterval(interval);
     };
+  }, [isPolling, router]);
 
-  }, [params.id, router, brief, user]);
 
-  if (isLoading) {
+  if (isLoading && !brief) {
     return <LoadingBriefPage />;
   }
 
   if (!brief) {
+    // This can happen if getBrief returns null (e.g., permissions error)
     return notFound();
   }
 
@@ -227,20 +242,17 @@ export default function BriefPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-                {status === 'Discovery' ? 'New Brief' : (latestVersion?.brief?.title || 'Brief')}
+                {status === 'Discovery' || !latestVersion?.brief?.title
+                  ? 'New Brief' 
+                  : latestVersion.brief.title
+                }
             </h1>
             <p className="text-muted-foreground max-w-2xl">{goal}</p>
           </div>
         </div>
         
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {status === 'Discovery' && (
-             <div className="lg:col-span-3 text-center text-muted-foreground p-8">
-              <p>The agent is creating your draft based on your answers.</p>
-              <p>This page will automatically update when it's ready.</p>
-            </div>
-          )}
-          {status === 'Draft' && <DraftView brief={brief} />}
+            <DraftView brief={brief} onRefine={handleDataRefresh} />
         </div>
       </div>
     </AppLayout>
