@@ -9,7 +9,8 @@ const serviceAccount = JSON.parse(
 
 // This is a more robust singleton pattern for Firebase Admin initialization.
 // It caches the initialized services on a global object to prevent re-initialization
-// during Next.js hot-reloads in development, which can cause memory leaks.
+// during Next.js hot-reloads in development, which can cause memory leaks and
+// interfere with client-side initialization.
 const globalForFirebase = globalThis as unknown as {
   app: App | undefined;
   auth: Auth | undefined;
