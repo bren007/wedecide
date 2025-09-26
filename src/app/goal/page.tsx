@@ -64,11 +64,19 @@ export default function GoalPage() {
   });
 
   const handleGoalSubmit = () => {
-    if (!goal.trim()) return;
+    if (!goal.trim() || !user) {
+        toast({
+            title: 'Authentication Error',
+            description: 'You must be logged in to start a new brief.',
+            variant: 'destructive',
+        });
+        return;
+    }
 
     startClarifyTransition(async () => {
       try {
-        const result = await clarifyGoal(goal);
+        const sessionCookie = await user.getIdToken();
+        const result = await clarifyGoal(sessionCookie, goal);
         setQuestions(result.questions);
         form.reset({
           responses: result.questions.reduce(
@@ -141,7 +149,7 @@ export default function GoalPage() {
                 />
                 <Button
                   onClick={handleGoalSubmit}
-                  disabled={isClarifying || !goal.trim()}
+                  disabled={isClarifying || !goal.trim() || !user}
                   size="lg"
                 >
                   {isClarifying ? 'Agent is thinking...' : 'Start Brief'}

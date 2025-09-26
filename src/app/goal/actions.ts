@@ -1,17 +1,22 @@
-
 'use server';
 
 import type { ClarifyGoalOutput } from '@/lib/schema/clarify-goal-schema';
+import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 
 /**
- * Stage 1: Returns a hardcoded set of clarifying questions to bypass the failing AI call.
+ * Stage 1: Returns a hardcoded set of clarifying questions.
+ * This is a stable workaround to bypass a persistent environment issue with the Genkit flow.
  */
 export async function clarifyGoal(
+  sessionCookie: string,
   goal: string
 ): Promise<ClarifyGoalOutput> {
   console.log('actions.clarifyGoal: Bypassing AI call and returning hardcoded questions for goal:', goal);
   
-  // This is a stable workaround to bypass the persistent environment issue with the Genkit flow.
+  // We still check for an authenticated user to ensure the action is secure.
+  const { user } = await getAuthenticatedUser(sessionCookie);
+  if (!user) throw new Error('Authentication session not found.');
+
   const hardcodedQuestions = {
     questions: [
       {
@@ -33,7 +38,5 @@ export async function clarifyGoal(
     ]
   };
 
-  // The return type is compatible with the UI, but we are not calling the AI.
-  // We are using a Promise.resolve to maintain the async function signature.
   return Promise.resolve(hardcodedQuestions);
 }
