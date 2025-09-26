@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
@@ -17,7 +18,9 @@ export async function clarifyGoal(goal: string): Promise<ClarifyGoalOutput> {
   );
 
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) throw new Error('Authentication session not found.');
+  if (!sessionCookie) {
+    throw new Error('Authentication session not found.');
+  }
 
   // We still check for an authenticated user to ensure the action is secure.
   const { user } = await getAuthenticatedUser(sessionCookie);
