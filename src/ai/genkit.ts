@@ -10,7 +10,9 @@ export const flash = googleAI.model('gemini-1.5-flash');
 export const ai = genkit({
   plugins: [
     googleAI({
-      // Ensure the API key is passed correctly.
+      // By explicitly listing the models we intend to use, we prevent
+      // the faulty auto-discovery/resolution that was causing the 404 error.
+      models: [flash],
       apiKey: process.env.GEMINI_API_KEY,
     }),
   ],
