@@ -63,7 +63,7 @@ export async function startBriefingProcess(
   );
 
   // Asynchronously kick off draft generation but don't block the UI
-  generateDraft(briefId, userResponses, sessionCookie, true).catch(console.error);
+  generateDraft(briefId, userResponses).catch(console.error);
 
   revalidatePath(`/brief/${briefId}`);
   return briefId;
@@ -75,10 +75,10 @@ export async function startBriefingProcess(
 export async function generateDraft(
   briefId: string,
   userResponses: Record<string, string>,
-  sessionCookie: string,
   isFirstDraft = false
 ) {
   console.log(`actions.generateDraft: Initiated for briefId: ${briefId}`);
+  const sessionCookie = cookies().get('session')?.value;
   if (!sessionCookie) throw new Error('Authentication session not found.');
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
