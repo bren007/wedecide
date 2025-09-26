@@ -7,7 +7,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/googleai'; // Explicit import for the fix.
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -18,17 +18,19 @@ import {
 export async function clarifyGoal(
   input: ClarifyGoalInput
 ): Promise<ClarifyGoalOutput> {
+  // Good logging to see what's happening.
+  console.log('AGENT: Starting clarifyGoal flow.');
   return clarifyGoalFlow(input);
 }
 
-// This is the definitive fix. By explicitly constructing the model here,
-// we bypass any faulty global configuration or model resolution that was
-// causing the 404 error.
+// This prompt now EXPLICITLY defines the model it must use, bypassing any
+// faulty global configuration or model resolution that was causing the 404 error.
+// This is the definitive fix.
 const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
-  model: googleAI.model('gemini-1.5-flash'),
+  model: googleAI.model('gemini-1.5-flash'), // The explicit, targeted fix.
   prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
 
 **User's Goal:** "{{userGoal}}"
@@ -53,7 +55,9 @@ const clarifyGoalFlow = ai.defineFlow(
     outputSchema: ClarifyGoalOutputSchema,
   },
   async (input) => {
+    console.log('AGENT: Calling LLM with the explicitly defined model.');
     const { output } = await prompt(input);
+    console.log('AGENT: Successfully received LLM output.');
 
     if (!output) {
       console.error('AGENT ERROR: The clarifyGoalPrompt returned no output.');
