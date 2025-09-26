@@ -5,8 +5,7 @@
  *
  * - clarifyGoal - A function that generates questions.
  */
-import { googleAI } from '@genkit-ai/googleai';
-import { ai } from '@/ai/genkit';
+import { ai, flash } from '@/ai/genkit';
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -22,7 +21,7 @@ export async function clarifyGoal(
 
 const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
-  model: 'gemini-1.5-flash',
+  model: flash, // Use the explicit model object reference.
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
   prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
@@ -30,11 +29,11 @@ const prompt = ai.definePrompt({
 **User's Goal:** "{{userGoal}}"
 
 **Your Task:**
-Generate one question for each of the following categories to help refine the goal:
-1.  **Strategic Alignment:** A question linking the goal to a higher-level organizational priority.
-2.  **Scope & Constraints:** A question to define boundaries (e.g., budget, timeline).
-3.  **Audience & Purpose:** A question to clarify the ultimate user and desired outcome.
-4.  **Data & Information Gaps:** A question to proactively ask for necessary data.
+Generate a list of four insightful clarifying questions to help the user refine their goal. The questions should cover:
+1.  The strategic alignment of the goal.
+2.  The scope and constraints (e.g., budget, timeline).
+3.  The intended audience and purpose.
+4.  Potential data or information gaps.
 
 **Output Format:**
 Respond only with a valid JSON object matching the output schema.
