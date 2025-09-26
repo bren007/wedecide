@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps, getApp, cert, type App } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
@@ -6,23 +7,36 @@ const serviceAccount = JSON.parse(
   process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string
 );
 
-let adminApp: App;
-let adminAuth: Auth;
-let adminDb: Firestore;
+// This is a more robust singleton pattern for Firebase Admin initialization.
+// It caches the initialized services on a global object to prevent re-initialization
+// during Next.js hot-reloads in development, which can cause memory leaks.
+const globalForFirebase = globalThis as unknown as {
+  app: App | undefined;
+  auth: Auth | undefined;
+  db: Firestore | undefined;
+};
 
-// This function initializes the Firebase Admin SDK.
-// It's a singleton pattern to avoid re-initializing the app on every hot-reload.
+function getAdminServices() {
+    if (globalForFirebase.app) {
+        return {
+            app: globalForFirebase.app,
+            auth: globalForFirebase.auth!,
+            db: globalForFirebase.db!,
+        };
+    }
+
+    const app = getApps().length > 0 ? getApp() : initializeApp({ credential: cert(serviceAccount) });
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    globalForFirebase.app = app;
+    globalForFirebase.auth = auth;
+    globalForFirebase.db = db;
+    
+    return { app, auth, db };
+}
+
+
 export function initializeAdmin() {
-  if (!getApps().length) {
-    adminApp = initializeApp({
-      credential: cert(serviceAccount),
-    });
-    adminAuth = getAuth(adminApp);
-    adminDb = getFirestore(adminApp);
-  } else {
-    adminApp = getApp();
-    adminAuth = getAuth(adminApp);
-    adminDb = getFirestore(adminApp);
-  }
-  return { app: adminApp, auth: adminAuth, db: adminDb };
+  return getAdminServices();
 }
