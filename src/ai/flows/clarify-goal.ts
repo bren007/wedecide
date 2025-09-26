@@ -21,14 +21,13 @@ export async function clarifyGoal(
   return clarifyGoalFlow(input);
 }
 
-// This prompt now explicitly uses the 'flash' model defined in genkit.ts,
-// ensuring the correct model is always used and avoiding resolution errors.
+// This is the definitive fix. By explicitly constructing the model here,
+// we bypass any faulty global configuration or model resolution that was
+// causing the 404 error.
 const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
-  // This is the definitive fix: explicitly setting the model here,
-  // using the robust constructor, bypassing any faulty global defaults.
   model: googleAI.model('gemini-1.5-flash'),
   prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
 
