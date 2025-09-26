@@ -5,7 +5,7 @@
  *
  * - clarifyGoal - A function that generates questions.
  */
-import { ai } from '@/ai/genkit';
+import { ai, flash } from '@/ai/genkit';
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -21,8 +21,7 @@ export async function clarifyGoal(
 
 const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
-  // CRITICAL CHANGE: Use the fully qualified string ID as per expert advice.
-  model: 'googleai/gemini-1.5-flash',
+  model: flash,
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
   prompt: `You are an expert public sector consultant. Your task is to generate insightful clarifying questions for a user's goal.
