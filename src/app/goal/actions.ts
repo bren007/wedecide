@@ -3,10 +3,8 @@
 
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
-import {
-  ClarifyGoalOutput,
-  generateClarifyingQuestions,
-} from '@/ai/flows/generate-clarifying-questions';
+import { generateClarifyingQuestions } from '@/ai/flows/generate-clarifying-questions';
+import type { ClarifyGoalOutput } from '@/lib/types';
 
 /**
  * Stage 1: Calls a Genkit flow to generate dynamic, targeted clarifying questions
