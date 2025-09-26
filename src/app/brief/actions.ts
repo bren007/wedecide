@@ -37,7 +37,8 @@ async function createPlaceholderBrief(goal: string, uid: string, tenantId: strin
  */
 export async function startBriefingProcess(goal: string, userResponses: Record<string, string>): Promise<string> {
   console.log('actions.startBriefingProcess: Initiated with goal:', goal);
-  const sessionCookie = cookies().get('session')?.value;
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
   if (!sessionCookie) throw new Error('Authentication session not found.');
   
   const { user } = await getAuthenticatedUser(sessionCookie);
@@ -57,7 +58,8 @@ export async function startBriefingProcess(goal: string, userResponses: Record<s
  */
 export async function generateDraft(briefId: string, userResponses: Record<string, string>, isFirstDraft = false) {
     console.log(`actions.generateDraft: Initiated for briefId: ${briefId}`);
-    const sessionCookie = cookies().get('session')?.value;
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get('session')?.value;
     if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
     if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
@@ -108,7 +110,8 @@ export async function generateDraft(briefId: string, userResponses: Record<strin
  */
 export async function refineDraft(briefId: string, instruction: string) {
     console.log(`actions.refineDraft: Initiated for briefId: ${briefId} with instruction: "${instruction}"`);
-    const sessionCookie = cookies().get('session')?.value;
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get('session')?.value;
     if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
     if (!user) throw new Error('User not authenticated.');
@@ -157,7 +160,8 @@ export async function refineDraft(briefId: string, instruction: string) {
 
 
 export async function getBrief(id: string): Promise<DecisionBriefV2 | null> {
-  const sessionCookie = cookies().get('session')?.value;
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
   if (!sessionCookie) throw new Error('Authentication session not found.');
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('Authentication required.');
