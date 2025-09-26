@@ -75,8 +75,7 @@ export default function GoalPage() {
 
     startClarifyTransition(async () => {
       try {
-        const sessionCookie = await user.getIdToken();
-        const result = await clarifyGoal(sessionCookie, goal);
+        const result = await clarifyGoal(goal);
         setQuestions(result.questions);
         form.reset({
           responses: result.questions.reduce(
@@ -109,8 +108,7 @@ export default function GoalPage() {
     }
     startGeneratingTransition(async () => {
       try {
-        const sessionCookie = await user.getIdToken();
-        const newBriefId = await startBriefingProcess(sessionCookie, goal, data.responses);
+        const newBriefId = await startBriefingProcess(goal, data.responses);
         toast({
           title: 'Brief Generation Started',
           description: 'The agent is now creating your draft.',

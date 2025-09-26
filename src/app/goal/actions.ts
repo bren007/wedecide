@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import type { ClarifyGoalOutput } from '@/lib/schema/clarify-goal-schema';
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 
@@ -8,12 +9,13 @@ import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
  * This is a stable workaround to bypass a persistent environment issue with the Genkit flow.
  */
 export async function clarifyGoal(
-  sessionCookie: string,
   goal: string
 ): Promise<ClarifyGoalOutput> {
   console.log('actions.clarifyGoal: Bypassing AI call and returning hardcoded questions for goal:', goal);
   
   // We still check for an authenticated user to ensure the action is secure.
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) throw new Error('Authentication session not found.');
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user) throw new Error('Authentication session not found.');
 

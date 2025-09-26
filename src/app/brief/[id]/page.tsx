@@ -32,8 +32,7 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
 
         startRefinementTransition(async () => {
             try {
-                const sessionCookie = await user.getIdToken();
-                await refineDraft(sessionCookie, brief.id, refinementInstruction);
+                await refineDraft(brief.id, refinementInstruction);
                 toast({
                     title: 'Draft Refined',
                     description: 'The agent has created a new version of your brief.',
@@ -179,8 +178,7 @@ export default function BriefPage() {
     const fetchBrief = async () => {
       setIsLoading(true);
       try {
-        const sessionCookie = await user.getIdToken();
-        const fetchedBrief = await getBrief(sessionCookie, briefId);
+        const fetchedBrief = await getBrief(briefId);
         if (!isCancelled) {
           setBrief(fetchedBrief);
         }

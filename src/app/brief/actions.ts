@@ -5,6 +5,7 @@ import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import type { BriefVersionV2, DecisionBriefV2 } from '@/lib/types';
 import { refineBrief } from '@/ai/flows/refine-brief';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 
 /**
  * Creates an initial, empty brief document in Firestore.
@@ -33,8 +34,10 @@ async function createPlaceholderBrief(goal: string, uid: string, tenantId: strin
 /**
  * Kicks off the briefing process by creating a placeholder and then generating the first draft.
  */
-export async function startBriefingProcess(sessionCookie: string, goal: string, userResponses: Record<string, string>): Promise<string> {
+export async function startBriefingProcess(goal: string, userResponses: Record<string, string>): Promise<string> {
   console.log('actions.startBriefingProcess: Initiated with goal:', goal);
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) throw new Error('Authentication session not found.');
   
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('User not authenticated or tenant ID is missing.');
@@ -42,7 +45,7 @@ export async function startBriefingProcess(sessionCookie: string, goal: string, 
   const briefId = await createPlaceholderBrief(goal, user.uid, user.profile.tenantId);
 
   // Asynchronously kick off draft generation but don't block the UI
-  generateDraft(sessionCookie, briefId, userResponses, true).catch(console.error);
+  generateDraft(briefId, userResponses, true).catch(console.error);
 
   revalidatePath(`/brief/${briefId}`);
   return briefId;
@@ -51,8 +54,10 @@ export async function startBriefingProcess(sessionCookie: string, goal: string, 
 /**
  * Stage 2: Generates the first draft of the document.
  */
-export async function generateDraft(sessionCookie: string, briefId: string, userResponses: Record<string, string>, isFirstDraft = false) {
+export async function generateDraft(briefId: string, userResponses: Record<string, string>, isFirstDraft = false) {
     console.log(`actions.generateDraft: Initiated for briefId: ${briefId}`);
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
     if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
@@ -100,8 +105,10 @@ export async function generateDraft(sessionCookie: string, briefId: string, user
 /**
  * Stage 2 Refinement: Refines an existing draft based on user instructions.
  */
-export async function refineDraft(sessionCookie: string, briefId: string, instruction: string) {
+export async function refineDraft(briefId: string, instruction: string) {
     console.log(`actions.refineDraft: Initiated for briefId: ${briefId} with instruction: "${instruction}"`);
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
     if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
@@ -148,7 +155,9 @@ export async function refineDraft(sessionCookie: string, briefId: string, instru
 }
 
 
-export async function getBrief(sessionCookie: string, id: string): Promise<DecisionBriefV2 | null> {
+export async function getBrief(id: string): Promise<DecisionBriefV2 | null> {
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) throw new Error('Authentication session not found.');
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('Authentication required.');
 
