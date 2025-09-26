@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
@@ -15,10 +14,12 @@ import { useToast } from '@/hooks/use-toast';
 import LoadingBriefPage from './loading';
 import { Briefcase, FileText, Wand2, Group } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/components/auth-provider';
 
 
 // Stage 2: Component to display and refine the generated draft
 function DraftView({ brief }: { brief: DecisionBriefV2 }) {
+    const { user } = useAuth();
     const latestVersion = brief.versions.at(-1)!;
     const { brief: briefContent, fullArtifact } = latestVersion;
     const [refinementInstruction, setRefinementInstruction] = useState('');
@@ -27,11 +28,12 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
     const { toast } = useToast();
 
     const handleRefine = () => {
-        if (!refinementInstruction.trim()) return;
+        if (!refinementInstruction.trim() || !user) return;
 
         startRefinementTransition(async () => {
             try {
-                await refineDraft(brief.id, refinementInstruction);
+                const sessionCookie = await user.getIdToken();
+                await refineDraft(sessionCookie, brief.id, refinementInstruction);
                 toast({
                     title: 'Draft Refined',
                     description: 'The agent has created a new version of your brief.',
@@ -144,7 +146,7 @@ function DraftView({ brief }: { brief: DecisionBriefV2 }) {
                                 onChange={(e) => setRefinementInstruction(e.target.value)}
                              />
                         </div>
-                        <Button onClick={handleRefine} disabled={isRefining || !refinementInstruction.trim()}>
+                        <Button onClick={handleRefine} disabled={isRefining || !refinementInstruction.trim() || !user}>
                             {isRefining ? 'Agent is refining...' : <>
                                 <Wand2 className="mr-2 h-4 w-4" />
                                 Refine Draft
@@ -166,17 +168,19 @@ export default function BriefPage() {
   const [isLoading, setIsLoading] = useState(true);
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     const briefId = params.id as string;
-    if (!briefId) return;
+    if (!briefId || !user) return;
     
     let isCancelled = false;
 
     const fetchBrief = async () => {
       setIsLoading(true);
       try {
-        const fetchedBrief = await getBrief(briefId);
+        const sessionCookie = await user.getIdToken();
+        const fetchedBrief = await getBrief(sessionCookie, briefId);
         if (!isCancelled) {
           setBrief(fetchedBrief);
         }
@@ -205,7 +209,7 @@ export default function BriefPage() {
       clearInterval(interval);
     };
 
-  }, [params.id, router, brief]);
+  }, [params.id, router, brief, user]);
 
   if (isLoading) {
     return <LoadingBriefPage />;

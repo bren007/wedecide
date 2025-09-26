@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -30,6 +29,7 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
+import { useAuth } from '@/components/auth-provider';
 
 type FormValues = {
   responses: Record<string, string>;
@@ -38,6 +38,7 @@ type FormValues = {
 export default function GoalPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [step, setStep] = useState<'enterGoal' | 'clarifyGoal'>('enterGoal');
   const [goal, setGoal] = useState('');
@@ -90,9 +91,18 @@ export default function GoalPage() {
   };
 
   const handleClarificationSubmit = (data: FormValues) => {
+    if (!user) {
+        toast({
+          title: 'Authentication Error',
+          description: 'You must be logged in to generate a brief.',
+          variant: 'destructive',
+        });
+        return;
+    }
     startGeneratingTransition(async () => {
       try {
-        const newBriefId = await startBriefingProcess(goal, data.responses);
+        const sessionCookie = await user.getIdToken();
+        const newBriefId = await startBriefingProcess(sessionCookie, goal, data.responses);
         toast({
           title: 'Brief Generation Started',
           description: 'The agent is now creating your draft.',
