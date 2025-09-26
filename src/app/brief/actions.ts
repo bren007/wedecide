@@ -33,9 +33,8 @@ async function createPlaceholderBrief(goal: string, uid: string, tenantId: strin
 /**
  * Kicks off the briefing process by creating a placeholder and then generating the first draft.
  */
-export async function startBriefingProcess(sessionCookie: string | undefined, goal: string, userResponses: Record<string, string>): Promise<string> {
+export async function startBriefingProcess(sessionCookie: string, goal: string, userResponses: Record<string, string>): Promise<string> {
   console.log('actions.startBriefingProcess: Initiated with goal:', goal);
-  if (!sessionCookie) throw new Error('Authentication session not found.');
   
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('User not authenticated or tenant ID is missing.');
@@ -52,9 +51,8 @@ export async function startBriefingProcess(sessionCookie: string | undefined, go
 /**
  * Stage 2: Generates the first draft of the document.
  */
-export async function generateDraft(sessionCookie: string | undefined, briefId: string, userResponses: Record<string, string>, isFirstDraft = false) {
+export async function generateDraft(sessionCookie: string, briefId: string, userResponses: Record<string, string>, isFirstDraft = false) {
     console.log(`actions.generateDraft: Initiated for briefId: ${briefId}`);
-    if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
     if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
@@ -102,11 +100,10 @@ export async function generateDraft(sessionCookie: string | undefined, briefId: 
 /**
  * Stage 2 Refinement: Refines an existing draft based on user instructions.
  */
-export async function refineDraft(sessionCookie: string | undefined, briefId: string, instruction: string) {
+export async function refineDraft(sessionCookie: string, briefId: string, instruction: string) {
     console.log(`actions.refineDraft: Initiated for briefId: ${briefId} with instruction: "${instruction}"`);
-    if (!sessionCookie) throw new Error('Authentication session not found.');
     const { user } = await getAuthenticatedUser(sessionCookie);
-    if (!user) throw new Error('User not authenticated.');
+    if (!user || !user.profile.tenantId) throw new Error('User not authenticated.');
 
     const { db } = initializeAdmin();
     const briefRef = db.collection('decisionBriefs').doc(briefId);
@@ -151,8 +148,7 @@ export async function refineDraft(sessionCookie: string | undefined, briefId: st
 }
 
 
-export async function getBrief(sessionCookie: string | undefined, id: string): Promise<DecisionBriefV2 | null> {
-  if (!sessionCookie) throw new Error('Authentication session not found.');
+export async function getBrief(sessionCookie: string, id: string): Promise<DecisionBriefV2 | null> {
   const { user } = await getAuthenticatedUser(sessionCookie);
   if (!user || !user.profile.tenantId) throw new Error('Authentication required.');
 
