@@ -2,8 +2,7 @@
 'use server';
 /**
  * @fileOverview A Genkit flow for refining an existing decision brief based on user instructions.
- *
- * - refineBrief - A function that handles the document refinement.
+ * This file ONLY exports the server action function. All types and schemas are in /src/lib/types.ts.
  */
 
 import { ai } from '@/ai/genkit';

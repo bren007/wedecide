@@ -3,11 +3,10 @@
 
 /**
  * @fileOverview AI agent that generates targeted clarifying questions for a user's goal.
- * This file ONLY exports the server action function. All types are in /src/lib/types.ts.
+ * This file ONLY exports the server action function. All types and schemas are in /src/lib/types.ts.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -17,7 +16,6 @@ import {
 
 /**
  * The main exported function that clients will call.
- * This is the ONLY export from this file.
  */
 export async function generateClarifyingQuestions(
   input: ClarifyGoalInput
@@ -43,7 +41,7 @@ To do this, you must ask exactly four insightful clarifying questions, one for e
 2.  **Scope and Constraints:** Generate one question that clarifies the boundaries of the request.
     *   *Example:* "Is this brief focused solely on the initial feasibility assessment, or should it also include implementation timelines and resource allocation?"
 
-3.  **Data and Information Gaps:** Generate one question to confirm or request missing data. Consider what data would be needed for a robust analysis.
+3.  **Data and Information Gaps:** Based on its initial analysis, generate one question to confirm or request missing data.
     *   *Example:* "To support this analysis, what existing datasets, internal reports, or historical documents should be considered? For instance, do recent user satisfaction surveys or operational cost reports exist?"
 
 4.  **Audience and Purpose:** Generate one question that helps tailor the final output for the intended decision-maker.
