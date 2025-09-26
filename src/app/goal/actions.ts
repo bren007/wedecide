@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';

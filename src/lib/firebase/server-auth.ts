@@ -13,7 +13,8 @@ type AuthResult = {
 /**
  * Verifies a session cookie and returns the authenticated user.
  * Throws an error if the user is not authenticated.
- * This function is designed to be used in server-side components and server actions.
+ * This function is a pure helper and should be called by Server Actions
+ * that have already retrieved the session cookie.
  */
 export async function getAuthenticatedUser(sessionCookie: string | undefined): Promise<AuthResult> {
   if (!sessionCookie) {
