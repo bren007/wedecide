@@ -65,12 +65,12 @@ export default function GoalPage() {
 
   const handleGoalSubmit = () => {
     if (!goal.trim() || !user) {
-        toast({
-            title: 'Authentication Error',
-            description: 'You must be logged in to start a new brief.',
-            variant: 'destructive',
-        });
-        return;
+      toast({
+        title: 'Authentication Error',
+        description: 'You must be logged in to start a new brief.',
+        variant: 'destructive',
+      });
+      return;
     }
 
     startClarifyTransition(async () => {
@@ -99,12 +99,12 @@ export default function GoalPage() {
 
   const handleClarificationSubmit = (data: FormValues) => {
     if (!user) {
-        toast({
-          title: 'Authentication Error',
-          description: 'You must be logged in to generate a brief.',
-          variant: 'destructive',
-        });
-        return;
+      toast({
+        title: 'Authentication Error',
+        description: 'You must be logged in to generate a brief.',
+        variant: 'destructive',
+      });
+      return;
     }
     startGeneratingTransition(async () => {
       try {
@@ -183,7 +183,10 @@ export default function GoalPage() {
                               {q.question}
                             </Label>
                             <FormControl>
-                              <Textarea placeholder="Your answer..." {...field} />
+                              <Textarea
+                                placeholder="Your answer..."
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
