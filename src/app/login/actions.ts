@@ -1,3 +1,4 @@
+
 'use server';
 
 import { initializeAdmin } from '@/lib/firebase/server-admin';
@@ -17,7 +18,8 @@ export async function createSession(idToken: string) {
 
   try {
     const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
-    cookies().set('session', sessionCookie, {
+    const cookieStore = cookies();
+    cookieStore.set('session', sessionCookie, {
       maxAge: expiresIn / 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

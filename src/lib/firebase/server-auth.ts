@@ -31,12 +31,28 @@ export async function getAuthenticatedUser(
 
   try {
     const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+    
+    let userProfile: UserProfile;
 
     const userDoc = await db.collection('users').doc(decodedToken.uid).get();
-    if (!userDoc.exists) {
-      throw new Error(`User profile not found in database for UID: ${decodedToken.uid}.`);
+    
+    if (userDoc.exists) {
+        userProfile = userDoc.data() as UserProfile;
+    } else {
+        // This is a fallback for the race condition where the session is created
+        // before the user document is written to Firestore. We can construct
+        // a valid-enough profile from the token itself.
+        console.warn(`User profile not found in database for UID: ${decodedToken.uid}. Falling back to token claims.`);
+        userProfile = {
+            uid: decodedToken.uid,
+            email: decodedToken.email || '',
+            displayName: decodedToken.name || 'New User',
+            role: (decodedToken.role as UserRole) || 'member',
+            tenantId: decodedToken.tenantId || '',
+            createdAt: new Date().toISOString(),
+        };
     }
-    const userProfile = userDoc.data() as UserProfile;
+
 
     // This constructs a user object that is compatible with what the client-side
     // expects, even though we are on the server.
