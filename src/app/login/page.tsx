@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { seedFirstUser, createSession } from './actions';
 
@@ -15,13 +15,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log('CLIENT: handleSignIn initiated.');
 
     if (email === 'seed@we-decide.com') {
       try {
@@ -47,17 +47,25 @@ export default function LoginPage() {
 
 
     try {
+      console.log('CLIENT: Attempting to sign in with email and password...');
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('CLIENT: Sign-in successful. Getting ID token...');
       const idToken = await userCredential.user.getIdToken();
+      console.log(`CLIENT: ID token received. Has value: ${!!idToken}`);
       
+      console.log('CLIENT: Calling createSession server action...');
       await createSession(idToken);
+      console.log('CLIENT: createSession server action completed successfully.');
 
       const nextUrl = searchParams.get('next') || '/goal';
+      console.log(`CLIENT: Redirecting to ${nextUrl}...`);
+      
       // Use window.location.href for a full page reload to ensure the cookie is sent.
       // This is the definitive fix for the timing issue.
       window.location.href = nextUrl;
 
     } catch (error: any) {
+      console.error('CLIENT: Sign-in failed.', error);
       toast({
         title: 'Sign-in Failed',
         description: error.message,
