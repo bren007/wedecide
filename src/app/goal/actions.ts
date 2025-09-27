@@ -15,8 +15,7 @@ export async function clarifyGoal(
 ): Promise<ClarifyGoalOutput> {
   console.log('AGENT (clarifyGoal): Initiated.');
 
-  const cookieStore = cookies();
-  const sessionCookie = cookieStore.get('session')?.value;
+  const sessionCookie = cookies().get('session')?.value;
   console.log(`AGENT (clarifyGoal): Retrieving session cookie. Found: ${!!sessionCookie}`);
 
   const { user } = await getAuthenticatedUser(sessionCookie);
