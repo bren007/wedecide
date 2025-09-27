@@ -88,6 +88,7 @@ export type FullArtifactContent = z.infer<typeof FullArtifactContentSchema>;
 export type RefineBriefInput = z.infer<typeof RefineBriefInputSchema>;
 export type RefineBriefOutput = z.infer<typeof RefineBriefOutputSchema>;
 
+
 export type DecisionBriefV2 = {
   id: string;
   tenantId: string;
@@ -104,6 +105,6 @@ export type BriefVersionV2 = {
   createdBy: string; // UID of user who triggered this version
   refinementInstruction?: string;
   userResponses?: Record<string, string>; // User answers to agentQuestions
-  brief: BriefContent;
-  fullArtifact: FullArtifactContent;
+  brief?: BriefContent;
+  fullArtifact?: FullArtifactContent;
 };

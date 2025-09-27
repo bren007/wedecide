@@ -13,13 +13,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import LoadingBriefPage from './loading';
-import { Briefcase, FileText, Wand2, Group } from 'lucide-react';
+import { Briefcase, FileText, Wand2, Group, RefreshCw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Component to display and refine the generated draft
 function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () => void }) {
-    const latestVersion = brief.versions.at(-1)!;
-    const { brief: briefContent, fullArtifact } = latestVersion;
+    const latestVersion = brief.versions.at(-1);
+    const { brief: briefContent, fullArtifact } = latestVersion || {};
     const [refinementInstruction, setRefinementInstruction] = useState('');
     const [isRefining, startRefinementTransition] = useTransition();
     const { toast } = useToast();
@@ -45,12 +45,16 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
             }
         });
     };
-
-    if (!briefContent || !fullArtifact) {
+    
+    if (brief.status === 'Discovery' || !latestVersion) {
       return (
-        <div className="lg:col-span-3 text-center text-muted-foreground p-8">
+        <div className="lg:col-span-3 text-center text-muted-foreground p-8 space-y-4">
             <p>The agent is creating your draft based on your answers.</p>
             <p>This page will automatically update when it's ready.</p>
+             <Button onClick={onRefine} variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Check Status
+            </Button>
         </div>
       )
     };
@@ -70,18 +74,20 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
                                 <CardDescription>A concise summary of the full artifact, suitable for executive review.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div>
-                                    <h4 className="font-semibold mb-1">Title</h4>
-                                    <p className="text-sm text-muted-foreground">{briefContent.title}</p>
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold mb-1">Strategic Case</h4>
-                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.strategicCase}</p>
-                                </div>
-                                 <div>
-                                    <h4 className="font-semibold mb-1">Recommendation</h4>
-                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.recommendation}</p>
-                                 </div>
+                                {briefContent ? <>
+                                    <div>
+                                        <h4 className="font-semibold mb-1">Title</h4>
+                                        <p className="text-sm text-muted-foreground">{briefContent.title}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold mb-1">Strategic Case</h4>
+                                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.strategicCase}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold mb-1">Recommendation</h4>
+                                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{briefContent.recommendation}</p>
+                                    </div>
+                                </>: <p className="text-sm text-muted-foreground">Brief content is being generated...</p>}
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -92,6 +98,7 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
                                 <CardDescription>The comprehensive, detailed decision document.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                {fullArtifact ? <>
                                 <div>
                                     <h4 className="font-semibold mb-1">Title</h4>
                                     <p className="text-sm text-muted-foreground">{fullArtifact.title}</p>
@@ -112,13 +119,14 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
                                     <h4 className="font-semibold mb-1">Recommendation</h4>
                                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fullArtifact.recommendation}</p>
                                  </div>
+                                </> : <p className="text-sm text-muted-foreground">Full artifact content is being generated...</p>}
                             </CardContent>
                         </Card>
                     </TabsContent>
                 </Tabs>
             </div>
             <div className="space-y-6 lg:col-span-1">
-                 <Card>
+                 {briefContent && <Card>
                     <CardHeader>
                         <CardTitle>Strategic Alignment</CardTitle>
                         <CardDescription>{briefContent.alignmentRationale}</CardDescription>
@@ -126,7 +134,7 @@ function DraftView({ brief, onRefine }: { brief: DecisionBriefV2, onRefine: () =
                     <CardContent>
                          <StrategicAlignment score={briefContent.alignmentScore} />
                     </CardContent>
-                 </Card>
+                 </Card>}
                  <Card>
                     <CardHeader>
                         <CardTitle>Next Steps</CardTitle>
@@ -168,13 +176,14 @@ export default function BriefPage() {
   const briefId = params.id as string;
   
   const handleDataRefresh = () => {
+    // This function tells the Next.js router to re-fetch the data for the current page
+    // and re-render the server components, which in turn re-fetches the brief data.
     router.refresh();
   };
 
   useEffect(() => {
     let isCancelled = false;
-    let poller: NodeJS.Timeout | null = null;
-
+    
     const fetchBriefData = async () => {
       if (isCancelled) return;
       setIsLoading(true);
@@ -182,16 +191,6 @@ export default function BriefPage() {
         const fetchedBrief = await getBrief(briefId);
         if (!isCancelled) {
           setBrief(fetchedBrief);
-          // If the brief is still in discovery, start polling.
-          if (fetchedBrief?.status === 'Discovery') {
-             if (poller) clearInterval(poller);
-             poller = setInterval(() => {
-                console.log('Polling for brief data...');
-                router.refresh();
-             }, 5000); // Poll every 5 seconds
-          } else {
-             if (poller) clearInterval(poller);
-          }
         }
       } catch (error) {
         console.error("Failed to fetch brief", error);
@@ -211,9 +210,27 @@ export default function BriefPage() {
 
     return () => {
       isCancelled = true;
-      if (poller) clearInterval(poller);
     };
-  }, [briefId, router, brief?.status]);
+  }, [briefId, router]);
+
+
+  // This effect will run whenever the brief data changes.
+  // If the brief is still being discovered, it sets up a poller.
+  useEffect(() => {
+    let poller: NodeJS.Timeout | null = null;
+    if (brief?.status === 'Discovery') {
+      poller = setInterval(() => {
+        console.log('Polling for updated brief status...');
+        router.refresh();
+      }, 5000); // Poll every 5 seconds
+    }
+    
+    return () => {
+      if (poller) {
+        clearInterval(poller);
+      }
+    }
+  }, [brief?.status, router]);
 
 
   if (isLoading) {
