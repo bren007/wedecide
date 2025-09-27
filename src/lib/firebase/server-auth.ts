@@ -12,9 +12,15 @@ type AuthResult = {
 /**
  * Verifies a session cookie string and returns the authenticated user's data.
  * Throws an error if the user is not authenticated.
+ * This is a pure utility and contains no Next.js dynamic functions.
  */
-export async function getAuthenticatedUser(sessionCookie: string | undefined): Promise<AuthResult> {
+export async function getAuthenticatedUser(
+  sessionCookie: string | undefined
+): Promise<AuthResult> {
   if (!sessionCookie) {
+    console.error(
+      'getAuthenticatedUser error: No session cookie was provided.'
+    );
     throw new Error('Authentication session cookie not found.');
   }
 
@@ -22,13 +28,15 @@ export async function getAuthenticatedUser(sessionCookie: string | undefined): P
 
   try {
     const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
-    
+
     const userDoc = await db.collection('users').doc(decodedToken.uid).get();
     if (!userDoc.exists) {
-        throw new Error('User profile not found in database.');
+      throw new Error(`User profile not found in database for UID: ${decodedToken.uid}.`);
     }
     const userProfile = userDoc.data() as UserProfile;
 
+    // This constructs a user object that is compatible with what the client-side
+    // expects, even though we are on the server.
     const user: AuthenticatedUser = {
       uid: decodedToken.uid,
       email: decodedToken.email,
@@ -36,12 +44,20 @@ export async function getAuthenticatedUser(sessionCookie: string | undefined): P
       photoURL: decodedToken.picture,
       emailVerified: decodedToken.email_verified || false,
       isAnonymous: false,
-      tenantId: userProfile.tenantId,
-      providerData: [], 
-      metadata: {},
-      profile: userProfile,
+      tenantId: userProfile.tenantId, // From custom claims
+      providerData: [], // Not available server-side
+      metadata: {}, // Not available server-side
+      profile: userProfile, // The full user profile from Firestore
       getIdToken: async () => sessionCookie,
-      getIdTokenResult: async () => ({ token: sessionCookie, claims: decodedToken, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
+      getIdTokenResult: async () => ({
+        token: sessionCookie,
+        claims: decodedToken,
+        authTime: '',
+        issuedAtTime: '',
+        expirationTime: '',
+        signInProvider: null,
+        signInSecondFactor: null,
+      }),
       reload: async () => {},
       delete: async () => {},
       toJSON: () => ({ ...decodedToken }),
@@ -49,7 +65,12 @@ export async function getAuthenticatedUser(sessionCookie: string | undefined): P
 
     return { user, decodedToken };
   } catch (error: any) {
-    console.error('Could not verify session cookie. User is not authenticated.', error.message);
+    // Log the detailed error on the server for diagnostics
+    console.error(
+      'Could not verify session cookie. User is not authenticated.',
+      error.message
+    );
+    // Throw a generic error to the client
     throw new Error('Authentication failed. Please log in again.');
   }
 }

@@ -1,12 +1,9 @@
 'use server';
 
-import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
-import {
-  generateClarifyingQuestions,
-} from '@/ai/flows/generate-clarifying-questions';
+import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
+import { generateClarifyingQuestions } from '@/ai/flows/generate-clarifying-questions';
 import type { ClarifyGoalInput, ClarifyGoalOutput } from '@/lib/types';
-
 
 /**
  * Stage 1: Calls a Genkit flow to generate dynamic, targeted clarifying questions
@@ -16,10 +13,11 @@ export async function clarifyGoal(
   input: ClarifyGoalInput
 ): Promise<ClarifyGoalOutput> {
   console.log('AGENT (clarifyGoal): Initiated.');
+
+  // This is the one, correct way to get the session cookie in a Server Action.
   const sessionCookie = cookies().get('session')?.value;
   const { user } = await getAuthenticatedUser(sessionCookie);
   console.log(`AGENT (clarifyGoal): User ${user.email} authenticated.`);
-
 
   console.log('AGENT (clarifyGoal): Calling generateClarifyingQuestions flow...');
   const clarifyingQuestions = await generateClarifyingQuestions(input);

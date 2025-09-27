@@ -1,12 +1,11 @@
-
 'use server';
 
-import { initializeAdmin } from '@/lib/firebase/server-admin';
-import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
-import type { BriefVersionV2, DecisionBriefV2 } from '@/lib/types';
-import { refineBrief } from '@/ai/flows/refine-brief';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
+import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
+import { initializeAdmin } from '@/lib/firebase/server-admin';
+import { refineBrief } from '@/ai/flows/refine-brief';
+import type { DecisionBriefV2, BriefVersionV2 } from '@/lib/types';
 
 /**
  * Kicks off the briefing process by creating a placeholder and then
@@ -40,12 +39,14 @@ export async function startBriefingProcess(
   );
 
   // Asynchronously kick off draft generation but don't block the UI
-  generateInitialDraft(newBriefRef.id, userResponses, goal, user.uid).catch((err) => {
-    console.error(
-      'AGENT (startBriefingProcess): CRITICAL - Initial draft generation failed.',
-      err
-    );
-  });
+  generateInitialDraft(newBriefRef.id, userResponses, goal, user.uid).catch(
+    (err) => {
+      console.error(
+        'AGENT (startBriefingProcess): CRITICAL - Initial draft generation failed.',
+        err
+      );
+    }
+  );
 
   console.log(
     `AGENT (startBriefingProcess): Returning brief ID to client and letting draft generation run in background.`
@@ -172,7 +173,7 @@ export async function refineDraft(briefId: string, instruction: string) {
 
   const newVersion: BriefVersionV2 = {
     version: existingBrief.versions.length + 1,
-    createdAt: newtoISOString(),
+    createdAt: new Date().toISOString(),
     createdBy: user.uid,
     refinementInstruction: instruction,
     brief: refinedOutput.brief,
