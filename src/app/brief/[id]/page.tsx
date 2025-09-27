@@ -173,6 +173,7 @@ export default function BriefPage() {
 
   useEffect(() => {
     let isCancelled = false;
+    let poller: NodeJS.Timeout | null = null;
 
     const fetchBriefData = async () => {
       if (isCancelled) return;
@@ -181,11 +182,21 @@ export default function BriefPage() {
         const fetchedBrief = await getBrief(briefId);
         if (!isCancelled) {
           setBrief(fetchedBrief);
+          // If the brief is still in discovery, start polling.
+          if (fetchedBrief?.status === 'Discovery') {
+             if (poller) clearInterval(poller);
+             poller = setInterval(() => {
+                console.log('Polling for brief data...');
+                router.refresh();
+             }, 5000); // Poll every 5 seconds
+          } else {
+             if (poller) clearInterval(poller);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch brief", error);
         if (!isCancelled) {
-          setBrief(null); // Explicitly set to null on error
+          setBrief(null);
         }
       } finally {
         if (!isCancelled) {
@@ -200,23 +211,9 @@ export default function BriefPage() {
 
     return () => {
       isCancelled = true;
+      if (poller) clearInterval(poller);
     };
-  }, [briefId]);
-
-  // Set up polling with useEffect to check for draft readiness
-  useEffect(() => {
-    const draftIsReady = brief?.versions?.length ?? 0 > 0;
-    if (draftIsReady || !briefId) {
-      return; // Stop polling if the draft is ready or there's no ID
-    }
-
-    console.log('Polling for brief data...');
-    const intervalId = setInterval(() => {
-      router.refresh();
-    }, 5000); // Poll every 5 seconds
-
-    return () => clearInterval(intervalId);
-  }, [brief, briefId, router]);
+  }, [briefId, router, brief?.status]);
 
 
   if (isLoading) {

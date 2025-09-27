@@ -40,7 +40,7 @@ export async function startBriefingProcess(
   );
 
   // Asynchronously kick off draft generation but don't block the UI
-  generateInitialDraft(newBriefRef.id, userResponses, goal).catch((err) => {
+  generateInitialDraft(newBriefRef.id, userResponses, goal, user.uid).catch((err) => {
     console.error(
       'AGENT (startBriefingProcess): CRITICAL - Initial draft generation failed.',
       err
@@ -55,19 +55,18 @@ export async function startBriefingProcess(
 
 /**
  * Generates the first "V1" draft of the document using the refineBrief flow.
+ * This runs in the background and does not need its own auth check, as it's
+ * called by an authenticated server action.
  */
 async function generateInitialDraft(
   briefId: string,
   userResponses: Record<string, string>,
-  goal: string
+  goal: string,
+  userId: string
 ) {
   console.log(
     `AGENT (generateInitialDraft): Initiated for briefId: ${briefId}.`
   );
-  // Since this is a non-exported helper, it inherits the auth context from the calling Server Action.
-  // For robustness, we re-verify auth here.
-  const sessionCookie = cookies().get('session')?.value;
-  const { user } = await getAuthenticatedUser(sessionCookie);
 
   const instruction = `My primary goal is: "${goal}". I have answered your clarifying questions. Based on my goal and my answers, please generate the first draft of the document. My answers were: ${JSON.stringify(
     userResponses
@@ -103,7 +102,7 @@ async function generateInitialDraft(
   const newVersion: BriefVersionV2 = {
     version: 1,
     createdAt: new Date().toISOString(),
-    createdBy: user.uid,
+    createdBy: userId,
     userResponses: userResponses,
     brief: draftOutput.brief,
     fullArtifact: draftOutput.fullArtifact,

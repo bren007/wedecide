@@ -33,9 +33,8 @@ type FormValues = {
   responses: Record<string, string>;
 };
 
-// Sample data for rapid testing
 const SAMPLE_GOAL = "Draft a business case using the better business case format. The business case should seek funding to construct a new call centre system for the department's customer helpdesk. The call centre system must be up and running before Q3 2028 and cost no more than $5m to implement. The system should provide 10% efficiency gains and support a 15% increase in customer satisfaction.";
-const SAMPLE_RESPONSES = {
+const SAMPLE_RESPONSES: Record<string, string> = {
     'Strategic Alignment': 'This primarily supports our "Improve Public Service Delivery" objective by enhancing efficiency and satisfaction.',
     'Scope and Constraints': 'The brief should focus on the business case for funding approval, including high-level timelines and resource needs, but defer detailed implementation planning.',
     'Data and Information Gaps': 'Please incorporate the attached "2024 Customer Satisfaction Report" and the "Current Call Centre Operating Costs" spreadsheet.',
@@ -86,9 +85,8 @@ export default function GoalPage() {
         const result = await clarifyGoal({ userGoal: goal });
         setQuestions(result.questions);
         
-        // Pre-fill form with sample answers for speed
         const initialResponses = result.questions.reduce((acc, q) => {
-            acc[q.category] = SAMPLE_RESPES[q.category as keyof typeof SAMPLE_RESPES] || '';
+            acc[q.category] = SAMPLE_RESPONSES[q.category] || '';
             return acc;
         }, {} as Record<string, string>);
 
