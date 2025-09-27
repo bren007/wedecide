@@ -14,10 +14,9 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Target, Users, Landmark, LogOut } from 'lucide-react';
+import { Target, Users, Landmark, LogOut, Home } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from './auth-provider';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 
@@ -47,7 +46,6 @@ function Logo() {
 function NavLinks() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
-  const { user } = useAuth();
   const isActive = (path: string) => pathname === path;
 
   const handleLinkClick = () => {
@@ -57,52 +55,31 @@ function NavLinks() {
   return (
     <SidebarMenu>
         <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/goal')}>
-          <Link href="/goal" onClick={handleLinkClick}>
-            <Target />
-            <span>New Brief</span>
+        <SidebarMenuButton asChild isActive={isActive('/')}>
+          <Link href="/" onClick={handleLinkClick}>
+            <Home />
+            <span>Dashboard</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/decision-bank')}>
-          <Link href="/decision-bank" onClick={handleLinkClick}>
-            <Landmark />
-            <span>Decision Bank</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      {user?.profile.role === 'admin' && (
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild isActive={isActive('/admin')}>
-            <Link href="/admin" onClick={handleLinkClick}>
-              <Users />
-              <span>Admin</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      )}
     </SidebarMenu>
   );
 }
 
 function UserProfile() {
-    const { user, signOut } = useAuth();
-    if (!user) return null;
-
     return (
         <div className="mt-auto p-2">
             <Separator className="mb-2" />
             <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-                    <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarImage src={'https://picsum.photos/seed/100/40/40'} alt={'Demo User'} />
+                    <AvatarFallback>DU</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium truncate">{user.displayName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    <p className="text-sm font-medium truncate">Demo User</p>
+                    <p className="text-xs text-muted-foreground truncate">director@gov.org</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={signOut} className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                     <LogOut className="h-4 w-4" />
                 </Button>
             </div>
@@ -127,7 +104,7 @@ export function AppLayout({ children }: { children: React.ReactNode}) {
             <header className="p-4 md:hidden">
                 <SidebarTrigger />
             </header>
-            <main className="flex-1 p-4 md:p-6 lg:p-8">
+            <main className="flex-1">
                 {children}
             </main>
         </SidebarInset>

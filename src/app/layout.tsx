@@ -1,6 +1,5 @@
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/components/auth-provider';
 
 export const metadata = {
   title: 'WeDecide',
@@ -13,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full bg-background">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -27,9 +26,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased h-full">
-        <AuthProvider>
           {children}
-        </AuthProvider>
         <Toaster />
       </body>
     </html>
