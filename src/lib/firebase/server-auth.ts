@@ -1,4 +1,3 @@
-
 'use server';
 
 import { initializeAdmin } from './server-admin';
@@ -13,7 +12,6 @@ type AuthResult = {
 /**
  * Verifies a session cookie string and returns the authenticated user's data.
  * Throws an error if the user is not authenticated.
- * This is a pure helper function that does not use any Next.js dynamic APIs.
  */
 export async function getAuthenticatedUser(sessionCookie: string | undefined): Promise<AuthResult> {
   if (!sessionCookie) {
@@ -42,7 +40,6 @@ export async function getAuthenticatedUser(sessionCookie: string | undefined): P
       providerData: [], 
       metadata: {},
       profile: userProfile,
-      // Mock client-side methods that are not available on the server
       getIdToken: async () => sessionCookie,
       getIdTokenResult: async () => ({ token: sessionCookie, claims: decodedToken, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
       reload: async () => {},

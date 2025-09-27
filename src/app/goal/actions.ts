@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getAuthenticatedUser } from '@/lib/firebase/server-auth';
@@ -18,7 +17,6 @@ export async function clarifyGoal(
 ): Promise<ClarifyGoalOutput> {
   console.log('AGENT (clarifyGoal): Initiated.');
   const sessionCookie = cookies().get('session')?.value;
-  // This action is secure because it verifies the user before proceeding.
   const { user } = await getAuthenticatedUser(sessionCookie);
   console.log(`AGENT (clarifyGoal): User ${user.email} authenticated.`);
 

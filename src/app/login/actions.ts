@@ -1,4 +1,3 @@
-
 'use server';
 
 import { initializeAdmin } from '@/lib/firebase/server-admin';
@@ -14,7 +13,6 @@ export async function createSession(idToken: string) {
     throw new Error('ID token is required.');
   }
 
-  // Set session expiration to 5 days.
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
 
   try {
@@ -48,7 +46,6 @@ export async function seedFirstUser() {
     tenantName: 'WeDecide Global Corp',
   };
   
-  // 1. Check if the user already exists
   try {
     await auth.getUserByEmail(seedData.email);
     console.log('Seed user already exists. Skipping creation.');
@@ -57,10 +54,8 @@ export async function seedFirstUser() {
     if (error.code !== 'auth/user-not-found') {
       throw error; // Re-throw unexpected errors
     }
-    // User does not exist, so we can proceed.
   }
 
-  // 2. Create the user in Firebase Auth
   console.log(`Creating user: ${seedData.email}`);
   const userRecord = await auth.createUser({
     email: seedData.email,
@@ -68,14 +63,12 @@ export async function seedFirstUser() {
     displayName: seedData.displayName,
   });
 
-  // 3. Set custom claims for role and tenant
   console.log(`Setting custom claims for user: ${userRecord.uid}`);
   await auth.setCustomUserClaims(userRecord.uid, {
     role: 'admin',
     tenantId: seedData.tenantId,
   });
 
-  // 4. Create the user profile in Firestore
   console.log(`Creating user profile in Firestore for UID: ${userRecord.uid}`);
   const userProfile: UserProfile = {
     uid: userRecord.uid,
@@ -86,9 +79,6 @@ export async function seedFirstUser() {
     createdAt: new Date().toISOString(),
   };
   await db.collection('users').doc(userRecord.uid).set(userProfile);
-  
-  // 5. In a real app, we might also create the Tenant document itself.
-  // For now, the tenantId claim is sufficient for authorization.
   
   console.log('Database seeding successful.');
 }

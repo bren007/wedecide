@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -23,7 +22,6 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Special case to seed the first admin user
     if (email === 'seed@we-decide.com') {
       try {
         await seedFirstUser();
@@ -32,7 +30,7 @@ export default function LoginPage() {
           description: 'The first admin user and organization have been created. Please log in with the credentials provided.',
         });
         setEmail('admin@we-decide.com');
-        setPassword('password'); // Pre-fill for convenience
+        setPassword('password'); 
         setIsLoading(false);
         return;
       } catch (error: any) {
@@ -51,7 +49,6 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
       
-      // Use the Server Action to create the session cookie
       await createSession(idToken);
 
       const nextUrl = searchParams.get('next') || '/goal';
