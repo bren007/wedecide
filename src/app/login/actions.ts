@@ -2,7 +2,7 @@
 'use server';
 
 import { initializeAdmin } from '@/lib/firebase/server-admin';
-import type { UserProfile } from '@/lib/types';
+import type { UserProfile, UserRole } from '@/lib/types';
 import { cookies } from 'next/headers';
 
 /**
