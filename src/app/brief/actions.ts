@@ -17,6 +17,8 @@ export async function startBriefingProcess(
 ): Promise<string> {
   console.log('AGENT (startBriefingProcess): Initiated.');
   const sessionCookie = cookies().get('session')?.value;
+  console.log(`AGENT (startBriefingProcess): Retrieving session cookie. Found: ${!!sessionCookie}`);
+
   const { user } = await getAuthenticatedUser(sessionCookie);
   console.log(`AGENT (startBriefingProcess): User ${user.email} authenticated.`);
 
@@ -132,6 +134,8 @@ async function generateInitialDraft(
 export async function refineDraft(briefId: string, instruction: string) {
   console.log(`AGENT (refineDraft): Initiated for briefId: ${briefId}.`);
   const sessionCookie = cookies().get('session')?.value;
+  console.log(`AGENT (refineDraft): Retrieving session cookie. Found: ${!!sessionCookie}`);
+
   const { user } = await getAuthenticatedUser(sessionCookie);
   console.log(`AGENT (refineDraft): User ${user.email} authenticated.`);
 
@@ -173,7 +177,7 @@ export async function refineDraft(briefId: string, instruction: string) {
 
   const newVersion: BriefVersionV2 = {
     version: existingBrief.versions.length + 1,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date().toISOString    (),
     createdBy: user.uid,
     refinementInstruction: instruction,
     brief: refinedOutput.brief,
@@ -198,6 +202,8 @@ export async function refineDraft(briefId: string, instruction: string) {
  */
 export async function getBrief(id: string): Promise<DecisionBriefV2 | null> {
   const sessionCookie = cookies().get('session')?.value;
+  console.log(`AGENT (getBrief): Retrieving session cookie. Found: ${!!sessionCookie}`);
+
   const { user } = await getAuthenticatedUser(sessionCookie);
 
   try {

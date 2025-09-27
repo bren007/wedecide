@@ -14,8 +14,9 @@ export async function clarifyGoal(
 ): Promise<ClarifyGoalOutput> {
   console.log('AGENT (clarifyGoal): Initiated.');
 
-  // This is the one, correct way to get the session cookie in a Server Action.
   const sessionCookie = cookies().get('session')?.value;
+  console.log(`AGENT (clarifyGoal): Retrieving session cookie. Found: ${!!sessionCookie}`);
+
   const { user } = await getAuthenticatedUser(sessionCookie);
   console.log(`AGENT (clarifyGoal): User ${user.email} authenticated.`);
 

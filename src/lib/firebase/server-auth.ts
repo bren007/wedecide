@@ -12,15 +12,17 @@ type AuthResult = {
 /**
  * Verifies a session cookie string and returns the authenticated user's data.
  * Throws an error if the user is not authenticated.
- * This is a pure utility and contains no Next.js dynamic functions.
  */
 export async function getAuthenticatedUser(
   sessionCookie: string | undefined
 ): Promise<AuthResult> {
+  console.log(`AGENT (getAuthenticatedUser): Received session cookie value. Has value: ${!!sessionCookie}`);
   if (!sessionCookie) {
+    // Log the detailed error on the server for diagnostics
     console.error(
-      'getAuthenticatedUser error: No session cookie was provided.'
+      'getAuthenticatedUser error: No session cookie was provided to the function.'
     );
+    // Throw a generic error to the client
     throw new Error('Authentication session cookie not found.');
   }
 
