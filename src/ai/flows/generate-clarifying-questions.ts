@@ -6,7 +6,7 @@
  * This file ONLY exports the server action function. All types and schemas are in /src/lib/types.ts.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, flash } from '@/ai/genkit';
 import {
   ClarifyGoalInputSchema,
   ClarifyGoalOutputSchema,
@@ -28,6 +28,7 @@ const prompt = ai.definePrompt({
   name: 'clarifyGoalPrompt',
   input: { schema: ClarifyGoalInputSchema },
   output: { schema: ClarifyGoalOutputSchema },
+  model: flash, // Explicitly define the model for the prompt
   prompt: `You are an expert public sector consultant. Your job is to help a user refine their initial goal into a "decision-ready" brief.
 To do this, you must ask exactly four insightful clarifying questions, one for each of the following categories.
 
