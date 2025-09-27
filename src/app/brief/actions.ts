@@ -178,7 +178,7 @@ export async function refineDraft(briefId: string, instruction: string) {
 
   const newVersion: BriefVersionV2 = {
     version: existingBrief.versions.length + 1,
-    createdAt: new Date().toISOString    (),
+    createdAt: new Date().toISOString(),
     createdBy: user.uid,
     refinementInstruction: instruction,
     brief: refinedOutput.brief,
