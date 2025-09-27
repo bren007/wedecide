@@ -3,6 +3,34 @@
 
 import { initializeAdmin } from '@/lib/firebase/server-admin';
 import type { UserProfile } from '@/lib/types';
+import { cookies } from 'next/headers';
+
+/**
+ * Creates a session cookie for the authenticated user.
+ */
+export async function createSession(idToken: string) {
+  const { auth } = initializeAdmin();
+  if (!idToken) {
+    throw new Error('ID token is required.');
+  }
+
+  // Set session expiration to 5 days.
+  const expiresIn = 60 * 60 * 24 * 5 * 1000;
+
+  try {
+    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+    cookies().set('session', sessionCookie, {
+      maxAge: expiresIn / 1000,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+    });
+    return { status: 'success' };
+  } catch (error) {
+    console.error('Error creating session cookie:', error);
+    throw new Error('Unauthorized');
+  }
+}
 
 /**
  * This is a one-time server action to "seed" the database with the first user and tenant.

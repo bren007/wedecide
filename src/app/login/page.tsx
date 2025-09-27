@@ -7,10 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { seedFirstUser } from './actions';
+import { seedFirstUser, createSession } from './actions';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -52,12 +51,8 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
       
-      // Send the token to the server to set a session cookie
-      await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
+      // Use the Server Action to create the session cookie
+      await createSession(idToken);
 
       const nextUrl = searchParams.get('next') || '/goal';
       router.push(nextUrl);
