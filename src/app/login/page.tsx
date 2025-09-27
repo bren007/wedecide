@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -52,7 +53,9 @@ export default function LoginPage() {
       await createSession(idToken);
 
       const nextUrl = searchParams.get('next') || '/goal';
-      router.push(nextUrl);
+      // Use window.location.href for a full page reload to ensure the cookie is sent.
+      // This is the definitive fix for the timing issue.
+      window.location.href = nextUrl;
 
     } catch (error: any) {
       toast({
