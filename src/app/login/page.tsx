@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { seedFirstUser, createSession } from './actions';
 
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { toast } = useToast();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -60,9 +61,9 @@ export default function LoginPage() {
       const nextUrl = searchParams.get('next') || '/goal';
       console.log(`CLIENT: Redirecting to ${nextUrl}...`);
       
-      // Use window.location.href for a full page reload to ensure the cookie is sent.
-      // This is the definitive fix for the timing issue.
-      window.location.href = nextUrl;
+      // Use router.push for client-side navigation without a full refresh.
+      // This preserves the console logs for debugging.
+      router.push(nextUrl);
 
     } catch (error: any) {
       console.error('CLIENT: Sign-in failed.', error);
