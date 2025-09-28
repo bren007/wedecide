@@ -1,47 +1,20 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to get user's tenantId from their custom claim
-    function getTenantId() {
-      return request.auth.token.tenantId;
-    }
 
-    // Helper function to check the user's role
-    function isRole(role) {
-      return request.auth.token.role == role;
-    }
-    
-    // Users collection:
-    // - Allow users to read their own profile.
-    // - Allow admins to create new users within their own tenancy.
-    match /users/{userId} {
-      allow read: if request.auth.uid == userId;
-      allow create: if isRole('admin') && request.resource.data.tenantId == getTenantId();
-      // Allow admins to update roles for users in their tenancy.
-      allow update: if isRole('admin') && resource.data.tenantId == getTenantId();
-    }
-    
-    // Decision Briefs collection:
-    // Enforce tenancy and role-based access.
-    match /decisionBriefs/{briefId} {
-      
-      // CREATE: Only authenticated users can create briefs within their own tenancy.
-      allow create: if request.auth != null && request.resource.data.tenantId == getTenantId();
-      
-      // READ: Users can only read briefs that belong to their tenancy.
-      allow read: if request.auth != null && resource.data.tenantId == getTenantId();
-      
-      // UPDATE:
-      // - Any user in the tenancy can update a 'Draft' brief (e.g., to add answers).
-      // - Only a 'chair' can update the status to 'Approved' or 'Decided'.
-      allow update: if request.auth != null && resource.data.tenantId == getTenantId();
-    }
-
-    // Default deny all other access
+    // Deny all reads and writes by default
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // Allow anyone to submit an email to the 'interest' collection.
+    // This rule is secure because it does NOT allow anyone to read, update,
+    // or delete the documents in the collection. They can only create new ones.
+    match /interest/{docId} {
+      allow create: if true;
+      allow read, update, delete: if false;
     }
   }
 }

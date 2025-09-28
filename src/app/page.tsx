@@ -5,9 +5,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Check, ArrowRight, Target, FileText, Landmark } from 'lucide-react';
+import { Check, ArrowRight, Target, FileText, Landmark, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { registerInterest } from './actions';
+import { useToast } from '@/hooks/use-toast';
 
 function Logo() {
   return (
@@ -36,22 +38,36 @@ function InterestForm() {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+
         if (!email || !/\S+@\S+\.\S+/.test(email)) {
             setError('Please enter a valid email address.');
             return;
         }
-        setError('');
-        // In a real app, you'd send this to a server.
-        console.log('Interest registered for:', email);
-        setSubmitted(true);
+
+        setLoading(true);
+        const result = await registerInterest(email);
+        setLoading(false);
+
+        if (result.success) {
+            setSubmitted(true);
+        } else {
+            toast({
+              variant: 'destructive',
+              title: 'An error occurred',
+              description: result.message,
+            });
+        }
     };
 
     if (submitted) {
         return (
-            <div className="text-center p-4 bg-green-100 text-green-800 rounded-lg">
+            <div className="text-center p-4 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg border border-green-200 dark:border-green-700">
                 <h3 className="font-semibold">Thank you for your interest!</h3>
                 <p className="text-sm">We will be in touch with you shortly.</p>
             </div>
@@ -63,20 +79,23 @@ function InterestForm() {
             <div className="flex gap-2">
                 <Input
                     type="email"
-                    placeholder="Enter your email address"
+                    placeholder="Enter your work email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="flex-1"
                     aria-label="Email for interest registration"
+                    disabled={loading}
                 />
-                <Button type="submit" size="lg">
+                <Button type="submit" size="lg" disabled={loading}>
+                    {loading && <Loader2 className="animate-spin mr-2"/>}
                     Register Interest
                 </Button>
             </div>
-             {error && <p className="text-destructive text-sm">{error}</p>}
+             {error && <p className="text-destructive text-sm text-center">{error}</p>}
         </form>
     );
 }
+
 
 export default function LandingPage() {
   return (
@@ -210,5 +229,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
