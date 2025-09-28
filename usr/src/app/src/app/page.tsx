@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, ArrowRight, Target, FileText, Landmark } from 'lucide-react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 function Logo() {
   return (
@@ -163,5 +164,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    

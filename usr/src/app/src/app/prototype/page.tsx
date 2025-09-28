@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AppLayout } from '@/components/app-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -601,12 +600,8 @@ export default function PrototypePage() {
   };
 
   return (
-    <AppLayout>
-      <div className="container mx-auto py-8 md:py-12">
+    <>
         {renderScreen()}
-      </div>
-    </AppLayout>
+    </>
   );
 }
-
-    
