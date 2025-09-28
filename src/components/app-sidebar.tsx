@@ -14,7 +14,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Target, Users, Landmark, LogOut, Home } from 'lucide-react';
+import { Target, Users, Landmark, LogOut, Home, Presentation } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -46,7 +46,7 @@ function Logo() {
 function NavLinks() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => pathname.startsWith(path);
 
   const handleLinkClick = () => {
     setOpenMobile(false);
@@ -54,11 +54,19 @@ function NavLinks() {
 
   return (
     <SidebarMenu>
-        <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={isActive('/')}>
+       <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={pathname === '/'}>
           <Link href="/" onClick={handleLinkClick}>
             <Home />
-            <span>Dashboard</span>
+            <span>Home</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive('/prototype')}>
+          <Link href="/prototype" onClick={handleLinkClick}>
+            <Presentation />
+            <span>Prototype</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -111,3 +119,5 @@ export function AppLayout({ children }: { children: React.ReactNode}) {
     </SidebarProvider>
   )
 }
+
+    
