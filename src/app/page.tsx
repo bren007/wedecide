@@ -1,6 +1,10 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Check, ArrowRight, Target, FileText, Landmark } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +30,52 @@ function Logo() {
       <h2 className="text-lg font-semibold tracking-tighter text-primary">WeDecide</h2>
     </div>
   );
+}
+
+function InterestForm() {
+    const [email, setEmail] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !/\S+@\S+\.\S+/.test(email)) {
+            setError('Please enter a valid email address.');
+            return;
+        }
+        setError('');
+        // In a real app, you'd send this to a server.
+        console.log('Interest registered for:', email);
+        setSubmitted(true);
+    };
+
+    if (submitted) {
+        return (
+            <div className="text-center p-4 bg-green-100 text-green-800 rounded-lg">
+                <h3 className="font-semibold">Thank you for your interest!</h3>
+                <p className="text-sm">We will be in touch with you shortly.</p>
+            </div>
+        );
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-3">
+            <div className="flex gap-2">
+                <Input
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1"
+                    aria-label="Email for interest registration"
+                />
+                <Button type="submit" size="lg">
+                    Register Interest
+                </Button>
+            </div>
+             {error && <p className="text-destructive text-sm">{error}</p>}
+        </form>
+    );
 }
 
 export default function LandingPage() {
@@ -148,11 +198,7 @@ export default function LandingPage() {
               We are currently engaging with pioneering public sector and multilateral organizations to refine our vision. If you are interested in solving these challenges, we would love to hear from you.
             </p>
             <div className="mt-8">
-              <Button size="lg" variant="outline" asChild>
-                <Link href="mailto:contact@wedecide.com?subject=Expression of Interest in WeDecide">
-                  Register Your Interest
-                </Link>
-              </Button>
+              <InterestForm />
             </div>
           </div>
         </section>
@@ -164,3 +210,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
