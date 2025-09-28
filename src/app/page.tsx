@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/app-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,8 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Mock Data
+const userGoal = "I need to produce a business case for the procurement of new software to manage public feedback, and I need it ready for the CEO's committee next month.";
+
 const agentQuestions = [
   { category: 'Strategic Alignment', question: 'Which strategic objective—"Improve Citizen Service Score by 15%" or "Reduce Carbon Footprint by 20%"—does this software procurement best support?' },
   { category: 'Scope and Constraints', question: 'Is this business case just for the initial software procurement, or should it also cover the multi-year implementation and training plan?' },
@@ -43,20 +45,8 @@ const stakeholders = [
 // --- SCREEN COMPONENTS ---
 
 function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [showRag, setShowRag] = useState(false);
-  const goal = "I need to produce a business case for the procurement of new software to manage public feedback, and I need it ready for the CEO's committee next month.";
-
-  const handleNextQuestion = () => {
-    if (currentQuestion < agentQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      setShowRag(true);
-    }
-  };
-
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-8">
+    <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
         <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight">Welcome to WeDecide</h1>
             <p className="text-muted-foreground mt-2">The intelligent operating system for public sector governance.</p>
@@ -78,35 +68,75 @@ function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>1. Start with your Goal</CardTitle>
+          <CardTitle>Start with your Goal</CardTitle>
+          <CardDescription>Enter your goal, request, or problem statement in natural language.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Textarea
-            value={goal}
-            readOnly
-            className="text-base p-4 bg-muted/50"
+            defaultValue={userGoal}
+            className="text-base p-4"
             rows={3}
           />
+           <Button onClick={onNext} className="w-full">
+              Start Clarification <ArrowRight className="ml-2" />
+            </Button>
         </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Screen2_ClarifyingQuestions({ onNext }: { onNext: () => void }) {
+  const [questionsToShow, setQuestionsToShow] = useState(0);
+  const [showRag, setShowRag] = useState(false);
+
+  useEffect(() => {
+    if (questionsToShow < agentQuestions.length) {
+      const timer = setTimeout(() => {
+        setQuestionsToShow(prev => prev + 1);
+      }, 1500); // 1.5 second delay between questions
+      return () => clearTimeout(timer);
+    } else {
+        const ragTimer = setTimeout(() => {
+            setShowRag(true);
+        }, 1500);
+        return () => clearTimeout(ragTimer);
+    }
+  }, [questionsToShow]);
+
+  return (
+    <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Clarifying Intent</h1>
+          <p className="text-muted-foreground mt-2">The agent is analyzing your goal and generating questions to ensure the best possible output.</p>
+      </div>
+      <Card>
+          <CardHeader>
+              <CardTitle>Your Goal</CardTitle>
+          </CardHeader>
+          <CardContent>
+              <p className="text-base p-4 bg-muted/50 rounded-md">"{userGoal}"</p>
+          </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-            <CardTitle>2. Clarify Your Intent</CardTitle>
-            <CardDescription>The agent will guide you through a structured intake to ensure the best possible output.</CardDescription>
+            <CardTitle>Intelligent Vetting</CardTitle>
+            <CardDescription>Please provide responses to the following questions.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            {agentQuestions.slice(0, currentQuestion + 1).map((q, index) => (
-                 <div key={q.category} className="space-y-2 animate-in fade-in duration-500">
+            {agentQuestions.slice(0, questionsToShow).map((q, index) => (
+                 <div key={q.category} className="space-y-3 animate-in fade-in duration-1000">
                     <Label className="font-semibold text-primary">{q.category}</Label>
-                    <p className="font-medium">{q.question}</p>
-                    <Textarea placeholder="Your response..." defaultValue={index < currentQuestion ? "This is a mock response." : ""} />
+                    <p className="font-medium p-4 border rounded-md bg-muted/30">{q.question}</p>
+                    <Textarea placeholder="Your response..." />
                 </div>
             ))}
-            {!showRag && (
-                <Button onClick={handleNextQuestion}>
-                    {currentQuestion < agentQuestions.length - 1 ? 'Next Question' : 'Confirm Intent'} <ArrowRight className="ml-2" />
-                </Button>
+            {questionsToShow < agentQuestions.length && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-4 h-4 border-2 border-dashed rounded-full animate-spin border-primary"></div>
+                    <span>Agent is thinking...</span>
+                </div>
             )}
         </CardContent>
       </Card>
@@ -114,7 +144,7 @@ function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
       {showRag && (
         <Card className="animate-in fade-in duration-500">
           <CardHeader>
-            <CardTitle>3. Confirm Knowledge Sources</CardTitle>
+            <CardTitle>Confirm Knowledge Sources</CardTitle>
             <CardDescription>Confirm the organizational knowledge the agent should use to generate the draft.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -136,7 +166,7 @@ function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
   );
 }
 
-function Screen2_DraftGeneration({ onNext }: { onNext: () => void }) {
+function Screen3_DraftGeneration({ onNext }: { onNext: () => void }) {
     return (
         <div className="w-full max-w-6xl mx-auto space-y-6">
             <h1 className="text-3xl font-bold tracking-tight">Draft: Business Case for Public Feedback Software</h1>
@@ -230,7 +260,7 @@ function Screen2_DraftGeneration({ onNext }: { onNext: () => void }) {
     );
 }
 
-function Screen3_Consultation({ onNext }: { onNext: () => void }) {
+function Screen4_Consultation({ onNext }: { onNext: () => void }) {
     return (
         <div className="w-full max-w-5xl mx-auto space-y-6">
             <h1 className="text-3xl font-bold tracking-tight">Consultation: Business Case for Public Feedback Software</h1>
@@ -267,7 +297,7 @@ function Screen3_Consultation({ onNext }: { onNext: () => void }) {
 }
 
 
-function Screen4_GovernanceHandoff({ onNext }: { onNext: () => void }) {
+function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
     return (
          <div className="w-full max-w-5xl mx-auto space-y-6">
             <h1 className="text-3xl font-bold tracking-tight">Governance Review: Business Case</h1>
@@ -336,7 +366,7 @@ function Screen4_GovernanceHandoff({ onNext }: { onNext: () => void }) {
     );
 }
 
-function Screen5_DecisionHub({ onNext }: { onNext: () => void }) {
+function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
     return (
          <div className="w-full max-w-6xl mx-auto space-y-6">
             <div className="pb-2">
@@ -420,7 +450,7 @@ function Screen5_DecisionHub({ onNext }: { onNext: () => void }) {
     );
 }
 
-function Screen6_DecisionCapture({ onNext }: { onNext: () => void }) {
+function Screen7_DecisionCapture({ onNext }: { onNext: () => void }) {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold tracking-tight">Capture & Formalize Decision</h1>
@@ -472,7 +502,7 @@ function Screen6_DecisionCapture({ onNext }: { onNext: () => void }) {
   );
 }
 
-function Screen7_DecisionBank({ onReset }: { onReset: () => void }) {
+function Screen8_DecisionBank({ onReset }: { onReset: () => void }) {
     return (
         <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
              <div className="flex justify-between items-start">
@@ -552,17 +582,19 @@ export default function HomePage() {
       case 1:
         return <Screen1_AgentIntake onNext={handleNext} />;
       case 2:
-        return <Screen2_DraftGeneration onNext={handleNext} />;
+        return <Screen2_ClarifyingQuestions onNext={handleNext} />;
       case 3:
-        return <Screen3_Consultation onNext={handleNext} />;
+        return <Screen3_DraftGeneration onNext={handleNext} />;
       case 4:
-        return <Screen4_GovernanceHandoff onNext={handleNext} />;
+        return <Screen4_Consultation onNext={handleNext} />;
       case 5:
-        return <Screen5_DecisionHub onNext={handleNext} />;
+        return <Screen5_GovernanceHandoff onNext={handleNext} />;
       case 6:
-        return <Screen6_DecisionCapture onNext={handleNext} />;
+        return <Screen6_DecisionHub onNext={handleNext} />;
       case 7:
-        return <Screen7_DecisionBank onReset={handleReset} />;
+        return <Screen7_DecisionCapture onNext={handleNext} />;
+      case 8:
+        return <Screen8_DecisionBank onReset={handleReset} />;
       default:
         return <Screen1_AgentIntake onNext={handleNext} />;
     }
@@ -576,4 +608,3 @@ export default function HomePage() {
     </AppLayout>
   );
 }
-
