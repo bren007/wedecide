@@ -1,3 +1,4 @@
+
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -25,7 +26,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased h-full">
+      <body className="font-body antialiased">
           {children}
         <Toaster />
       </body>
