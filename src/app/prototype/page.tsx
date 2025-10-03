@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward } from 'lucide-react';
-import { strategicGoals } from '@/lib/data';
+import { strategicOutcomes } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const userGoal = "I need to produce a business case for the procurement of new software to manage public feedback, and I need it ready for the CEO's committee next month.";
 
 const agentQuestions = [
-  { category: 'Strategic Alignment', question: 'Which strategic objective—"Improve Citizen Service Score by 15%" or "Reduce Carbon Footprint by 20%"—does this software procurement best support?' },
+  { category: 'Strategic Outcomes', question: 'Which strategic outcomes—"Improve Citizen Service Score by 15%" or "Reduce Carbon Footprint by 20%"—does this software procurement best support? You can select multiple and provide a rationale.' },
   { category: 'Scope and Constraints', question: 'Is this business case just for the initial software procurement, or should it also cover the multi-year implementation and training plan?' },
   { category: 'Data and Information Gaps', question: 'To build the case, should I reference the "2023 Citizen Satisfaction Survey" and the "Current IT Infrastructure Cost Report"?' },
   { category: 'Audience and Purpose', question: 'Who is the final decision-maker for this business case (e.g., the CEO, the CTO, or the Board), and what is the primary action you want them to take?' },
@@ -52,11 +52,11 @@ function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>Configured Strategic Objectives</CardTitle>
-                <CardDescription>All decisions should align with one or more of these core goals.</CardDescription>
+                <CardTitle>Configured Strategic Outcomes</CardTitle>
+                <CardDescription>All decisions should align with one or more of these core organizational outcomes.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-                {strategicGoals.map(goal => (
+                {strategicOutcomes.map(goal => (
                     <Card key={goal.id} className="p-4">
                         <h4 className="font-semibold">{goal.name}</h4>
                         <p className="text-sm text-muted-foreground">{goal.description}</p>
@@ -77,7 +77,7 @@ function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
             rows={3}
           />
            <Button onClick={onNext} className="w-full">
-              Start Clarification <ArrowRight className="ml-2" />
+              Submit Goal <ArrowRight className="ml-2" />
             </Button>
         </CardContent>
       </Card>
@@ -120,7 +120,7 @@ function Screen2_ClarifyingQuestions({ onNext }: { onNext: () => void }) {
 
       <Card>
         <CardHeader>
-            <CardTitle>Intelligent Vetting</CardTitle>
+            <CardTitle>Goal Clarification</CardTitle>
             <CardDescription>Please provide responses to the following questions.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -168,8 +168,13 @@ function Screen2_ClarifyingQuestions({ onNext }: { onNext: () => void }) {
 function Screen3_DraftGeneration({ onNext }: { onNext: () => void }) {
     return (
         <div className="w-full max-w-6xl mx-auto space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight">Draft: Business Case for Public Feedback Software</h1>
-             <div className="flex items-center gap-6 text-sm">
+             <div className="text-center">
+                <Badge>Your Role: Preparer</Badge>
+                <h1 className="text-3xl font-bold tracking-tight mt-2">Draft: Business Case for Public Feedback Software</h1>
+                <p className="text-muted-foreground mt-2 max-w-3xl mx-auto">You are now viewing the agent-generated draft. Your role is to collaborate with your team and the agent to refine this document until it's ready for formal consultation.</p>
+            </div>
+            
+             <div className="flex justify-center items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                     <CheckCircle className="text-green-500" />
                     <span className="font-semibold">Strategic Alignment Score:</span>
@@ -183,7 +188,7 @@ function Screen3_DraftGeneration({ onNext }: { onNext: () => void }) {
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-                <div className="col-span-3 lg:col-span-2">
+                <div className="col-span-3 lg:col-span-2 space-y-6">
                      <Tabs defaultValue="brief" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="brief"><Briefcase className="mr-2"/>Decision Brief</TabsTrigger>
@@ -193,34 +198,41 @@ function Screen3_DraftGeneration({ onNext }: { onNext: () => void }) {
                             <Card>
                                 <CardHeader><CardTitle>Executive Summary</CardTitle></CardHeader>
                                 <CardContent className="space-y-4 text-sm text-muted-foreground">
-                                    <p>This business case seeks approval for the procurement of a new software-as-a-service (SaaS) solution to manage public feedback, suggestions, and complaints. The proposed solution directly supports the strategic objective to "Improve Citizen Service Score by 15%" by streamlining intake, enabling faster response times, and providing robust analytics for service improvement.</p>
+                                    <p>This business case seeks committee approval for the procurement of a new software-as-a-service (SaaS) solution to systematically manage public feedback, suggestions, and complaints. The proposed investment directly supports the strategic outcome to **"Improve Citizen Service Score by 15%"** by addressing critical deficiencies in our current manual and fragmented processes. It will streamline intake, enable faster response times, and provide robust analytics for continuous service improvement, thereby enhancing public trust and operational efficiency.</p>
+                                    <Separator />
                                     <h4 className="font-semibold text-foreground">Recommendation:</h4>
-                                    <p>It is recommended that the committee approve the allocation of $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
+                                    <p>It is recommended that the committee **approve** the allocation of **$250,000** from the IT Modernization Fund to procure and implement the 'CivicEngage' platform. This option represents the best value by offering rapid time-to-value, lower maintenance overhead compared to an in-house build, and adherence to modern security standards, with a target go-live date of Q2 2025.</p>
                                 </CardContent>
                             </Card>
                         </TabsContent>
                         <TabsContent value="artifact">
                             <Card>
-                                 <CardHeader><CardTitle>Full Business Case</CardTitle></CardHeader>
+                                 <CardHeader><CardTitle>Full Business Case: Public Feedback Software</CardTitle></CardHeader>
                                 <CardContent className="space-y-6 text-sm text-muted-foreground">
                                     <div>
-                                        <h4 className="font-semibold text-foreground">1. Strategic Context</h4>
-                                        <p>The project aligns with the "Improve Citizen Service Score by 15%" objective by addressing key deficiencies in our current feedback management process, which is manual, fragmented, and lacks analytical capabilities.</p>
+                                        <h4 className="font-semibold text-foreground">1. Strategic Case</h4>
+                                        <p>The organization's strategic plan prioritizes improving citizen service delivery. The current method of handling public feedback via disconnected email inboxes and spreadsheets is inefficient, prone to error, and provides zero actionable insight. This project directly addresses this gap by creating a centralized system of record, aligning with the "Improve Citizen Service Score by 15%" outcome by enabling data-driven service design and accountability.</p>
+                                    </div>
+                                     <div>
+                                        <h4 className="font-semibold text-foreground">2. Economic Case</h4>
+                                        <p>An analysis of options indicates that procuring a SaaS solution offers the most compelling economic benefit. While a 'do nothing' approach avoids initial outlay, it carries the unquantified but significant cost of reputational damage and missed service improvements. The recommended SaaS option provides a positive net present value (NPV) over five years, factoring in productivity gains from staff time saved on manual processing.</p>
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-foreground">2. Options Analysis</h4>
-                                        <p>Three options were considered: (a) Do Nothing, (b) Build a custom solution in-house, (c) Procure a market-leading SaaS solution. Option (c) is recommended due to lower upfront cost, faster time-to-value, and reduced maintenance overhead.</p>
+                                        <h4 className="font-semibold text-foreground">3. Commercial Case</h4>
+                                        <p>A market scan identified three viable SaaS vendors. The recommended 'CivicEngage' platform is a leader in the government technology space, offering a competitive pricing structure and a robust feature set that meets 95% of our requirements out-of-the-box. The proposed contract is a standard three-year enterprise license with favorable terms for data ownership and exit.</p>
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-foreground">3. Financial Case</h4>
-                                        <p>The total cost of ownership over 3 years for the recommended solution is estimated at $250,000. This is projected to deliver productivity savings of $80,000 per annum and contribute to improved citizen satisfaction scores, which has a quantifiable economic value.</p>
+                                        <h4 className="font-semibold text-foreground">4. Financial Case</h4>
+                                        <p>The total cost of ownership over 3 years for the recommended solution is estimated at $250,000, funded from the approved IT Modernization Fund (Ref: B-2024-04). This includes one-time setup fees ($50,000) and recurring license fees ($200,000). The investment is projected to deliver productivity savings of $80,000 per annum, resulting in a payback period of approximately 3.1 years.</p>
+                                    </div>
+                                     <div>
+                                        <h4 className="font-semibold text-foreground">5. Management Case</h4>
+                                        <p>The project will be managed by the Digital Services team, with a dedicated project manager assigned. A detailed project plan, including risk register and stakeholder communication plan, has been prepared. Governance will be overseen by the existing Digital Transformation Steering Committee, with quarterly progress reports provided to the board. Successful implementation is highly probable given the vendor's strong track record and our internal project management expertise.</p>
                                     </div>
                                 </CardContent>
                             </Card>
                         </TabsContent>
                     </Tabs>
-                </div>
-                <div className="col-span-3 lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center"><PenSquare className="mr-2"/>Collaboration & Refinement</CardTitle>
@@ -237,6 +249,8 @@ function Screen3_DraftGeneration({ onNext }: { onNext: () => void }) {
                             </div>
                         </CardContent>
                     </Card>
+                </div>
+                <div className="col-span-3 lg:col-span-1 space-y-6">
                      <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center"><Paperclip className="mr-2"/>Knowledge Sources</CardTitle>
@@ -605,3 +619,5 @@ export default function PrototypePage() {
     </>
   );
 }
+
+    
