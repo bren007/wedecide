@@ -52,7 +52,7 @@ function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>Configured Strategic Outcomes</CardTitle>
+                <CardTitle>Strategic Outcomes</CardTitle>
                 <CardDescription>All decisions should align with one or more of these core organizational outcomes.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
