@@ -87,21 +87,17 @@ function Screen1_AgentIntake({ onNext }: { onNext: () => void }) {
 
 function Screen2_ClarifyingQuestions({ onNext }: { onNext: () => void }) {
   const [questionsToShow, setQuestionsToShow] = useState(0);
-  const [showRag, setShowRag] = useState(false);
+  const [clarificationsSubmitted, setClarificationsSubmitted] = useState(false);
+  const allQuestionsShown = questionsToShow === agentQuestions.length;
 
   useEffect(() => {
-    if (questionsToShow < agentQuestions.length) {
+    if (!allQuestionsShown) {
       const timer = setTimeout(() => {
         setQuestionsToShow(prev => prev + 1);
       }, 1500); // 1.5 second delay between questions
       return () => clearTimeout(timer);
-    } else {
-        const ragTimer = setTimeout(() => {
-            setShowRag(true);
-        }, 1500);
-        return () => clearTimeout(ragTimer);
     }
-  }, [questionsToShow]);
+  }, [questionsToShow, allQuestionsShown]);
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -124,27 +120,32 @@ function Screen2_ClarifyingQuestions({ onNext }: { onNext: () => void }) {
             <CardDescription>Please provide responses to the following questions.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            {agentQuestions.slice(0, questionsToShow).map((q, index) => (
+            {agentQuestions.slice(0, questionsToShow).map((q) => (
                  <div key={q.category} className="space-y-3 animate-in fade-in duration-1000">
                     <Label className="font-semibold text-primary">{q.category}</Label>
                     <p className="font-medium p-4 border rounded-md bg-muted/30">{q.question}</p>
                     <Textarea placeholder="Your response..." />
                 </div>
             ))}
-            {questionsToShow < agentQuestions.length && (
+            {!allQuestionsShown && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <div className="w-4 h-4 border-2 border-dashed rounded-full animate-spin border-primary"></div>
                     <span>Agent is thinking...</span>
                 </div>
             )}
+            {allQuestionsShown && !clarificationsSubmitted && (
+                 <Button onClick={() => setClarificationsSubmitted(true)} className="w-full animate-in fade-in duration-500">
+                    Submit Responses
+                </Button>
+            )}
         </CardContent>
       </Card>
       
-      {showRag && (
+      {clarificationsSubmitted && (
         <Card className="animate-in fade-in duration-500">
           <CardHeader>
             <CardTitle>Confirm Knowledge Sources</CardTitle>
-            <CardDescription>Confirm the organizational knowledge the agent should use to generate the draft.</CardDescription>
+            <CardDescription>The agent has suggested these sources based on your goal and clarifications. Please confirm or adjust.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {ragSources.map(source => (
