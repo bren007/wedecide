@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle } from 'lucide-react';
 import { strategicOutcomes } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -154,6 +154,10 @@ function Screen2_ClarifyingQuestions({ onNext }: { onNext: () => void }) {
                 <Label htmlFor={source.id} className="font-medium">{source.name}</Label>
               </div>
             ))}
+             <Button variant="outline" className="w-full mt-2">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Connect Source
+            </Button>
           </CardContent>
           <CardContent>
             <Button onClick={onNext} className="w-full">
