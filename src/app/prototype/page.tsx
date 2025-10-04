@@ -411,14 +411,15 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
 function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
     return (
         <div className="w-full max-w-7xl mx-auto space-y-6">
-            <div className="pb-2 text-center md:text-left">
+            <div className="text-center md:text-left">
                 <p className="text-primary font-semibold">CEO Committee Meeting: 15 Oct 2024</p>
                 <h1 className="text-3xl font-bold tracking-tight">Decision Intelligence Hub</h1>
                 <p className="text-muted-foreground max-w-3xl mx-auto md:mx-0">This is the central space for decision-makers to review materials, explore scenarios, and capture outcomes.</p>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-6">
                     {/* Main Decision Brief */}
                     <Card>
                         <CardHeader>
@@ -431,25 +432,10 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
                             <p>It is recommended that the committee approve the allocation of $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
                         </CardContent>
                     </Card>
-
-                    {/* Strategic Impact */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center"><TrendingUp className="mr-2" />Strategic Impact</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Label>Progress Towards: "Improve Citizen Service Score by 15%"</Label>
-                            <Progress value={73} className="mt-2" />
-                            <p className="text-xs text-muted-foreground mt-1">Current Progress: 11% / 15% (On Track). This decision is forecast to contribute a <span className="font-bold text-green-600">2%</span> improvement.</p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Capture Decision Button - Full Width */}
-                    <Button onClick={onNext} className="w-full" size="lg">Capture Decision <ArrowRight className="ml-2"/></Button>
                 </div>
 
-                {/* Intelligence Deck */}
-                <div className="lg:col-span-1 space-y-6">
+                {/* Right Column: Intelligence Deck */}
+                <div className="space-y-6">
                     <Tabs defaultValue="scenario" className="w-full">
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="scenario"><Zap className="mr-1.5"/>Scenarios</TabsTrigger>
@@ -526,6 +512,20 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
                     </Tabs>
                 </div>
             </div>
+
+            {/* Full-width cards below the main grid */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center"><TrendingUp className="mr-2" />Strategic Impact</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Label>Progress Towards: "Improve Citizen Service Score by 15%"</Label>
+                    <Progress value={73} className="mt-2" />
+                    <p className="text-xs text-muted-foreground mt-1">Current Progress: 11% / 15% (On Track). This decision is forecast to contribute a <span className="font-bold text-green-600">2%</span> improvement.</p>
+                </CardContent>
+            </Card>
+
+            <Button onClick={onNext} className="w-full" size="lg">Capture Decision <ArrowRight className="ml-2"/></Button>
         </div>
     );
 }
