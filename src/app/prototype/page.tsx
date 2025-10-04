@@ -410,9 +410,10 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
 function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
     return (
          <div className="w-full max-w-6xl mx-auto space-y-6">
-            <div className="pb-2">
+            <div className="pb-2 text-center md:text-left">
                 <p className="text-primary font-semibold">CEO Committee Meeting: 15 Oct 2024</p>
-                <h1 className="text-3xl font-bold tracking-tight">Decision Brief Hub</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Decision Hub</h1>
+                <p className="text-muted-foreground max-w-3xl mx-auto md:mx-0">This is the central space for decision-makers to review materials before the meeting and to guide the discussion during the meeting.</p>
             </div>
             
             <div className="grid grid-cols-3 gap-6">
@@ -455,32 +456,25 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
                             </div>
                             <Separator orientation="vertical" className="h-12 bg-primary/20"/>
                             <div>
-                                <p className="text-3xl font-bold text-primary">12</p>
-                                <p className="text-xs font-semibold text-primary/80">Days Cycle Length</p>
+                                <p className="text-3xl font-bold text-primary">12 Days</p>
+                                <p className="text-xs font-semibold text-primary/80">Decision Cycle</p>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center"><SlidersHorizontal className="mr-2"/>Interactive Scenario Explorer</CardTitle>
-                            <CardDescription>Adjust parameters to see hypothetical impacts.</CardDescription>
+                            <CardTitle className="flex items-center"><SlidersHorizontal className="mr-2"/>Intelligent Scenario Explorer</CardTitle>
+                            <CardDescription>Use the agent to explore hypotheticals and probe the brief.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                              <div>
-                                <Label>Financial Budget ($250k)</Label>
-                                <Slider defaultValue={[50]} />
-                                <div className="text-xs flex justify-between"><span>-20%</span><span>+20%</span></div>
+                                <Label>What if we reduced the budget by 20%?</Label>
+                                <Textarea className="mt-1 text-xs" readOnly value="Reducing the budget to $200,000 would likely require descoping the project to exclude the 'Advanced Analytics' module. This would impact our ability to generate deep insights and may delay achieving the full 15% service score improvement."/>
                             </div>
                             <div>
-                                <Label>Timeline (12 Months)</Label>
-                                <Slider defaultValue={[50]} />
-                                <div className="text-xs flex justify-between"><span>-3 Months</span><span>+3 Months</span></div>
-                            </div>
-                            <Separator/>
-                            <div className="text-center">
-                                <p className="text-sm text-muted-foreground">Impact on Risk Score</p>
-                                <p className="text-2xl font-bold text-yellow-600">MODERATE (+15%)</p>
+                                <Label>What is the biggest implementation risk?</Label>
+                                <Textarea className="mt-1 text-xs" readOnly value="The primary risk is user adoption. A comprehensive change management and training plan, included in the full budget, is critical to mitigate this. Without it, the new tool may be underutilized, limiting ROI."/>
                             </div>
                         </CardContent>
                     </Card>
@@ -647,3 +641,5 @@ export default function PrototypePage() {
     </>
   );
 }
+
+    
