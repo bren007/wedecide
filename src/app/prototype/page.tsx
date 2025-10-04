@@ -522,6 +522,7 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
 }
 
 function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
+    const [captureMode, setCaptureMode] = useState(false);
     return (
         <div className="w-full max-w-7xl mx-auto space-y-6">
             <div className="text-center md:text-left">
@@ -640,69 +641,45 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
                 </CardContent>
             </Card>
 
-            <Button onClick={onNext} className="w-full" size="lg">Capture Decision <ArrowRight className="ml-2"/></Button>
+            {!captureMode ? (
+                 <Button onClick={() => setCaptureMode(true)} className="w-full" size="lg">Capture Decision <ArrowRight className="ml-2"/></Button>
+            ) : (
+                <Card className="animate-in fade-in duration-500 border-primary/20 bg-primary/5">
+                    <CardHeader>
+                        <CardTitle className="flex items-center"><BookCheck className="mr-2" />Final Decision & Directives</CardTitle>
+                        <CardDescription>Record the final outcome. Any amendments based on scenario exploration will be automatically included.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Select defaultValue="approved-amended">
+                            <SelectTrigger className="text-base h-12">
+                                <SelectValue placeholder="Select decision outcome..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="approved">Approved as Proposed</SelectItem>
+                                <SelectItem value="approved-amended">Approved with Amendments</SelectItem>
+                                <SelectItem value="endorsed">Endorsed</SelectItem>
+                                <SelectItem value="noted">Noted</SelectItem>
+                                <SelectItem value="not-approved">Not Approved</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Textarea placeholder="Add any final decision notes or directives... (e.g., 'The committee approves the recommendation, with the condition that the project team provides quarterly progress reports to the board.')" rows={4}/>
+                        <div className="text-sm p-4 rounded-md border bg-background">
+                            <p className="font-semibold">Captured Amendments:</p>
+                            <p className="text-muted-foreground">Based on scenario exploration, the budget is adjusted to **$200,000** and the timeline is extended to **15 months** to mitigate user adoption risks.</p>
+                        </div>
+                    </CardContent>
+                    <CardContent>
+                         <Button onClick={onNext} className="w-full" size="lg">
+                            Confirm and Deposit to Decision Bank <ArrowRight className="ml-2" />
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }
 
-
-function Screen7_DecisionCapture({ onNext }: { onNext: () => void }) {
-  return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
-        <div className="text-center">
-            <Badge>Your Role: Secretariat / Chair</Badge>
-            <h1 className="text-3xl font-bold tracking-tight mt-2">Capture & Formalize Decision</h1>
-            <p className="text-muted-foreground">Record the outcome for the Business Case for Public Feedback Software.</p>
-        </div>
-        
-
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center"><BookCheck className="mr-2" />Final Decision</CardTitle>
-                <CardDescription>Select the final outcome based on the committee's decision.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 <Select defaultValue="approved">
-                    <SelectTrigger className="text-base h-12">
-                        <SelectValue placeholder="Select decision outcome..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="endorsed">Endorsed</SelectItem>
-                        <SelectItem value="noted">Noted</SelectItem>
-                        <SelectItem value="not-approved">Not Approved</SelectItem>
-                    </SelectContent>
-                </Select>
-                 <Textarea placeholder="Add any final decision notes or directives... (e.g., 'The committee approves the recommendation, with the condition that the project team provides quarterly progress reports to the board.')" rows={4}/>
-                 <p className="text-xs text-muted-foreground">
-                    Governance approach for this committee is configured to: <span className="font-semibold text-foreground">Consensus</span>.
-                 </p>
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center"><FileText className="mr-2" />Auto-Generated Minutes Preview</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 border rounded-lg bg-muted/30 text-sm space-y-4">
-                <h4 className="font-bold">Minutes of the CEO Committee - 15 October 2024</h4>
-                <p><span className="font-semibold">Attendees:</span> J. Smith (Chair), D. Miller, A. White, L. Green.</p>
-                <Separator/>
-                <h4 className="font-semibold">Decision Item: Business Case for Public Feedback Software</h4>
-                <p><span className="font-semibold">Outcome:</span> <span className="text-green-700 font-bold">Approved</span></p>
-                <p><span className="font-semibold">Decision:</span> The committee approves the recommendation to allocate $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
-                <p><span className="font-semibold">Directive:</span> The project team is required to provide quarterly progress reports to the board.</p>
-            </CardContent>
-        </Card>
-        
-        <Button onClick={onNext} className="w-full" size="lg">
-            Confirm and Deposit to Decision Bank <ArrowRight className="ml-2" />
-        </Button>
-    </div>
-  );
-}
-
-function Screen8_DecisionBank({ onReset }: { onReset: () => void }) {
+function Screen7_DecisionBank({ onReset }: { onReset: () => void }) {
     return (
         <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
              <div className="flex justify-between items-start">
@@ -723,7 +700,7 @@ function Screen8_DecisionBank({ onReset }: { onReset: () => void }) {
                        <div className="border rounded-lg">
                             <div className="p-4 bg-muted/30 flex justify-between items-center">
                                <div>
-                                    <p className="font-semibold">Approved: Business Case for Public Feedback Software</p>
+                                    <p className="font-semibold">Approved (Amended): Business Case for Public Feedback Software</p>
                                     <p className="text-xs text-muted-foreground">Decided: 15 Oct 2024 | Cycle Time: 12 Days | Alignment: 85%</p>
                                </div>
                                <Button variant="ghost" size="sm">View Record</Button>
@@ -792,9 +769,7 @@ export default function PrototypePage() {
       case 6:
         return <Screen6_DecisionHub onNext={handleNext} />;
       case 7:
-        return <Screen7_DecisionCapture onNext={handleNext} />;
-      case 8:
-        return <Screen8_DecisionBank onReset={handleReset} />;
+        return <Screen7_DecisionBank onReset={handleReset} />;
       default:
         return <Screen1_AgentIntake onNext={handleNext} />;
     }
