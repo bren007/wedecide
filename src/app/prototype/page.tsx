@@ -535,18 +535,33 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column */}
                 <div className="space-y-6">
-                    {/* Main Decision Brief */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Decision Brief: Business Case for Public Feedback Software</CardTitle>
-                            <CardDescription>Authored by Sarah Chen | Decision Sought: <span className="font-semibold text-foreground">Approve</span></CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4 text-sm text-muted-foreground">
-                            <p>This business case seeks approval for the procurement of a new SaaS solution to manage public feedback. The proposed solution directly supports the strategic objective to "Improve Citizen Service Score by 15%" by streamlining intake, enabling faster response times, and providing robust analytics for service improvement.</p>
-                            <h4 className="font-semibold text-foreground">Recommendation:</h4>
-                            <p>It is recommended that the committee approve the allocation of $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
-                        </CardContent>
-                    </Card>
+                    <Tabs defaultValue="brief" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="brief"><Briefcase className="mr-2"/>Decision Brief</TabsTrigger>
+                            <TabsTrigger value="artifact"><FileText className="mr-2"/>Full Decision Product</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="brief">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Decision Brief: Business Case for Public Feedback Software</CardTitle>
+                                    <CardDescription>Authored by Sarah Chen | Decision Sought: <span className="font-semibold text-foreground">Approve</span></CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4 text-sm text-muted-foreground">
+                                    <p>This business case seeks approval for the procurement of a new SaaS solution to manage public feedback. The proposed solution directly supports the strategic objective to "Improve Citizen Service Score by 15%" by streamlining intake, enabling faster response times, and providing robust analytics for service improvement.</p>
+                                    <h4 className="font-semibold text-foreground">Recommendation:</h4>
+                                    <p>It is recommended that the committee approve the allocation of $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                        <TabsContent value="artifact">
+                             <Card>
+                                 <CardHeader><CardTitle>Full Business Case: Public Feedback Software</CardTitle></CardHeader>
+                                <CardContent className="space-y-6 text-sm text-muted-foreground">
+                                    <p>[The full, 5-case business case document would be displayed here for detailed review, including all sections like economic case, management case, etc.]</p>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
                     <ConsultationAssuranceRollup />
                 </div>
 
