@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History, RotateCcw } from 'lucide-react';
 import { strategicOutcomes } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -327,65 +327,78 @@ function Screen4_Consultation({ onNext }: { onNext: () => void }) {
 
 function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
     return (
-         <div className="w-full max-w-5xl mx-auto space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight">Governance Review: Business Case</h1>
-            <p className="text-muted-foreground">Final quality control and scheduling by the Secretariat/Governance team.</p>
+         <div className="w-full max-w-6xl mx-auto space-y-6">
+            <div className="text-center">
+                <Badge>Your Role: Secretariat / Governance</Badge>
+                <h1 className="text-3xl font-bold tracking-tight mt-2">Governance Review</h1>
+                <p className="text-muted-foreground mt-2 max-w-3xl mx-auto">This is the final quality and coordination gate. Review the brief, check consultation, and decide if it is ready for the decision-making body.</p>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                           <CardTitle className="flex items-center"><FileText className="mr-2"/>Decision Brief Preview</CardTitle>
-                        </CardHeader>
-                         <CardContent className="space-y-4 text-sm text-muted-foreground">
-                            <h3 className="font-bold text-lg text-foreground">Business Case for Public Feedback Software</h3>
-                            <p>This business case seeks approval for the procurement of a new SaaS solution to manage public feedback. It directly supports the "Improve Citizen Service Score by 15%" objective.</p>
-                            <p><span className="font-semibold text-foreground">Recommendation:</span> Approve the allocation of $250,000 from the IT Modernization Fund.</p>
-                             <div className="flex items-center gap-6 pt-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-foreground">Alignment:</span>
-                                    <Badge variant="outline" className="text-base font-bold border-green-500 text-green-500">85%</Badge>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-foreground">Cycle Time:</span>
-                                    <Badge variant="outline" className="text-base font-bold">4 Days</Badge>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center"><MessageSquare className="mr-2"/>Pre-Meeting Discussion Thread</CardTitle>
-                            <CardDescription>Clarifications between Decision Makers and the Goal Setter before the meeting.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4 text-sm">
-                             <div className="flex gap-3">
-                                <Avatar><AvatarFallback>DM</AvatarFallback></Avatar>
-                                <div>
-                                    <p className="font-semibold">David Miller (Board Member)</p>
-                                    <p className="text-muted-foreground">"Can the author clarify the data residency and privacy implications of the recommended SaaS solution?"</p>
-                                </div>
-                            </div>
-                             <div className="flex gap-3 ml-6 border-l pl-4">
-                                <Avatar><AvatarFallback>GS</AvatarFallback></Avatar>
-                                <div>
-                                    <p className="font-semibold">Sarah Chen (Goal Setter)</p>
-                                    <p className="text-muted-foreground">"Thank you, David. The recommended vendor has confirmed all data will be hosted within our jurisdiction (EU) and is fully GDPR compliant. I've attached the compliance certificate to the full decision product for review."</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <Tabs defaultValue="brief" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="brief"><Briefcase className="mr-2"/>Decision Brief</TabsTrigger>
+                            <TabsTrigger value="artifact"><FileText className="mr-2"/>Full Decision Product</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="brief">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Business Case for Public Feedback Software</CardTitle>
+                                    <CardDescription>Decision Sought: <span className="font-semibold text-foreground">Approve</span></CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4 text-sm text-muted-foreground">
+                                    <p>This business case seeks committee approval for the procurement of a new software-as-a-service (SaaS) solution to systematically manage public feedback. The investment directly supports the strategic outcome to **"Improve Citizen Service Score by 15%"**.</p>
+                                    <Separator/>
+                                    <h4 className="font-semibold text-foreground">Recommendation:</h4>
+                                    <p>It is recommended that the committee **approve** the allocation of **$250,000** from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, targeting a go-live date of Q2 2025.</p>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                        <TabsContent value="artifact">
+                            <Card>
+                                 <CardHeader><CardTitle>Full Business Case</CardTitle></CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">[The full, 5-case business case document would be displayed here for detailed review.]</p>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
                 </div>
                  <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center"><Users className="mr-2"/>Consultation & Endorsement</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                           {stakeholders.slice(0, 3).map((stakeholder) => (
+                                <div key={stakeholder.name} className="flex items-center justify-between text-sm">
+                                    <p className="font-medium">{stakeholder.name}</p>
+                                    <Badge variant={stakeholder.status === 'Endorsed' ? 'default' : 'outline'} className={stakeholder.status === 'Endorsed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                                        {stakeholder.status === 'Reviewed & Feedback Provided' ? 'Feedback' : stakeholder.status}
+                                    </Badge>
+                                </div>
+                           ))}
+                           <div className="text-sm flex items-center justify-between font-medium text-muted-foreground">
+                                <p>Ext. Citizen Panel</p>
+                                <Badge variant="secondary">Pending</Badge>
+                           </div>
+                        </CardContent>
+                    </Card>
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center"><GitCommitHorizontal className="mr-2"/>Governance Actions</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <Button className="w-full justify-start" variant="outline"><CheckCircle className="mr-2"/> Perform Final Quality Check</Button>
-                            <Button className="w-full justify-start" onClick={onNext}><Forward className="mr-2"/> Attach to Meeting Agenda (Scheduled)</Button>
-                             <p className="text-xs text-muted-foreground px-1 pt-1">Scheduled for: CEO Committee - 15 Oct 2024. Brief available to members for 10 working days.</p>
-                            <Button className="w-full justify-start" variant="outline"><Forward className="mr-2"/> Circulate for Out-of-Cycle Decision</Button>
+                            <Button className="w-full justify-start" variant="destructive">
+                                <RotateCcw className="mr-2"/> Return for Update
+                            </Button>
+                            <Button className="w-full justify-start" onClick={onNext}>
+                                <CheckCircle className="mr-2"/> Approve & Schedule for Meeting
+                            </Button>
+                             <p className="text-xs text-muted-foreground px-1 pt-1">
+                                This will lock the document and schedule it for the next available "CEO Committee" meeting.
+                             </p>
                         </CardContent>
                     </Card>
                 </div>
