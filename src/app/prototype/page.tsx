@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History, RotateCcw } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History, RotateCcw, Zap, Link2, TrendingUp } from 'lucide-react';
 import { strategicOutcomes } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 
 // Mock Data
 const userGoal = "I need to produce a business case for the procurement of new software to manage public feedback, and I need it ready for the CEO's committee next month.";
@@ -409,81 +410,126 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
 
 function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
     return (
-         <div className="w-full max-w-6xl mx-auto space-y-6">
+        <div className="w-full max-w-7xl mx-auto space-y-6">
             <div className="pb-2 text-center md:text-left">
                 <p className="text-primary font-semibold">CEO Committee Meeting: 15 Oct 2024</p>
-                <h1 className="text-3xl font-bold tracking-tight">Decision Hub</h1>
-                <p className="text-muted-foreground max-w-3xl mx-auto md:mx-0">This is the central space for decision-makers to review materials before the meeting and to guide the discussion during the meeting.</p>
+                <h1 className="text-3xl font-bold tracking-tight">Decision Intelligence Hub</h1>
+                <p className="text-muted-foreground max-w-3xl mx-auto md:mx-0">This is the central space for decision-makers to review materials, explore scenarios, and capture outcomes.</p>
             </div>
             
-            <div className="grid grid-cols-3 gap-6">
-                <div className="col-span-3 lg:col-span-2 space-y-6">
-                    <Tabs defaultValue="brief" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="brief"><Briefcase className="mr-2"/>Decision Brief</TabsTrigger>
-                            <TabsTrigger value="artifact"><FileText className="mr-2"/>Full Decision Product</TabsTrigger>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Main Decision Brief */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Decision Brief: Business Case for Public Feedback Software</CardTitle>
+                            <CardDescription>Authored by Sarah Chen | Decision Sought: <span className="font-semibold text-foreground">Approve</span></CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-sm text-muted-foreground">
+                            <p>This business case seeks approval for the procurement of a new SaaS solution to manage public feedback. The proposed solution directly supports the strategic objective to "Improve Citizen Service Score by 15%" by streamlining intake, enabling faster response times, and providing robust analytics for service improvement.</p>
+                            <h4 className="font-semibold text-foreground">Recommendation:</h4>
+                            <p>It is recommended that the committee approve the allocation of $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Strategic Impact */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center"><TrendingUp className="mr-2" />Strategic Impact</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Label>Progress Towards: "Improve Citizen Service Score by 15%"</Label>
+                            <Progress value={73} className="mt-2" />
+                            <p className="text-xs text-muted-foreground mt-1">Current Progress: 11% / 15% (On Track). This decision is forecast to contribute a <span className="font-bold text-green-600">2%</span> improvement.</p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Capture Decision Button - Full Width */}
+                    <Button onClick={onNext} className="w-full" size="lg">Capture Decision <ArrowRight className="ml-2"/></Button>
+                </div>
+
+                {/* Intelligence Deck */}
+                <div className="lg:col-span-1 space-y-6">
+                    <Tabs defaultValue="scenario" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="scenario"><Zap className="mr-1.5"/>Scenarios</TabsTrigger>
+                            <TabsTrigger value="predict"><TrendingUp className="mr-1.5"/>Predict</TabsTrigger>
+                            <TabsTrigger value="deps"><Link2 className="mr-1.5"/>Deps</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="brief">
+                        <TabsContent value="scenario">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Business Case for Public Feedback Software</CardTitle>
-                                    <CardDescription>Authored by Sarah Chen</CardDescription>
+                                    <CardTitle>Scenario Explorer</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-4 text-sm text-muted-foreground">
-                                    <p>This business case seeks approval for the procurement of a new SaaS solution to manage public feedback. The proposed solution directly supports the strategic objective to "Improve Citizen Service Score by 15%" by streamlining intake, enabling faster response times, and providing robust analytics for service improvement.</p>
-                                    <h4 className="font-semibold text-foreground">Recommendation:</h4>
-                                    <p>It is recommended that the committee approve the allocation of $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
+                                <CardContent className="space-y-4">
+                                    <div>
+                                        <Label>What if we reduced the budget by 20%?</Label>
+                                        <Textarea className="mt-1 text-xs" readOnly value="Reducing the budget to $200,000 would likely require descoping the project to exclude the 'Advanced Analytics' module. This would impact our ability to generate deep insights and may delay achieving the full 15% service score improvement."/>
+                                    </div>
+                                    <div>
+                                        <Label>What is the biggest implementation risk?</Label>
+                                        <Textarea className="mt-1 text-xs" readOnly value="The primary risk is user adoption. A comprehensive change management and training plan, included in the full budget, is critical to mitigate this. Without it, the new tool may be underutilized, limiting ROI."/>
+                                    </div>
+                                    <Separator />
+                                     <div>
+                                        <Label>Budget Adjustment</Label>
+                                        <Slider defaultValue={[50]} />
+                                        <div className="text-xs flex justify-between text-muted-foreground"><span>-$50k</span><span>$250k</span><span>+$50k</span></div>
+                                    </div>
+                                     <div>
+                                        <Label>Timeline Adjustment</Label>
+                                        <Slider defaultValue={[50]} />
+                                        <div className="text-xs flex justify-between text-muted-foreground"><span>-3 mos</span><span>12 mos</span><span>+3 mos</span></div>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </TabsContent>
-                         <TabsContent value="artifact">
+                        <TabsContent value="predict">
                             <Card>
-                                 <CardHeader><CardTitle>Full Business Case</CardTitle></CardHeader>
-                                <CardContent className="space-y-6 text-sm text-muted-foreground">
-                                    <p>The full business case artifact contains detailed sections on Strategic Context, Options Analysis, Financial Case, Implementation Plan, and Risk Assessment. [Content is truncated for prototype view]</p>
+                                <CardHeader>
+                                    <CardTitle>Predictive Insights</CardTitle>
+                                    <CardDescription>Based on 52 similar past decisions.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="text-center">
+                                        <p className="text-sm text-muted-foreground">Success Probability</p>
+                                        <p className="text-4xl font-bold text-green-600">88%</p>
+                                    </div>
+                                    <Separator />
+                                    <div>
+                                        <h4 className="font-semibold text-sm">Key Risk Factors Identified:</h4>
+                                        <ul className="list-disc pl-4 text-xs text-muted-foreground mt-2 space-y-1">
+                                            <li><span className="font-semibold text-foreground">Vendor Lock-in:</span> Similar SaaS procurements have a 35% chance of incurring significant switching costs after 3 years.</li>
+                                            <li><span className="font-semibold text-foreground">User Adoption:</span> Projects without a dedicated Change Manager have a 50% lower ROI.</li>
+                                        </ul>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                        <TabsContent value="deps">
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Decision Dependencies</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="text-sm p-3 rounded-md border bg-muted/50">
+                                        <p className="font-semibold">Dependent On:</p>
+                                        <p className="text-muted-foreground">Approval of 'IT Modernization Fund' (Status: <span className="text-green-600 font-medium">Approved</span>)</p>
+                                    </div>
+                                    <div className="text-sm p-3 rounded-md border bg-muted/50">
+                                        <p className="font-semibold">Blocks:</p>
+                                        <p className="text-muted-foreground">Decommission of 'Legacy Feedback System' (Status: <span className="font-medium">Pending</span>)</p>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </TabsContent>
                     </Tabs>
                 </div>
-
-                <div className="col-span-3 lg:col-span-1 space-y-6">
-                     <Card className="bg-primary/5 border-primary/20">
-                        <CardContent className="pt-6 flex justify-around items-center text-center">
-                            <div>
-                                <p className="text-3xl font-bold text-primary">85%</p>
-                                <p className="text-xs font-semibold text-primary/80">Strategic Alignment</p>
-                            </div>
-                            <Separator orientation="vertical" className="h-12 bg-primary/20"/>
-                            <div>
-                                <p className="text-3xl font-bold text-primary">12 Days</p>
-                                <p className="text-xs font-semibold text-primary/80">Decision Cycle</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center"><SlidersHorizontal className="mr-2"/>Intelligent Scenario Explorer</CardTitle>
-                            <CardDescription>Use the agent to explore hypotheticals and probe the brief.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                             <div>
-                                <Label>What if we reduced the budget by 20%?</Label>
-                                <Textarea className="mt-1 text-xs" readOnly value="Reducing the budget to $200,000 would likely require descoping the project to exclude the 'Advanced Analytics' module. This would impact our ability to generate deep insights and may delay achieving the full 15% service score improvement."/>
-                            </div>
-                            <div>
-                                <Label>What is the biggest implementation risk?</Label>
-                                <Textarea className="mt-1 text-xs" readOnly value="The primary risk is user adoption. A comprehensive change management and training plan, included in the full budget, is critical to mitigate this. Without it, the new tool may be underutilized, limiting ROI."/>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Button onClick={onNext} className="w-full" size="lg">Capture Decision <ArrowRight className="ml-2"/></Button>
-                </div>
             </div>
         </div>
     );
 }
+
 
 function Screen7_DecisionCapture({ onNext }: { onNext: () => void }) {
   return (
