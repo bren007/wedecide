@@ -484,24 +484,38 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
                  <div className="space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center"><GitCommitHorizontal className="mr-2"/>Governance Actions</CardTitle>
+                           <CardTitle className="flex items-center"><Info className="mr-2"/>Status</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent>
                             <ConsultationAssuranceRollup />
-                            <div className="pt-3 space-y-2">
-                                <Button className="w-full justify-start" variant="destructive">
-                                    <RotateCcw className="mr-2"/> Return for Update
-                                </Button>
-                                <Button className="w-full justify-start" onClick={onNext}>
-                                    <CheckCircle className="mr-2"/> Approve & Schedule for Meeting
-                                </Button>
-                                 <p className="text-xs text-muted-foreground px-1 pt-1">
-                                    This will lock the document and schedule it for the next available "CEO Committee" meeting.
-                                 </p>
-                            </div>
                         </CardContent>
                     </Card>
                 </div>
+            </div>
+            <Separator className="my-8" />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <Card className="bg-destructive/5 border-destructive/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center"><RotateCcw className="mr-2"/>Return for Update</CardTitle>
+                        <CardDescription>Send the brief back to the preparer with required actions before it can proceed.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Textarea placeholder="e.g., 'The financial case needs a more detailed breakdown of year 1 implementation costs. Please add and resubmit.'"/>
+                        <Button variant="destructive" className="w-full mt-2">Return to Preparer</Button>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-primary/5 border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center"><CheckCircle className="mr-2"/>Approve & Schedule</CardTitle>
+                        <CardDescription>The brief meets quality standards and is ready for the decision-making body.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <Button className="w-full" onClick={onNext}>Approve & Schedule for Meeting</Button>
+                         <p className="text-xs text-muted-foreground text-center mt-2">
+                            This will lock the document and schedule it for the next available "CEO Committee" meeting.
+                         </p>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
@@ -792,5 +806,3 @@ export default function PrototypePage() {
     </>
   );
 }
-
-    
