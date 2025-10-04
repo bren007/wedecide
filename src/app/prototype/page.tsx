@@ -474,7 +474,8 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
     return (
         <div className="w-full max-w-7xl mx-auto space-y-6">
             <div className="text-center md:text-left">
-                <p className="text-primary font-semibold">CEO Committee Meeting: 15 Oct 2024</p>
+                <Badge>Your Role: Decision-Maker</Badge>
+                <p className="text-primary font-semibold mt-2">CEO Committee Meeting: 15 Oct 2024</p>
                 <h1 className="text-3xl font-bold tracking-tight">Decision Intelligence Hub</h1>
                 <p className="text-muted-foreground max-w-3xl mx-auto md:mx-0">This is the central space for decision-makers to review materials, explore scenarios, and capture outcomes.</p>
             </div>
@@ -596,8 +597,12 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
 function Screen7_DecisionCapture({ onNext }: { onNext: () => void }) {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">Capture & Formalize Decision</h1>
-        <p className="text-muted-foreground">Record the outcome for the Business Case for Public Feedback Software.</p>
+        <div className="text-center">
+            <Badge>Your Role: Secretariat / Chair</Badge>
+            <h1 className="text-3xl font-bold tracking-tight mt-2">Capture & Formalize Decision</h1>
+            <p className="text-muted-foreground">Record the outcome for the Business Case for Public Feedback Software.</p>
+        </div>
+        
 
         <Card>
             <CardHeader>
