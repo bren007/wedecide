@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History, RotateCcw, Zap, Link2, TrendingUp } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History, RotateCcw, Zap, Link2, TrendingUp, Send, ShieldCheck, ClipboardCheck } from 'lucide-react';
 import { strategicOutcomes } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -35,12 +35,23 @@ const ragSources = [
   { id: 'it-cost-report', name: 'Current IT Infrastructure Cost Report', checked: true },
 ];
 
-const stakeholders = [
-    { name: 'Finance Department', status: 'Endorsed', feedback: 'Financial model is sound.' },
-    { name: 'IT Security', status: 'Reviewed & Feedback Provided', feedback: 'Requires multi-factor authentication integration.' },
-    { name: 'Legal & Compliance', status: 'Endorsed', feedback: 'No concerns.' },
-    { name: 'External Citizen Advisory Panel', status: 'Pending', feedback: null },
+const reviewStakeholders = [
+    { name: 'Digital Services Team', status: 'Feedback Submitted' },
+    { name: 'External Citizen Advisory Panel', status: 'Pending' },
 ];
+
+const endorsementStakeholders = [
+    { name: 'Finance Department', status: 'Endorsed', feedback: 'Financial model is sound.' },
+    { name: 'IT Security', status: 'Feedback Provided', feedback: 'Requires MFA integration.' },
+    { name: 'Legal & Compliance', status: 'Endorsed', feedback: 'No concerns.' },
+];
+
+const assuranceReview = {
+    name: 'Gateway Review 0: Strategic Assessment',
+    outcome: 'Amber/Green',
+    recommendation: 'The business case is viable, but the project team must strengthen the change management and benefits realisation plan before proceeding to the next stage.'
+}
+
 
 // --- SCREEN COMPONENTS ---
 
@@ -292,16 +303,43 @@ function Screen3_DraftGeneration({ onNext }: { onNext: () => void }) {
 function Screen4_Consultation({ onNext }: { onNext: () => void }) {
     return (
         <div className="w-full max-w-5xl mx-auto space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight">Consultation: Business Case for Public Feedback Software</h1>
-            <p className="text-muted-foreground">Track feedback and endorsement from key internal and external stakeholders.</p>
+            <div className="text-center">
+                <Badge>Your Role: Preparer</Badge>
+                <h1 className="text-3xl font-bold tracking-tight mt-2">Consultation & Assurance</h1>
+                <p className="text-muted-foreground max-w-3xl mx-auto">Manage feedback, endorsement, and formal assurance from stakeholders before proceeding to governance.</p>
+            </div>
+
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center"><Users className="mr-2"/>Stakeholder Consultation Tracker</CardTitle>
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="flex items-center"><Users className="mr-2"/>Stakeholder Review & Feedback</CardTitle>
+                        <Button variant="outline"><Send className="mr-2"/>Initiate Review Cycle</Button>
+                    </div>
+                    <CardDescription>Circulate the draft to relevant internal and external stakeholders for their feedback and comments.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {stakeholders.map((stakeholder, index) => (
-                            <div key={index} className="flex items-start justify-between p-4 border rounded-lg">
+                        {reviewStakeholders.map((stakeholder) => (
+                            <div key={stakeholder.name} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                                <p className="font-medium">{stakeholder.name}</p>
+                                <Badge variant={stakeholder.status === 'Feedback Submitted' ? 'default' : 'secondary'} className={stakeholder.status === 'Feedback Submitted' ? 'bg-blue-100 text-blue-800' : ''}>
+                                    {stakeholder.status}
+                                </Badge>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center"><ClipboardCheck className="mr-2"/>Required Endorsements</CardTitle>
+                    <CardDescription>Track formal endorsement from mandatory stakeholders whose approval is required to proceed.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {endorsementStakeholders.map((stakeholder) => (
+                            <div key={stakeholder.name} className="flex items-start justify-between p-4 border rounded-lg">
                                 <div>
                                     <h4 className="font-semibold">{stakeholder.name}</h4>
                                     {stakeholder.feedback && <p className="text-sm text-muted-foreground mt-1">"{stakeholder.feedback}"</p>}
@@ -309,10 +347,10 @@ function Screen4_Consultation({ onNext }: { onNext: () => void }) {
                                 <Badge variant={
                                     stakeholder.status === 'Endorsed' ? 'default' :
                                     stakeholder.status === 'Pending' ? 'secondary' : 'outline'
-                                } 
+                                }
                                 className={
                                      stakeholder.status === 'Endorsed' ? 'bg-green-100 text-green-800' :
-                                     stakeholder.status === 'Reviewed & Feedback Provided' ? 'bg-yellow-100 text-yellow-800' : ''
+                                     stakeholder.status === 'Feedback Provided' ? 'bg-yellow-100 text-yellow-800' : ''
                                 }
                                 >{stakeholder.status}</Badge>
                             </div>
@@ -320,7 +358,25 @@ function Screen4_Consultation({ onNext }: { onNext: () => void }) {
                     </div>
                 </CardContent>
             </Card>
-            <Button onClick={onNext} className="w-full" size="lg">Send to Governance for Review <ArrowRight className="ml-2"/></Button>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center"><ShieldCheck className="mr-2"/>Independent Assurance</CardTitle>
+                    <CardDescription>Record the outcome of formal, independent assurance reviews (e.g., Gateway Reviews, security assessments).</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-center">
+                            <h4 className="font-semibold">{assuranceReview.name}</h4>
+                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">{assuranceReview.outcome}</Badge>
+                        </div>
+                        <Separator className="my-3"/>
+                        <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">Key Recommendation:</span> {assuranceReview.recommendation}</p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Button onClick={onNext} className="w-full" size="lg">Submit to Governance Secretariat <ArrowRight className="ml-2"/></Button>
         </div>
     );
 }
@@ -372,14 +428,20 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
                             <CardTitle className="flex items-center"><Users className="mr-2"/>Consultation & Endorsement</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                           {stakeholders.slice(0, 3).map((stakeholder) => (
+                           {endorsementStakeholders.slice(0, 2).map((stakeholder) => (
                                 <div key={stakeholder.name} className="flex items-center justify-between text-sm">
                                     <p className="font-medium">{stakeholder.name}</p>
-                                    <Badge variant={stakeholder.status === 'Endorsed' ? 'default' : 'outline'} className={stakeholder.status === 'Endorsed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                                        {stakeholder.status === 'Reviewed & Feedback Provided' ? 'Feedback' : stakeholder.status}
+                                    <Badge variant={'default'} className={'bg-green-100 text-green-800'}>
+                                        Endorsed
                                     </Badge>
                                 </div>
                            ))}
+                            <div className="flex items-center justify-between text-sm">
+                                <p className="font-medium">IT Security</p>
+                                <Badge variant={'outline'} className={'bg-yellow-100 text-yellow-800'}>
+                                    Feedback
+                                </Badge>
+                            </div>
                            <div className="text-sm flex items-center justify-between font-medium text-muted-foreground">
                                 <p>Ext. Citizen Panel</p>
                                 <Badge variant="secondary">Pending</Badge>
@@ -687,5 +749,3 @@ export default function PrototypePage() {
     </>
   );
 }
-
-    
