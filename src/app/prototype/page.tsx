@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, MessageSquare, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History, RotateCcw, Zap, Link2, TrendingUp, Send, ShieldCheck, ClipboardCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, FileText, Briefcase, Users, PenSquare, Paperclip, SlidersHorizontal, BookCheck, Landmark, BarChart, GitCommitHorizontal, Forward, PlusCircle, History, RotateCcw, Zap, Link2, TrendingUp, Send, ShieldCheck, ClipboardCheck, Info } from 'lucide-react';
 import { strategicOutcomes } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // Mock Data
 const userGoal = "I need to produce a business case for the procurement of new software to manage public feedback, and I need it ready for the CEO's committee next month.";
@@ -381,6 +382,64 @@ function Screen4_Consultation({ onNext }: { onNext: () => void }) {
     );
 }
 
+const ConsultationAssuranceRollup = () => (
+    <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="item-1">
+            <AccordionTrigger>
+                <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4" />
+                    <span>Consultation & Assurance Roll-up</span>
+                </div>
+            </AccordionTrigger>
+            <AccordionContent>
+                <div className="space-y-4 px-1">
+                    <div>
+                        <h4 className="font-semibold text-sm mb-2">Required Endorsements</h4>
+                        <div className="space-y-2 text-sm">
+                            {endorsementStakeholders.map(s => (
+                                <div key={s.name} className="flex justify-between">
+                                    <span>{s.name}</span>
+                                    <Badge variant={
+                                        s.status === 'Endorsed' ? 'default' :
+                                        s.status === 'Pending' ? 'secondary' : 'outline'
+                                    }
+                                    className={
+                                        s.status === 'Endorsed' ? 'bg-green-100 text-green-800' :
+                                        s.status === 'Feedback Provided' ? 'bg-yellow-100 text-yellow-800' : ''
+                                    }
+                                    >{s.status}</Badge>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <Separator />
+                    <div>
+                        <h4 className="font-semibold text-sm mb-2">Stakeholder Review</h4>
+                         <div className="space-y-2 text-sm">
+                            {reviewStakeholders.map(s => (
+                                <div key={s.name} className="flex justify-between">
+                                    <span>{s.name}</span>
+                                    <Badge variant={s.status === 'Feedback Submitted' ? 'default' : 'secondary'} className={s.status === 'Feedback Submitted' ? 'bg-blue-100 text-blue-800' : ''}>
+                                        {s.status}
+                                    </Badge>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <Separator />
+                     <div>
+                        <h4 className="font-semibold text-sm mb-2">Independent Assurance</h4>
+                         <div className="text-sm flex justify-between">
+                            <span>{assuranceReview.name}</span>
+                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">{assuranceReview.outcome}</Badge>
+                        </div>
+                    </div>
+                </div>
+            </AccordionContent>
+        </AccordionItem>
+    </Accordion>
+);
+
 
 function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
     return (
@@ -425,43 +484,21 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
                  <div className="space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center"><Users className="mr-2"/>Consultation & Endorsement</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                           {endorsementStakeholders.slice(0, 2).map((stakeholder) => (
-                                <div key={stakeholder.name} className="flex items-center justify-between text-sm">
-                                    <p className="font-medium">{stakeholder.name}</p>
-                                    <Badge variant={'default'} className={'bg-green-100 text-green-800'}>
-                                        Endorsed
-                                    </Badge>
-                                </div>
-                           ))}
-                            <div className="flex items-center justify-between text-sm">
-                                <p className="font-medium">IT Security</p>
-                                <Badge variant={'outline'} className={'bg-yellow-100 text-yellow-800'}>
-                                    Feedback
-                                </Badge>
-                            </div>
-                           <div className="text-sm flex items-center justify-between font-medium text-muted-foreground">
-                                <p>Ext. Citizen Panel</p>
-                                <Badge variant="secondary">Pending</Badge>
-                           </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
                             <CardTitle className="flex items-center"><GitCommitHorizontal className="mr-2"/>Governance Actions</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                            <Button className="w-full justify-start" variant="destructive">
-                                <RotateCcw className="mr-2"/> Return for Update
-                            </Button>
-                            <Button className="w-full justify-start" onClick={onNext}>
-                                <CheckCircle className="mr-2"/> Approve & Schedule for Meeting
-                            </Button>
-                             <p className="text-xs text-muted-foreground px-1 pt-1">
-                                This will lock the document and schedule it for the next available "CEO Committee" meeting.
-                             </p>
+                        <CardContent className="space-y-3">
+                            <ConsultationAssuranceRollup />
+                            <div className="pt-3 space-y-2">
+                                <Button className="w-full justify-start" variant="destructive">
+                                    <RotateCcw className="mr-2"/> Return for Update
+                                </Button>
+                                <Button className="w-full justify-start" onClick={onNext}>
+                                    <CheckCircle className="mr-2"/> Approve & Schedule for Meeting
+                                </Button>
+                                 <p className="text-xs text-muted-foreground px-1 pt-1">
+                                    This will lock the document and schedule it for the next available "CEO Committee" meeting.
+                                 </p>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -495,6 +532,7 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
                             <p>It is recommended that the committee approve the allocation of $250,000 from the IT Modernization Fund to procure and implement the 'CivicEngage' platform, with a target go-live date of Q2 2025.</p>
                         </CardContent>
                     </Card>
+                    <ConsultationAssuranceRollup />
                 </div>
 
                 {/* Right Column: Intelligence Deck */}
@@ -754,3 +792,5 @@ export default function PrototypePage() {
     </>
   );
 }
+
+    
