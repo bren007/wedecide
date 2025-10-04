@@ -19,7 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // Mock Data
-const userGoal = "I need to produce a business case for the procurement of new software to manage public feedback, and I need it ready for the CEO's committee next month.";
+const userGoal = "I need to produce a business case for the procurement of new software to manage public feedback, and I need it ready for the Investment Committee next month.";
 
 const agentQuestions = [
   { category: 'Strategic Outcomes', question: 'Which strategic outcomes—"Improve Citizen Service Score by 15%" or "Reduce Carbon Footprint by 20%"—does this software procurement best support? You can select multiple and provide a rationale.' },
@@ -512,7 +512,7 @@ function Screen5_GovernanceHandoff({ onNext }: { onNext: () => void }) {
                     <CardContent>
                          <Button className="w-full" onClick={onNext}>Approve & Schedule for Meeting</Button>
                          <p className="text-xs text-muted-foreground text-center mt-2">
-                            This will lock the document and schedule it for the next available "CEO Committee" meeting.
+                            This will lock the document and schedule it for the next available "Investment Committee" meeting.
                          </p>
                     </CardContent>
                 </Card>
@@ -527,7 +527,7 @@ function Screen6_DecisionHub({ onNext }: { onNext: () => void }) {
         <div className="w-full max-w-7xl mx-auto space-y-6">
             <div className="text-center md:text-left">
                 <Badge>Your Role: Decision-Maker</Badge>
-                <p className="text-primary font-semibold mt-2">CEO Committee Meeting: 15 Oct 2024</p>
+                <p className="text-primary font-semibold mt-2">Investment Committee Meeting: 15 Oct 2024</p>
                 <h1 className="text-3xl font-bold tracking-tight">Decision Intelligence Hub</h1>
                 <p className="text-muted-foreground max-w-3xl mx-auto md:mx-0">This is the central space for decision-makers to review materials, explore scenarios, and capture outcomes.</p>
             </div>
