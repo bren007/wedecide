@@ -24,7 +24,7 @@ export const SignupPage: React.FC = () => {
       await signup(name, email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError('Failed to create account');
+      setError(err instanceof Error ? err.message : 'Failed to create account');
     } finally {
       setLoading(false);
     }
@@ -67,10 +67,10 @@ export const SignupPage: React.FC = () => {
                 required
               />
 
-              <Button 
-                type="submit" 
-                variant="primary" 
-                size="lg" 
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
                 disabled={loading}
                 className="auth-button"
               >

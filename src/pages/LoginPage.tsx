@@ -23,7 +23,7 @@ export const LoginPage: React.FC = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError('Invalid email or password');
+      setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -57,10 +57,10 @@ export const LoginPage: React.FC = () => {
                 required
               />
 
-              <Button 
-                type="submit" 
-                variant="primary" 
-                size="lg" 
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
                 disabled={loading}
                 className="auth-button"
               >
