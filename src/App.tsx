@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
@@ -6,6 +5,9 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { Dashboard } from './pages/Dashboard';
 import { NewDecision } from './pages/NewDecision';
 import './App.css';
@@ -41,6 +43,10 @@ function AppContent() {
           path="/signup"
           element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignupPage />}
         />
+        <Route
+          path="/forgot-password"
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />}
+        />
 
         {/* Protected Routes */}
         <Route
@@ -52,10 +58,26 @@ function AppContent() {
           }
         />
         <Route
+          path="/reset-password"
+          element={
+            <ProtectedRoute>
+              <ResetPasswordPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/decisions/new"
           element={
             <ProtectedRoute>
               <NewDecision />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <OrganizationSettingsPage />
             </ProtectedRoute>
           }
         />
