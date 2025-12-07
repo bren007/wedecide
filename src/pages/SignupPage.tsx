@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import './LoginPage.css';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
@@ -15,6 +15,8 @@ export const SignupPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ export const SignupPage: React.FC = () => {
     setLoading(true);
 
     try {
-      await signup(name, email, password);
+      await signup(name, email, password, token || undefined);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account');
@@ -36,8 +38,8 @@ export const SignupPage: React.FC = () => {
       <div className="container">
         <div className="auth-container fade-in">
           <Card className="auth-card">
-            <h1 className="auth-title">Get Started</h1>
-            <p className="auth-subtitle">Create your WeDecide account</p>
+            <h1 className="auth-title">{token ? 'Join Organization' : 'Get Started'}</h1>
+            <p className="auth-subtitle">{token ? 'Create your account to accept the invitation' : 'Create your WeDecide account'}</p>
 
             <form onSubmit={handleSubmit} className="auth-form">
               <Input
@@ -97,7 +99,7 @@ export const SignupPage: React.FC = () => {
                 disabled={loading}
                 className="auth-button"
               >
-                {loading ? 'Creating account...' : 'Sign Up'}
+                {loading ? 'Creating account...' : token ? 'Join Organization' : 'Sign Up'}
               </Button>
             </form>
 

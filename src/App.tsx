@@ -11,77 +11,72 @@ import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { Dashboard } from './pages/Dashboard';
 import { NewDecision } from './pages/NewDecision';
 import './App.css';
+import { LoadingSpinner } from './components/Loading';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppContent() {
   const { isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="app" style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
-        <div>Loading...</div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   return (
     <div className="app">
       <Navbar />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
 
-        {/* Public Routes (redirect to dashboard if logged in) */}
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
-        />
-        <Route
-          path="/signup"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignupPage />}
-        />
-        <Route
-          path="/forgot-password"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />}
-        />
+          {/* Public Routes (redirect to dashboard if logged in) */}
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+          />
+          <Route
+            path="/signup"
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignupPage />}
+          />
+          <Route
+            path="/forgot-password"
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />}
+          />
 
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reset-password"
-          element={
-            <ProtectedRoute>
-              <ResetPasswordPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/decisions/new"
-          element={
-            <ProtectedRoute>
-              <NewDecision />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <OrganizationSettingsPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <ProtectedRoute>
+                <ResetPasswordPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/decisions/new"
+            element={
+              <ProtectedRoute>
+                <NewDecision />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <OrganizationSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </ErrorBoundary>
     </div>
   );
 }

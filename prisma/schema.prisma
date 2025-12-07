@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id                  String   @id @default(uuid())
+  name                String
+  slug                String   @unique
+  subscription_tier   String   @default("free")
+  subscription_status String   @default("active")
+  max_users           Int      @default(5)
+  max_decisions       Int      @default(10)
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  users      User[]
+  decisions  Decision[]
+  documents  Document[]
+  user_roles UserRole[]
+
+  @@map("organizations")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  name            String
+  organization_id String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organization_id], references: [id])
+  roles        UserRole[]
+  decisions    Decision[]
+  documents    Document[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model UserRole {
+  id              String   @id @default(uuid())
+  user_id         String
+  organization_id String
+  role            String   // chair, admin, member, secretary
+  created_at      DateTime @default(now())
+
+  user         User         @relation(fields: [user_id], references: [id])
+  organization Organization @relation(fields: [organization_id], references: [id])
+
+  @@unique([user_id, organization_id, role])
+  @@map("user_roles")
+}
+
+model Decision {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  status          String   @default("draft") // draft, active, completed
+  owner_id        String
+  organization_id String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  owner        User          @relation(fields: [owner_id], references: [id])
+  organization Organization  @relation(fields: [organization_id], references: [id])
+  stakeholders Stakeholder[]
+  documents    Document[]
+
+  @@map("decisions")
+}
+
+model Stakeholder {
+  id          String   @id @default(uuid())
+  decision_id String
+  email       String
+  name        String
+  created_at  DateTime @default(now())
+
+  decision Decision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+
+  @@map("stakeholders")
+}
+
+model Document {
+  id                     String   @id @default(uuid())
+  decision_id            String
+  uploaded_by            String
+  organization_id        String
+  name                   String
+  type                   String   // google_docs, google_sheets, m365_word, m365_excel, pdf, url
+  url                    String
+  file_size              Int?
+  mime_type              String?
+  description            String?
+  is_part_of_meeting_pack Boolean  @default(false)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  decision     Decision     @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  uploader     User         @relation(fields: [uploaded_by], references: [id])
+  organization Organization @relation(fields: [organization_id], references: [id])
+
+  @@map("documents")
+}

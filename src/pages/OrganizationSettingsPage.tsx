@@ -5,6 +5,7 @@ import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { Navbar } from '../components/Navbar';
+import { LoadingSpinner } from '../components/Loading';
 
 interface Organization {
     id: string;
@@ -33,29 +34,38 @@ export const OrganizationSettingsPage: React.FC = () => {
     const [orgName, setOrgName] = useState('');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+    // Invite State
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteRole, setInviteRole] = useState('member');
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [inviteLink, setInviteLink] = useState<string | null>(null);
+
     useEffect(() => {
-        fetchOrganization();
+        if (user) {
+            fetchOrganization();
+        }
     }, [user]);
 
     const fetchOrganization = async () => {
         try {
             if (!user) return;
 
-            // 1. Get the organization the user belongs to via organization_members
-            const { data: memberData, error: memberError } = await supabase
-                .from('organization_members')
+            // 1. Get the organization the user belongs to via users table
+            const { data: userData, error: userError } = await supabase
+                .from('users')
                 .select('organization_id')
-                .eq('user_id', user.id)
+                .eq('id', user.id)
                 .single();
 
-            if (memberError) throw memberError;
+            if (userError) throw userError;
 
-            if (memberData) {
+            if (userData) {
                 // 2. Get the organization details
                 const { data: orgData, error: orgError } = await supabase
                     .from('organizations')
                     .select('*')
-                    .eq('id', memberData.organization_id)
+                    .eq('id', userData.organization_id)
                     .single();
 
                 if (orgError) throw orgError;
@@ -64,30 +74,35 @@ export const OrganizationSettingsPage: React.FC = () => {
                 setOrgName(orgData.name);
 
                 // 3. Get the members of the organization
-                const { data: membersData, error: membersError } = await supabase
-                    .from('organization_members')
+                const { data: usersData, error: usersError } = await supabase
+                    .from('users')
                     .select('*')
-                    .eq('organization_id', memberData.organization_id);
+                    .eq('organization_id', userData.organization_id);
 
-                if (membersError) throw membersError;
+                if (usersError) throw usersError;
 
-                // 4. For each member, we would ideally fetch user details (name, email)
-                // However, `auth.users` is not accessible directly from the client.
-                // In a real app, you'd have a public-facing `profiles` table or use an RPC function.
-                // For now, we'll try to fetch from the `users` table we created.
-                if (membersData) {
-                    const membersWithDetails = await Promise.all(membersData.map(async (member) => {
-                        const { data: userData } = await supabase
-                            .from('users')
-                            .select('name, email')
-                            .eq('id', member.user_id)
-                            .single();
+                // 4. Get roles for these users
+                const { data: rolesData, error: rolesError } = await supabase
+                    .from('user_roles')
+                    .select('*')
+                    .eq('organization_id', userData.organization_id);
 
+                if (rolesError) throw rolesError;
+
+                if (usersData) {
+                    const membersWithDetails = usersData.map((userMember) => {
+                        const userRole = rolesData?.find(r => r.user_id === userMember.id);
                         return {
-                            ...member,
-                            user_details: userData || { name: 'Unknown User', email: '' }
+                            id: userMember.id, // Using user ID as member ID since we lack a join table id
+                            user_id: userMember.id,
+                            role: userRole?.role || 'member',
+                            created_at: userMember.created_at,
+                            user_details: {
+                                name: userMember.name,
+                                email: userMember.email
+                            }
                         };
-                    }));
+                    });
                     setMembers(membersWithDetails);
                 }
             }
@@ -124,12 +139,45 @@ export const OrganizationSettingsPage: React.FC = () => {
         }
     };
 
+    const handleInviteUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setInviteLoading(true);
+        setInviteLink(null);
+        setMessage(null);
+
+        try {
+            const { data, error } = await supabase.rpc('invite_user', {
+                p_email: inviteEmail,
+                p_role: inviteRole
+            });
+
+            if (error) throw error;
+
+            if (data && data.success) {
+                const link = `${window.location.origin}/signup?token=${data.token}`;
+                setInviteLink(link);
+                setMessage({ type: 'success', text: 'Invitation generated successfully!' });
+                // Optionally clear form or keep it for the next one?
+                // setInviteEmail('');
+            }
+
+        } catch (error: any) {
+            console.error('Error inviting user:', error);
+            setMessage({ type: 'error', text: error.message || 'Failed to invite user' });
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const copyInviteLink = () => {
+        if (inviteLink) {
+            navigator.clipboard.writeText(inviteLink);
+            setMessage({ type: 'success', text: 'Invite link copied to clipboard!' });
+        }
+    };
+
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-                <p className="text-gray-500">Loading organization details...</p>
-            </div>
-        );
+        return <LoadingSpinner fullScreen />;
     }
 
     return (
@@ -178,8 +226,98 @@ export const OrganizationSettingsPage: React.FC = () => {
                         </form>
                     </Card>
 
+                    {/* Invite Modal / Section */}
+                    {showInviteModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                            <Card className="w-full max-w-md">
+                                <h2 className="text-xl font-semibold mb-4">Invite New Member</h2>
+
+                                {!inviteLink ? (
+                                    <form onSubmit={handleInviteUser}>
+                                        <Input
+                                            type="email"
+                                            label="Email Address"
+                                            value={inviteEmail}
+                                            onChange={(e) => setInviteEmail(e.target.value)}
+                                            placeholder="colleague@example.com"
+                                            required
+                                            className="mb-4"
+                                        />
+
+                                        <div className="mb-6">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                            <select
+                                                value={inviteRole}
+                                                onChange={(e) => setInviteRole(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="member">Member</option>
+                                                <option value="admin">Admin</option>
+                                                <option value="chair">Chair</option>
+                                                <option value="secretary">Secretary</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="flex justify-end gap-3">
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                onClick={() => setShowInviteModal(false)}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                variant="primary"
+                                                disabled={inviteLoading}
+                                            >
+                                                {inviteLoading ? 'Generating Link...' : 'Generate Invite Link'}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-green-50 rounded-md border border-green-200">
+                                            <p className="text-sm text-green-800 mb-2 font-medium">Invitation Created!</p>
+                                            <p className="text-xs text-green-600 mb-3">Share this link with the user to let them join your organization.</p>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={inviteLink}
+                                                    className="flex-1 text-sm p-2 border border-gray-300 rounded bg-white text-gray-600 font-mono"
+                                                />
+                                                <Button type="button" variant="secondary" onClick={copyInviteLink} size="sm">
+                                                    Copy
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="button"
+                                                variant="primary"
+                                                onClick={() => {
+                                                    setShowInviteModal(false);
+                                                    setInviteLink(null);
+                                                    setInviteEmail('');
+                                                }}
+                                            >
+                                                Done
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </Card>
+                        </div>
+                    )}
+
                     <Card>
-                        <h2 className="text-xl font-semibold mb-4">Team Members</h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-semibold">Team Members</h2>
+                            <Button variant="primary" size="sm" onClick={() => setShowInviteModal(true)}>
+                                + Invite Member
+                            </Button>
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
