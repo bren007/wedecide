@@ -9,7 +9,10 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { Dashboard } from './pages/Dashboard';
-import { NewDecision } from './pages/NewDecision';
+import { DecisionLayout } from './components/layouts/DecisionLayout';
+import { DecisionListPage } from './pages/decisions/DecisionListPage';
+import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
+import { DecisionDetailPage } from './pages/decisions/DecisionDetailPage';
 import './App.css';
 import { LoadingSpinner } from './components/Loading';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -60,14 +63,6 @@ function AppContent() {
             }
           />
           <Route
-            path="/decisions/new"
-            element={
-              <ProtectedRoute>
-                <NewDecision />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/settings"
             element={
               <ProtectedRoute>
@@ -75,6 +70,18 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/decisions"
+            element={
+              <ProtectedRoute>
+                <DecisionLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<DecisionListPage />} />
+            <Route path="new" element={<DecisionCreatePage />} />
+            <Route path=":id" element={<DecisionDetailPage />} />
+          </Route>
         </Routes>
       </ErrorBoundary>
     </div>

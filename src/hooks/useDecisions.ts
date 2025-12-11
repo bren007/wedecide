@@ -1,0 +1,77 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+
+export interface Decision {
+    id: string;
+    title: string;
+    description: string | null;
+    status: 'draft' | 'active' | 'completed';
+    owner_id: string;
+    organization_id: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export function useDecisions() {
+    const { user } = useAuth();
+    const [decisions, setDecisions] = useState<Decision[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (user?.organization_id) {
+            fetchDecisions();
+        }
+    }, [user?.organization_id]);
+
+    async function fetchDecisions() {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('decisions')
+                .select('*')
+                .eq('organization_id', user?.organization_id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setDecisions(data || []);
+        } catch (e) {
+            setError(e as Error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function createDecision(data: { title: string; description?: string }) {
+        try {
+            if (!user?.organization_id) throw new Error('No organization found');
+
+            const { data: decision, error } = await supabase
+                .from('decisions')
+                .insert({
+                    title: data.title,
+                    description: data.description,
+                    organization_id: user.organization_id,
+                    owner_id: user.id,
+                    status: 'draft'
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            setDecisions([decision, ...decisions]);
+            return decision;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    return {
+        decisions,
+        loading,
+        error,
+        createDecision,
+        refresh: fetchDecisions
+    };
+}

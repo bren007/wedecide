@@ -19,12 +19,12 @@ export const Navbar: React.FC = () => {
         <Link to="/" className="navbar-logo">
           <span className="logo-text">WeDecide</span>
         </Link>
-        
+
         <div className="navbar-links">
           {isAuthenticated ? (
             <>
               <Link to="/dashboard" className="nav-link">Dashboard</Link>
-              <Link to="/decisions/new" className="nav-link">New Decision</Link>
+              <Link to="/decisions" className="nav-link">Decisions</Link>
               <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
             </>
           ) : (

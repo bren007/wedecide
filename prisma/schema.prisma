@@ -40,6 +40,7 @@ model User {
   roles        UserRole[]
   decisions    Decision[]
   documents    Document[]
+  stakeholders Stakeholder[]
 
   @@index([email])
   @@map("users")
@@ -85,6 +86,8 @@ model Stakeholder {
   created_at  DateTime @default(now())
 
   decision Decision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [user_id], references: [id])
+  user_id  String
 
   @@map("stakeholders")
 }

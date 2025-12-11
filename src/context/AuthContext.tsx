@@ -7,6 +7,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  organization_id: string;
 }
 
 interface AuthContextType {
@@ -41,7 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, email, name')
+        .select('id, email, name, organization_id')
         .eq('id', supabaseUser.id)
         .single();
 
