@@ -7,10 +7,25 @@ import { LoadingSpinner } from '../../components/Loading';
 export function DecisionDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getDecision } = useDecisions();
+    const { getDecision, updateDecision } = useDecisions();
     const [decision, setDecision] = useState<Decision | null>(null);
     const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    async function handleStatusChange(newStatus: 'draft' | 'active' | 'completed') {
+        if (!decision) return;
+        setUpdating(true);
+        try {
+            const updated = await updateDecision(decision.id, { status: newStatus });
+            setDecision(updated);
+        } catch (err) {
+            console.error('Failed to update status:', err);
+            // Optionally set an error message visible to the user
+        } finally {
+            setUpdating(false);
+        }
+    }
 
     useEffect(() => {
         async function loadDecision() {
@@ -54,13 +69,35 @@ export function DecisionDetailPage() {
                 >
                     <ArrowLeft className="h-5 w-5 text-gray-500" />
                 </button>
-                <h1 className="text-2xl font-bold text-gray-900">{decision.title}</h1>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize 
-                    ${decision.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        decision.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'}`}>
-                    {decision.status}
-                </span>
+                <h1 className="text-2xl font-bold text-gray-900 flex-1">{decision.title}</h1>
+                <div className="flex items-center gap-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize 
+                        ${decision.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            decision.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                                'bg-gray-100 text-gray-800'}`}>
+                        {decision.status}
+                    </span>
+
+                    {decision.status === 'draft' && (
+                        <button
+                            onClick={() => handleStatusChange('active')}
+                            disabled={updating}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                        >
+                            {updating ? 'Updating...' : 'Publish (Active)'}
+                        </button>
+                    )}
+
+                    {decision.status === 'active' && (
+                        <button
+                            onClick={() => handleStatusChange('completed')}
+                            disabled={updating}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                        >
+                            {updating ? 'Updating...' : 'Close (Complete)'}
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="bg-white shadow sm:rounded-lg">
