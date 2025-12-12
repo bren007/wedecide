@@ -67,11 +67,42 @@ export function useDecisions() {
         }
     }
 
+    async function getDecision(id: string) {
+        if (!user?.organization_id) return null;
+
+        const { data, error } = await supabase
+            .from('decisions')
+            .select('*')
+            .eq('id', id)
+            .eq('organization_id', user.organization_id)
+            .single();
+
+        if (error) throw error;
+        return data as Decision;
+    }
+
+    async function updateDecision(id: string, updates: Partial<Decision>) {
+        const { data, error } = await supabase
+            .from('decisions')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // Update local state if the decision is in the list
+        setDecisions(decisions.map(d => d.id === id ? data : d));
+        return data as Decision;
+    }
+
     return {
         decisions,
         loading,
         error,
         createDecision,
+        getDecision,
+        updateDecision,
         refresh: fetchDecisions
     };
 }
