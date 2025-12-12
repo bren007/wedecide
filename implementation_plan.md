@@ -4,18 +4,20 @@
 With the foundation (Auth, DB, Environments) complete, we move to building the core value proposition: **Decision Management**. This phase focuses on the "Decision Intake" and "Management" workflows.
 
 ## 1. Decision Management (CRUD)
-- [ ] **Create Decision Page** (`/decisions/new`)
+- [x] **Create Decision Page** (`/decisions/new`)
     - Form with Title, Description (Rich Text optional?), and initial Status (Default: Draft).
     - Validation (Title required).
     - API connection to `decisions` table.
-- [ ] **Decision Detail View** (`/decisions/:id`)
+- [x] **Decision Detail View** (`/decisions/:id`)
     - Header with Title, Status Badge, Owner.
     - Description view.
     - Metadata (Created At, Updated At).
     - Action Bar (Edit, Delete, Change Status).
 - [ ] **Edit Decision**
     - Interface to update Title/Description.
-- [ ] **Status Workflow**
+- [ ] **Delete Decision**
+    - Button to delete a decision (Owner only).
+- [x] **Status Workflow**
     - UI to move Decision from `Draft` -> `Active` -> `Completed`.
     - Validation rules (e.g., "Cannot complete without Outcome").
 
