@@ -8,7 +8,7 @@ import { useDecisions } from '../hooks/useDecisions';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { decisions, loading, error } = useDecisions();
+  const { decisions, loading } = useDecisions();
 
   const activeDecisions = decisions.filter(d => d.status === 'active').length;
   const completedDecisions = decisions.filter(d => d.status === 'completed').length;
