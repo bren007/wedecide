@@ -26,20 +26,24 @@ DECLARE
 BEGIN
   -- 1. Create Organization
   INSERT INTO organizations (
+    id,
     name, 
     slug, 
     subscription_tier, 
     subscription_status, 
     max_users, 
-    max_decisions
+    max_decisions,
+    updated_at
   )
   VALUES (
+    gen_random_uuid(),
     p_org_name,
     p_org_slug,
     'free',
     'active',
     5,
-    10
+    10,
+    NOW()
   )
   RETURNING id INTO v_org_id;
 
@@ -48,22 +52,26 @@ BEGIN
     id,
     email,
     name,
-    organization_id
+    organization_id,
+    updated_at
   )
   VALUES (
     p_user_id::text,
     p_email,
     p_name,
-    v_org_id
+    v_org_id,
+    NOW()
   );
 
   -- 3. Assign Admin Role
   INSERT INTO user_roles (
+    id,
     user_id,
     organization_id,
     role
   )
   VALUES (
+    gen_random_uuid(),
     p_user_id::text,
     v_org_id,
     'admin'
@@ -102,6 +110,7 @@ DROP POLICY IF EXISTS "final_user_select" ON users;
 DROP POLICY IF EXISTS "user_select_authenticated" ON users;
 DROP POLICY IF EXISTS "users_select_own_profile" ON users;
 DROP POLICY IF EXISTS "users_read_own" ON users;
+DROP POLICY IF EXISTS "users_update_own" ON users;
 
 DROP POLICY IF EXISTS "final_org_select" ON organizations;
 DROP POLICY IF EXISTS "orgs_read_own" ON organizations;

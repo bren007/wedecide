@@ -96,6 +96,21 @@ export function useDecisions() {
         return data as Decision;
     }
 
+    async function deleteDecision(id: string) {
+        if (!user?.organization_id) return;
+
+        const { error } = await supabase
+            .from('decisions')
+            .delete()
+            .eq('id', id)
+            .eq('organization_id', user.organization_id);
+
+        if (error) throw error;
+
+        // Remove from local state
+        setDecisions(decisions.filter(d => d.id !== id));
+    }
+
     return {
         decisions,
         loading,
@@ -103,6 +118,7 @@ export function useDecisions() {
         createDecision,
         getDecision,
         updateDecision,
+        deleteDecision,
         refresh: fetchDecisions
     };
 }

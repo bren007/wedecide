@@ -13,16 +13,16 @@ With the foundation (Auth, DB, Environments) complete, we move to building the c
     - Description view.
     - Metadata (Created At, Updated At).
     - Action Bar (Edit, Delete, Change Status).
-- [ ] **Edit Decision**
+- [x] **Edit Decision**
     - Interface to update Title/Description.
-- [ ] **Delete Decision**
+- [x] **Delete Decision**
     - Button to delete a decision (Owner only).
 - [x] **Status Workflow**
     - UI to move Decision from `Draft` -> `Active` -> `Completed`.
     - Validation rules (e.g., "Cannot complete without Outcome").
 
 ## 2. Stakeholder Management
-- [ ] **Manage Stakeholders UI** (Inside Decision Detail)
+- [x] **Manage Stakeholders UI** (Inside Decision Detail)
     - List current stakeholders.
     - **Add Stakeholder**:
         - Select from existing Organization Users.
@@ -30,15 +30,15 @@ With the foundation (Auth, DB, Environments) complete, we move to building the c
     - **Remove Stakeholder**.
 
 ## 3. Context & Documents
-- [ ] **Document Attachments** (Inside Decision Detail)
+- [x] **Document Attachments** (Inside Decision Detail)
     - Support for URL-based resources (Google Docs, M365, etc.).
     - Form to add: Name, URL, Type (Doc/Sheet/PDF/etc).
     - List view of attached documents with clickable links.
 
 ## 4. Dashboard Enhancements
-- [ ] **Empty States**: Better guidance when no decisions exist.
-- [ ] **Filtering**: Filter by Status (Active vs Completed) or My Decisions vs All Org Decisions.
+- [x] **Empty States**: Better guidance when no decisions exist.
+- [x] **Filtering**: Filter by Status (Active vs Completed) or My Decisions vs All Org Decisions.
 
 ## Technical Tasks (Infrastructure)
-- [ ] **RLS verification**: Ensure users can only view/edit decisions within their Organization.
+- [x] **RLS verification**: Ensure users can only view/edit decisions within their Organization.
 - [ ] **Type Safety**: Generate TypeScript types from Supabase or Prisma to ensure frontend type safety matches new schema usage.

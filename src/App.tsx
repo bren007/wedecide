@@ -13,6 +13,7 @@ import { DecisionLayout } from './components/layouts/DecisionLayout';
 import { DecisionListPage } from './pages/decisions/DecisionListPage';
 import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
 import { DecisionDetailPage } from './pages/decisions/DecisionDetailPage';
+import { DecisionEditPage } from './pages/decisions/DecisionEditPage';
 import './App.css';
 import { LoadingSpinner } from './components/Loading';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -81,6 +82,7 @@ function AppContent() {
             <Route index element={<DecisionListPage />} />
             <Route path="new" element={<DecisionCreatePage />} />
             <Route path=":id" element={<DecisionDetailPage />} />
+            <Route path=":id/edit" element={<DecisionEditPage />} />
           </Route>
         </Routes>
       </ErrorBoundary>

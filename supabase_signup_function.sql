@@ -20,6 +20,7 @@ DECLARE
 BEGIN
   -- 1. Create Organization
   INSERT INTO organizations (
+    id,
     name, 
     slug, 
     subscription_tier, 
@@ -28,6 +29,7 @@ BEGIN
     max_decisions
   )
   VALUES (
+    gen_random_uuid(),
     p_org_name,
     p_org_slug,
     'free',
@@ -53,11 +55,13 @@ BEGIN
 
   -- 3. Assign Admin Role
   INSERT INTO user_roles (
+    id,
     user_id,
     organization_id,
     role
   )
   VALUES (
+    gen_random_uuid(),
     p_user_id,
     v_org_id,
     'admin'

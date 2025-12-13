@@ -1,16 +1,23 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useDecisions, type Decision } from '../../hooks/useDecisions';
 import { useEffect, useState } from 'react';
 import { LoadingSpinner } from '../../components/Loading';
+import { StakeholderManager } from '../../components/decisions/StakeholderManager';
+import { DocumentManager } from '../../components/decisions/DocumentManager';
+import { useAuth } from '../../context/AuthContext';
+import { Button } from '../../components/Button';
+import './DecisionDetailPage.css';
 
 export function DecisionDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getDecision, updateDecision } = useDecisions();
+    const { user } = useAuth();
+    const { getDecision, updateDecision, deleteDecision } = useDecisions();
     const [decision, setDecision] = useState<Decision | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     async function handleStatusChange(newStatus: 'draft' | 'active' | 'completed') {
@@ -24,6 +31,21 @@ export function DecisionDetailPage() {
             // Optionally set an error message visible to the user
         } finally {
             setUpdating(false);
+        }
+    }
+
+    async function handleDelete() {
+        if (!decision) return;
+        if (!window.confirm('Are you sure you want to delete this decision? This action cannot be undone.')) return;
+
+        setDeleting(true);
+        try {
+            await deleteDecision(decision.id);
+            navigate('/decisions');
+        } catch (err) {
+            console.error('Failed to delete:', err);
+            setDeleting(false);
+            // Could add error toast here
         }
     }
 
@@ -46,70 +68,100 @@ export function DecisionDetailPage() {
             }
         }
         loadDecision();
-    }, [id]); // Removed getDecision dependency to avoid infinite loops if hook reference changes
+    }, [id]);
 
     if (loading) return <LoadingSpinner fullScreen />;
 
     if (error || !decision) return (
-        <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900">Error</h3>
-            <p className="mt-1 text-sm text-gray-500">{error || 'Decision not found'}</p>
-            <button onClick={() => navigate('/decisions')} className="mt-4 text-primary hover:underline">
-                Back to Decisions
-            </button>
+        <div className="decision-detail-container">
+            <div className="decision-section" style={{ textAlign: 'center' }}>
+                <h3 className="section-title">Error</h3>
+                <p className="section-content">{error || 'Decision not found'}</p>
+                <div style={{ marginTop: 'var(--spacing-md)' }}>
+                    <Button variant="ghost" onClick={() => navigate('/decisions')}>
+                        Back to Decisions
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex items-center space-x-4">
+        <div className="decision-detail-container">
+            <div className="decision-header">
                 <button
                     onClick={() => navigate('/decisions')}
-                    className="p-2 hover:bg-gray-100 rounded-full"
+                    className="back-button"
+                    aria-label="Back to Decisions"
                 >
-                    <ArrowLeft className="h-5 w-5 text-gray-500" />
+                    <ArrowLeft size={20} />
                 </button>
-                <h1 className="text-2xl font-bold text-gray-900 flex-1">{decision.title}</h1>
-                <div className="flex items-center gap-3">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize 
-                        ${decision.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            decision.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                                'bg-gray-100 text-gray-800'}`}>
+                <h1 className="decision-title">{decision.title}</h1>
+                <div className="decision-meta">
+                    <span className={`status-badge ${decision.status}`}>
                         {decision.status}
                     </span>
 
                     {decision.status === 'draft' && (
-                        <button
+                        <Button
+                            variant="primary"
                             onClick={() => handleStatusChange('active')}
                             disabled={updating}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                            className="btn--sm"
                         >
                             {updating ? 'Updating...' : 'Publish (Active)'}
-                        </button>
+                        </Button>
                     )}
 
                     {decision.status === 'active' && (
-                        <button
+                        <Button
+                            variant="primary"
                             onClick={() => handleStatusChange('completed')}
                             disabled={updating}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                            className="btn--sm"
+                            style={{ backgroundColor: 'var(--color-success)' }} // Needs success variant in Button
                         >
                             {updating ? 'Updating...' : 'Close (Complete)'}
-                        </button>
+                        </Button>
                     )}
+
+                    <div className="separator" aria-hidden="true" />
+
+                    <button
+                        onClick={() => navigate(`/decisions/${decision.id}/edit`)}
+                        className="icon-button"
+                        title="Edit Decision"
+                    >
+                        <Pencil size={20} />
+                    </button>
+
+                    <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="icon-button delete"
+                        title="Delete Decision"
+                    >
+                        <Trash2 size={20} />
+                    </button>
                 </div>
             </div>
 
-            <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Description</h3>
-                    <div className="mt-2 max-w-xl text-sm text-gray-500">
-                        <p>{decision.description || 'No description provided.'}</p>
-                    </div>
+            <div className="decision-section">
+                <h3 className="section-title">Description</h3>
+                <div className="section-content">
+                    <p>{decision.description || 'No description provided.'}</p>
                 </div>
             </div>
 
-            {/* Sections for Stakeholders and Documents will go here */}
+            <StakeholderManager
+                decisionId={decision.id}
+                isOwner={user?.id === decision.owner_id}
+            />
+
+            <DocumentManager
+                decisionId={decision.id}
+                isOwner={user?.id === decision.owner_id}
+            />
         </div>
     );
 }

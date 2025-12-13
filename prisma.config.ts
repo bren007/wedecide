@@ -10,7 +10,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL"),
-    directUrl: env("DIRECT_URL"),
+    // FORCE Direct Connection (5432) for schema operations
+    url: process.env.DIRECT_URL ?? "",
   },
 });
