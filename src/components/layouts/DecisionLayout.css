@@ -11,6 +11,8 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-lg);
+    padding-top: calc(var(--spacing-lg) + 5rem);
+    /* Extra padding for fixed navbar */
     width: 100%;
 }
 

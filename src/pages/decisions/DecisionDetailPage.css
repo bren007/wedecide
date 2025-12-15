@@ -11,6 +11,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .decision-title {
@@ -18,12 +19,15 @@
     font-weight: 700;
     color: var(--color-text-primary);
     flex: 1;
+    min-width: 250px;
+    /* Ensure it wraps if too narrow */
 }
 
 .decision-meta {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .status-badge {

@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (session?.user) {
         // Add a timeout to prevent hanging forever if DB is slow/locked
         const timeoutPromise = new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error('Profile fetch timed out')), 5000)
+          setTimeout(() => reject(new Error('Profile fetch timed out')), 15000)
         );
 
         try {
