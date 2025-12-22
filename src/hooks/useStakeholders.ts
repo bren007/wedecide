@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
-export interface Stakeholder {
+export interface ConsultationMember {
     id: string;
     decision_id: string;
     user_id: string;
@@ -11,29 +11,29 @@ export interface Stakeholder {
     created_at: string;
 }
 
-export function useStakeholders(decisionId: string | undefined) {
+export function useConsultation(decisionId: string | undefined) {
     const { user } = useAuth();
-    const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
+    const [members, setMembers] = useState<ConsultationMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (decisionId && user?.organization_id) {
-            fetchStakeholders();
+            fetchMembers();
         }
     }, [decisionId, user?.organization_id]);
 
-    async function fetchStakeholders() {
+    async function fetchMembers() {
         if (!decisionId) return;
         try {
             setLoading(true);
             const { data, error } = await supabase
-                .from('stakeholders')
+                .from('stakeholders') // Keeping table name for now
                 .select('*')
                 .eq('decision_id', decisionId);
 
             if (error) throw error;
-            setStakeholders(data || []);
+            setMembers(data || []);
         } catch (e) {
             setError(e as Error);
         } finally {
@@ -41,7 +41,7 @@ export function useStakeholders(decisionId: string | undefined) {
         }
     }
 
-    async function addStakeholder(userId: string, name: string, email: string) {
+    async function addMember(userId: string, name: string, email: string) {
         if (!decisionId) return;
         try {
             const { data, error } = await supabase
@@ -56,33 +56,33 @@ export function useStakeholders(decisionId: string | undefined) {
                 .single();
 
             if (error) throw error;
-            setStakeholders([...stakeholders, data]);
+            setMembers([...members, data]);
             return data;
         } catch (e) {
             throw e;
         }
     }
 
-    async function removeStakeholder(stakeholderId: string) {
+    async function removeMember(memberId: string) {
         try {
             const { error } = await supabase
                 .from('stakeholders')
                 .delete()
-                .eq('id', stakeholderId);
+                .eq('id', memberId);
 
             if (error) throw error;
-            setStakeholders(stakeholders.filter(s => s.id !== stakeholderId));
+            setMembers(members.filter(m => m.id !== memberId));
         } catch (e) {
             throw e;
         }
     }
 
     return {
-        stakeholders,
+        members,
         loading,
         error,
-        addStakeholder,
-        removeStakeholder,
-        refresh: fetchStakeholders
+        addMember,
+        removeMember,
+        refresh: fetchMembers
     };
 }

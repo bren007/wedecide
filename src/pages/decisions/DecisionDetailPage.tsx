@@ -153,15 +153,21 @@ export function DecisionDetailPage() {
                 </div>
             </div>
 
-            <StakeholderManager
-                decisionId={decision.id}
-                isOwner={user?.id === decision.owner_id}
-            />
+            <div className="decision-section">
+                <h3 className="section-title">People Involved (Consultation Log)</h3>
+                <StakeholderManager
+                    decisionId={decision.id}
+                    isOwner={user?.id === decision.owner_id}
+                />
+            </div>
 
-            <DocumentManager
-                decisionId={decision.id}
-                isOwner={user?.id === decision.owner_id}
-            />
+            <div className="decision-section">
+                <h3 className="section-title">Documents</h3>
+                <DocumentManager
+                    decisionId={decision.id}
+                    isOwner={user?.id === decision.owner_id}
+                />
+            </div>
         </div>
     );
 }

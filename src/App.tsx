@@ -30,7 +30,10 @@ function AppContent() {
       <Navbar />
       <ErrorBoundary>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/"
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />}
+          />
 
           {/* Public Routes (redirect to dashboard if logged in) */}
           <Route

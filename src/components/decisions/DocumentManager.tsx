@@ -81,7 +81,7 @@ export function DocumentManager({ decisionId, isOwner }: DocumentManagerProps) {
     return (
         <div className="document-manager">
             <div className="document-header">
-                <h3 className="document-title">Context & Documents</h3>
+                <h3 className="document-title">Documents</h3>
                 {isOwner && !isAdding && (
                     <button
                         onClick={() => setIsAdding(true)}

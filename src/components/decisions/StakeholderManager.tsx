@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Plus } from 'lucide-react';
-import { useStakeholders } from '../../hooks/useStakeholders';
+import { useConsultation, type ConsultationMember } from '../../hooks/useStakeholders';
 import { useOrganizationUsers } from '../../hooks/useOrganizationUsers';
 import { Button } from '../Button';
 import { LoadingSpinner } from '../Loading';
@@ -12,7 +12,12 @@ interface StakeholderManagerProps {
 }
 
 export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerProps) {
-    const { stakeholders, loading: stakeholdersLoading, addStakeholder, removeStakeholder } = useStakeholders(decisionId);
+    const {
+        members: stakeholders,
+        loading: stakeholdersLoading,
+        addMember: addStakeholder,
+        removeMember: removeStakeholder
+    } = useConsultation(decisionId);
     const { users, loading: usersLoading } = useOrganizationUsers();
 
     const [isAdding, setIsAdding] = useState(false);
@@ -47,7 +52,7 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
     return (
         <div className="stakeholder-manager">
             <div className="stakeholder-header">
-                <h3 className="stakeholder-title">Stakeholders</h3>
+                <h3 className="stakeholder-title">People Involved (Consultation Log)</h3>
                 {isOwner && !isAdding && (
                     <button
                         onClick={() => setIsAdding(true)}
@@ -63,7 +68,7 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
                 {stakeholders.length === 0 && !isAdding ? (
                     <p className="empty-state">No stakeholders added yet.</p>
                 ) : (
-                    stakeholders.map(stakeholder => (
+                    stakeholders.map((stakeholder: ConsultationMember) => (
                         <div key={stakeholder.id} className="stakeholder-item">
                             <div className="stakeholder-info">
                                 <div className="stakeholder-avatar">

@@ -5,7 +5,7 @@ import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -23,6 +23,9 @@ export const Navbar: React.FC = () => {
         <div className="navbar-links">
           {isAuthenticated ? (
             <>
+              <div className="nav-user-info">
+                <span className="nav-user-name">{user?.name ? user.name.split(' ')[0] : 'User'}</span>
+              </div>
               <Link to="/dashboard" className="nav-link">Dashboard</Link>
               <Link to="/decisions" className="nav-link">Decisions</Link>
               <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>

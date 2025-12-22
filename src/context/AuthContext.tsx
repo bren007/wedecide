@@ -37,73 +37,158 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch user profile from users table
-  const fetchUserProfile = async (supabaseUser: SupabaseUser): Promise<User | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, name, organization_id')
-        .eq('id', supabaseUser.id)
-        .single();
+  // Track the current profile fetch promise to prevent concurrent fetches
+  const profileFetchRef = React.useRef<Promise<User | null> | null>(null);
+  const initialFetchDoneRef = React.useRef(false);
+  const lastProcessedUserIdRef = React.useRef<string | null>(null);
 
-      if (error) {
-        // If user doesn't exist in users table, sign them out
-        // This handles orphaned auth users from failed signups
-        // BUT: Ignore 406/PGRST116 during initial signup flow to prevent race conditions
-        if (error.code === 'PGRST116') {
-          console.log('User profile not found (yet). Skipping auto-logout to allow signup to complete.');
-          // Do NOT signOut here
-        } else {
-          console.error('Error fetching user profile:', error);
-        }
-        return null;
-      }
+  // Fetch user profile from users table with optional retries
+  const fetchUserProfile = async (
+    supabaseUser: SupabaseUser,
+    retryCount = 0
+  ): Promise<User | null> => {
+    const userId = supabaseUser.id;
+    // VERY STRICT retry policy during initial boot
+    const isInitialBoot = !initialFetchDoneRef.current;
+    const maxRetries = isInitialBoot ? 0 : 2; // No retries during boot, wait for INITIAL_SESSION instead
+    const currentTimeoutMs = isInitialBoot ? 3000 : 5000;
 
-      return data;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
+    // If a fetch is already in flight for this user, return the existing promise
+    if (profileFetchRef.current) {
+      console.log(`🔗 [fetchUserProfile] Sharing promise for: ${userId}`);
+      return profileFetchRef.current;
     }
+
+    const fetchPromise = (async () => {
+      const timeoutPromise = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error('Profile fetch timeout')), currentTimeoutMs)
+      );
+
+      try {
+        console.log(`📡 [fetchUserProfile] Querying DB (${retryCount + 1}/${maxRetries + 1}) for: ${userId} (Timeout: ${currentTimeoutMs}ms)`);
+        const dbQuery = supabase
+          .from('users')
+          .select('id, email, name, organization_id')
+          .eq('id', userId)
+          .single();
+
+        const { data, error } = await Promise.race([
+          dbQuery,
+          timeoutPromise as any
+        ]);
+
+        if (error) {
+          if (error.code === 'PGRST116') return null;
+          throw error;
+        }
+
+        console.log(`✅ [fetchUserProfile] Success: ${userId}`);
+        return data as User;
+      } catch (error: any) {
+        console.warn(`⚠️ [fetchUserProfile] Attempt ${retryCount + 1} failed:`, error.message || error);
+
+        if (retryCount < maxRetries) {
+          const delay = 1000; // Fixed short delay for retries
+          await new Promise(resolve => setTimeout(resolve, delay));
+          profileFetchRef.current = null;
+          return fetchUserProfile(supabaseUser, retryCount + 1);
+        }
+
+        return null; // Give up
+      }
+    })();
+
+    const trackedPromise = fetchPromise.finally(() => {
+      if (profileFetchRef.current === trackedPromise) {
+        profileFetchRef.current = null;
+      }
+    });
+
+    profileFetchRef.current = trackedPromise;
+    return trackedPromise;
   };
 
   // Initialize auth state on mount
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user).then(setUser);
-      }
-      setIsLoading(false);
-    });
+    let mounted = true;
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        // Add a timeout to prevent hanging forever if DB is slow/locked
-        const timeoutPromise = new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error('Profile fetch timed out')), 15000)
-        );
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
 
-        try {
-          const profile = await Promise.race([
-            fetchUserProfile(session.user),
-            timeoutPromise
-          ]) as User | null;
+      const currentUserId = session?.user?.id || null;
 
-          setUser(profile);
-        } catch (err) {
-          console.error('Profile fetch failed or timed out:', err);
-        }
-      } else {
+      console.log(`🔵 Auth Event [${event}]:`, {
+        userId: currentUserId,
+        lastProcessed: lastProcessedUserIdRef.current,
+        initialDone: initialFetchDoneRef.current
+      });
+
+      // Handle sign out immediately
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        lastProcessedUserIdRef.current = null;
         setUser(null);
+        setIsLoading(false);
+        initialFetchDoneRef.current = true;
+        return;
       }
-      setIsLoading(false);
+
+      // De-bounce: If we've already started processing this user, skip
+      if (currentUserId === lastProcessedUserIdRef.current && user?.id === currentUserId) {
+        console.log('⏭️ Skipping: User already processed');
+        // Still mark initialization as done if it wasn't
+        if (!initialFetchDoneRef.current) {
+          initialFetchDoneRef.current = true;
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      lastProcessedUserIdRef.current = currentUserId;
+      setIsLoading(true);
+
+      try {
+        console.log('⏳ Processing profile for:', currentUserId);
+        const profile = await fetchUserProfile(session.user);
+
+        if (mounted) {
+          if (profile) {
+            console.log('✅ Auth success');
+            setUser(profile);
+          } else {
+            console.warn('⚠️ No profile found');
+            setUser(null);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Auth process failed:', err);
+      } finally {
+        if (mounted) {
+          // Special handling for the very first event (usually SIGNED_IN during boot)
+          // If it fails but we haven't seen INITIAL_SESSION yet, we might want to stay in loading
+          // But for simplicity, we just set initialFetchDone to true once ANY event completes
+          initialFetchDoneRef.current = true;
+          setIsLoading(false);
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Fallback: Check session once in case onAuthStateChange is slow
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted && !initialFetchDoneRef.current && !session) {
+        console.log('🏁 getSession Fallback (No Session)');
+        setIsLoading(false);
+        initialFetchDoneRef.current = true;
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [user?.id]); // Allow re-processing if user state is cleared
 
   const login = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({

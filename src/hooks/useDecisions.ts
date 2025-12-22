@@ -2,11 +2,20 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
+export interface AffectedParty {
+    id: string;
+    decision_id: string;
+    name: string;
+    created_at: string;
+}
+
 export interface Decision {
     id: string;
     title: string;
+    decision: string | null;
     description: string | null;
     status: 'draft' | 'active' | 'completed';
+    decision_type: 'approve' | 'note';
     owner_id: string;
     organization_id: string;
     created_at: string;
@@ -43,7 +52,7 @@ export function useDecisions() {
         }
     }
 
-    async function createDecision(data: { title: string; description?: string }) {
+    async function createDecision(data: { title: string; decision?: string; description?: string; decision_type?: 'approve' | 'note' }) {
         try {
             if (!user?.organization_id) throw new Error('No organization found');
 
@@ -51,7 +60,9 @@ export function useDecisions() {
                 .from('decisions')
                 .insert({
                     title: data.title,
+                    decision: data.decision,
                     description: data.description,
+                    decision_type: data.decision_type || 'approve',
                     organization_id: user.organization_id,
                     owner_id: user.id,
                     status: 'draft'
