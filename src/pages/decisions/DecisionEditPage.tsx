@@ -23,7 +23,9 @@ export function DecisionEditPage() {
                 if (data) {
                     setInitialData({
                         title: data.title,
-                        description: data.description || ''
+                        decision: data.decision || '',
+                        description: data.description || '',
+                        decision_type: data.decision_type
                     });
                 } else {
                     setError('Decision not found');

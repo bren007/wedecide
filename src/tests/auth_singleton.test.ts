@@ -1,13 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
-import React from 'react';
-
-// Mock supabase
-const mockSupabase = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn(),
-};
+import { describe, it, expect } from 'vitest';
 
 // We need a way to test the logic inside AuthContext without mounting the whole provider
 // I'll create a minimal version of the fetchUserProfile logic to verify the ref-based singleton pattern
