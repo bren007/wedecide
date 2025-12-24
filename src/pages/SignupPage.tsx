@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+
 import './LoginPage.css';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { useAuth } from '../context/AuthContext';
+import { useToasts } from '../context/ToastContext';
+
 
 export const SignupPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -13,8 +16,21 @@ export const SignupPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, isAuthenticated } = useAuth();
+  const { showToast } = useToasts();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
+
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
@@ -25,10 +41,14 @@ export const SignupPage: React.FC = () => {
 
     try {
       await signup(name, email, password, token || undefined);
-      navigate('/dashboard');
+      showToast('Account created successfully!', 'success');
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create account');
+      const message = err instanceof Error ? err.message : 'Failed to create account';
+      setError(message);
+      showToast(message, 'error');
     } finally {
+
       setLoading(false);
     }
   };

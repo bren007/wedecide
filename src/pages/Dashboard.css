@@ -41,17 +41,49 @@
 
 .dashboard-card h3 {
     margin-bottom: var(--spacing-lg);
-    color: var(--color-text-primary);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
 }
+
 
 .empty-state {
     text-align: center;
-    padding: var(--spacing-2xl) 0;
+    padding: var(--spacing-2xl) var(--spacing-xl);
     color: var(--color-text-muted);
     background-color: var(--color-surface-subtle);
     border-radius: var(--radius-md);
     border: 1px dashed var(--color-border);
 }
+
+.onboarding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-3xl) var(--spacing-xl);
+}
+
+.empty-state-icon {
+    color: var(--color-primary-light);
+    opacity: 0.5;
+    margin-bottom: var(--spacing-sm);
+}
+
+.onboarding h4 {
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.onboarding p {
+    max-width: 400px;
+    margin: 0 auto var(--spacing-lg);
+    line-height: 1.6;
+}
+
 
 .card-header {
     display: flex;
@@ -61,7 +93,7 @@
 }
 
 .dashboard-card h3 {
-    margin-bottom: 0; 
+    margin-bottom: 0;
 }
 
 .view-all-link {
@@ -135,8 +167,10 @@
 }
 
 .status-active {
-    background-color: #e0e7ff; /* Indigo-100 */
-    color: #3730a3; /* Indigo-800 */
+    background-color: #e0e7ff;
+    /* Indigo-100 */
+    color: #3730a3;
+    /* Indigo-800 */
 }
 
 .status-completed {

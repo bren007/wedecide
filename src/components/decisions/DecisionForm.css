@@ -4,18 +4,42 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    /* Tight gap between collapsed headers */
+    padding: var(--spacing-xl);
 }
 
+.container-entity {
+    background: var(--color-surface-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl), var(--shadow-glow-muted);
+    margin-top: var(--spacing-md);
+    position: relative;
+}
+
+.container-entity::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+
 .wizard-step {
-    background: var(--glass-bg);
+    background: var(--glass-highlight);
     backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0.9;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
+
+
 
 .wizard-step.active {
     opacity: 1;
@@ -321,6 +345,18 @@
     resize: vertical;
 }
 
+.form-textarea::placeholder {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+}
+
+
+.wizard-select:invalid,
+.wizard-select option[value=""] {
+    color: var(--color-text-muted);
+}
+
+
 @media (max-width: 600px) {
     .step-content {
         padding-left: var(--spacing-xl);
@@ -329,4 +365,29 @@
     .type-options {
         grid-template-columns: 1fr;
     }
+}
+
+.stakeholder-type-toggle {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    accent-color: var(--color-primary);
+}
+
+.manual-entry {
+    animation: fadeIn 0.3s ease-out;
 }

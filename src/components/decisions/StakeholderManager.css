@@ -106,23 +106,6 @@
     color: var(--color-text-secondary);
 }
 
-.remove-btn {
-    color: var(--color-text-muted);
-    padding: var(--spacing-xs);
-    border-radius: var(--radius-sm);
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.remove-btn:hover {
-    color: var(--color-error);
-    background-color: var(--color-bg-error);
-}
 
 .add-stakeholder-form {
     margin-top: var(--spacing-lg);
@@ -154,4 +137,42 @@
     justify-content: flex-end;
     gap: var(--spacing-sm);
     margin-top: var(--spacing-md);
+}
+
+.stakeholder-type-toggle {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    accent-color: var(--color-primary);
+}
+
+.custom-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+.custom-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }

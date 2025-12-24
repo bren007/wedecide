@@ -8,7 +8,9 @@ interface User {
   email: string;
   name: string;
   organization_id: string;
+  roles: string[];
 }
+
 
 interface AuthContextType {
   user: User | null;
@@ -17,7 +19,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string, token?: string) => Promise<void>;
   logout: () => Promise<void>;
+  hasRole: (role: string) => boolean;
+  isChair: boolean;
+  isAdmin: boolean;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -72,18 +78,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .eq('id', userId)
           .single();
 
-        const { data, error } = await Promise.race([
+        const { data: profile, error: profileError } = await Promise.race([
           dbQuery,
           timeoutPromise as any
         ]);
 
-        if (error) {
-          if (error.code === 'PGRST116') return null;
-          throw error;
+        if (profileError) {
+          if (profileError.code === 'PGRST116') return null;
+          throw profileError;
         }
 
-        console.log(`✅ [fetchUserProfile] Success: ${userId}`);
-        return data as User;
+        // Fetch roles
+        const { data: roles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('organization_id', profile.organization_id);
+
+        if (rolesError) throw rolesError;
+
+        console.log(`✅ [fetchUserProfile] Success: ${userId} (Roles: ${roles.length})`);
+        return {
+          ...profile,
+          roles: roles.map(r => r.role)
+        } as User;
+
       } catch (error: any) {
         console.warn(`⚠️ [fetchUserProfile] Attempt ${retryCount + 1} failed:`, error.message || error);
 
@@ -310,6 +329,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const hasRole = (role: string) => user?.roles.includes(role) || false;
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -317,7 +338,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     signup,
     logout,
+    hasRole,
+    isChair: hasRole('chair'),
+    isAdmin: hasRole('admin') || hasRole('chair'), // Chair is always an admin by default UX
   };
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

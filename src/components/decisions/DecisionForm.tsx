@@ -1,19 +1,23 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { X, UserPlus, Link as LinkIcon, Check, ChevronDown, Share2 } from 'lucide-react';
 import { useOrganizationUsers } from '../../hooks/useOrganizationUsers';
 import './DecisionForm.css';
 
+const PERSISTENCE_KEY = 'wedecide_decision_draft';
+
+
 export interface DecisionFormData {
     title: string;
     decision: string;
     description: string;
     decision_type: 'approve' | 'note';
-    initialPeople?: { userId: string; name: string; email: string }[];
+    initialPeople?: { userId?: string; name: string; email: string }[];
     initialDocuments?: { name: string; url: string; type: string }[];
     affectedParties?: string[];
 }
+
 
 interface DecisionFormProps {
     initialData?: DecisionFormData;
@@ -34,7 +38,7 @@ export function DecisionForm({
 }: DecisionFormProps) {
     const { users } = useOrganizationUsers();
 
-    // Step state: 1: Identity, 2: Type, 3: Evidence, 4: Consultation, 5: Impact, 6: Review
+    // Step state: 1: Identity & Type, 2: Evidence, 3: Consultation, 4: Impact, 5: Review
     const [currentStep, setCurrentStep] = useState(1);
     const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
@@ -45,8 +49,9 @@ export function DecisionForm({
     const [decisionType, setDecisionType] = useState<'approve' | 'note'>(initialData?.decision_type || 'approve');
 
     // List Fields
-    const [people, setPeople] = useState<{ userId: string; name: string; email: string }[]>(initialData?.initialPeople || []);
+    const [people, setPeople] = useState<{ userId?: string; name: string; email: string }[]>(initialData?.initialPeople || []);
     const [documents, setDocuments] = useState<{ name: string; url: string; type: string }[]>(initialData?.initialDocuments || []);
+
     const [affectedParties, setAffectedParties] = useState<string[]>(initialData?.affectedParties || []);
 
     // Temp state for adding items
@@ -54,8 +59,91 @@ export function DecisionForm({
     const [tempDocName, setTempDocName] = useState('');
     const [tempDocUrl, setTempDocUrl] = useState('');
     const [tempPartyName, setTempPartyName] = useState('');
+    const [isExternal, setIsExternal] = useState(false);
+    const [manualName, setManualName] = useState('');
+    const [manualEmail, setManualEmail] = useState('');
+
 
     const formRef = useRef<HTMLFormElement>(null);
+
+    // Persistence: Load from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(PERSISTENCE_KEY);
+        if (saved && !initialData) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.title) setTitle(data.title);
+                if (data.decision) setDecisionText(data.decision);
+                if (data.description) setDescription(data.description);
+                if (data.decision_type) setDecisionType(data.decision_type);
+                if (data.initialPeople) setPeople(data.initialPeople);
+                if (data.initialDocuments) setDocuments(data.initialDocuments);
+                if (data.affectedParties) setAffectedParties(data.affectedParties);
+                if (data.currentStep) setCurrentStep(data.currentStep);
+                if (data.completedSteps) setCompletedSteps(data.completedSteps);
+            } catch (e) {
+                console.error('Failed to load draft:', e);
+            }
+        }
+    }, [initialData]);
+
+    // Persistence: Save to localStorage on change
+    useEffect(() => {
+        if (!initialData && (title || decisionText || description || people.length > 0 || documents.length > 0 || affectedParties.length > 0)) {
+            const data = {
+                title,
+                decision: decisionText,
+                description,
+                decision_type: decisionType,
+                initialPeople: people,
+                initialDocuments: documents,
+                affectedParties,
+                currentStep,
+                completedSteps
+            };
+            localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(data));
+        }
+    }, [title, decisionText, description, decisionType, people, documents, affectedParties, currentStep, completedSteps, initialData]);
+
+    const clearDraft = () => {
+        localStorage.removeItem(PERSISTENCE_KEY);
+    };
+
+    // Scroll to top on mount
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    // Precisely anchor active step to navbar during transitions
+    useEffect(() => {
+        const activeStep = formRef.current?.querySelector('.wizard-step.active') as HTMLElement;
+        if (activeStep) {
+            const navHeight = 90; // Header offset
+            const startTime = Date.now();
+            const duration = 500; // Match 0.4s CSS + buffer
+            let frameId: number;
+
+            const stickToTop = () => {
+                const elapsed = Date.now() - startTime;
+                const rect = activeStep.getBoundingClientRect();
+                const delta = rect.top - navHeight;
+
+                if (Math.abs(delta) > 0.5) {
+                    window.scrollBy(0, delta);
+                }
+
+                if (elapsed < duration) {
+                    frameId = requestAnimationFrame(stickToTop);
+                }
+            };
+
+            frameId = requestAnimationFrame(stickToTop);
+            return () => cancelAnimationFrame(frameId);
+        }
+    }, [currentStep]);
+
+
+
 
     const completeStep = (step: number) => {
         if (!completedSteps.includes(step)) {
@@ -83,16 +171,26 @@ export function DecisionForm({
             initialDocuments: documents,
             affectedParties
         });
+        clearDraft();
     };
 
+
     const addPerson = () => {
-        if (!selectedUserId) return;
-        const userToAdd = users.find(u => u.id === selectedUserId);
-        if (userToAdd && !people.some(p => p.userId === selectedUserId)) {
-            setPeople([...people, { userId: userToAdd.id, name: userToAdd.name, email: userToAdd.email }]);
-            setSelectedUserId('');
+        if (isExternal) {
+            if (!manualName) return;
+            setPeople([...people, { name: manualName, email: manualEmail }]);
+            setManualName('');
+            setManualEmail('');
+        } else {
+            if (!selectedUserId) return;
+            const userToAdd = users.find(u => u.id === selectedUserId);
+            if (userToAdd && !people.some(p => p.userId === selectedUserId)) {
+                setPeople([...people, { userId: userToAdd.id, name: userToAdd.name, email: userToAdd.email }]);
+                setSelectedUserId('');
+            }
         }
     };
+
 
     const addDocument = () => {
         if (!tempDocName || !tempDocUrl) return;
@@ -132,14 +230,15 @@ export function DecisionForm({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="vertical-wizard-form" ref={formRef}>
+        <form onSubmit={handleSubmit} className="vertical-wizard-form container-entity" ref={formRef}>
+
             {externalError && <div className="decision-error-message">{externalError}</div>}
 
             {/* Step 1: Decision Details */}
             <div className={`wizard-step ${currentStep === 1 ? 'active' : ''} ${completedSteps.includes(1) ? 'completed' : ''}`}>
                 {renderStepHeader(1, "Name & Context", title || "Untitled Decision", 1)}
                 <div className="step-content">
-                    <p className="step-description">Provide the core details for this decision. This will be used to build your agenda later.</p>
+
 
                     <div className="form-group">
                         <Input
@@ -151,7 +250,6 @@ export function DecisionForm({
                             placeholder="A short, clear name for the agenda (e.g. Q4 Budget Approval)"
                             disabled={isLoading}
                         />
-                        <p className="field-explainer">The name used to identify this item in lists and agendas.</p>
                     </div>
 
                     <div className="form-group">
@@ -166,13 +264,12 @@ export function DecisionForm({
                             disabled={isLoading}
                             required
                         />
-                        <p className="field-explainer">The specific motion, action, or record that needs agreement.</p>
                     </div>
 
                     <div className="form-group">
                         <label className="form-label">Decision Type</label>
-                        <p className="field-explainer" style={{ marginBottom: '0.5rem' }}>Is this something that needs a vote/agreement, or just a record for awareness?</p>
                         <div className="type-options horizontal">
+
                             <div
                                 className={`type-card compact ${decisionType === 'approve' ? 'selected' : ''}`}
                                 onClick={() => setDecisionType('approve')}
@@ -207,8 +304,8 @@ export function DecisionForm({
                             rows={4}
                             disabled={isLoading}
                         />
-                        <p className="field-explainer">Supporting information that helps others understand the context.</p>
                     </div>
+
 
                     <div className="step-actions">
                         <Button
@@ -223,18 +320,15 @@ export function DecisionForm({
                 </div>
             </div>
 
-            {/* Original Step 2 (Decision Type) is now merged into Step 1. 
-                Keep numbering internal but skip step 2 for UI. */}
-
-            {/* Step 3: Supporting Evidence */}
-            <div className={`wizard-step ${currentStep === 3 ? 'active' : ''} ${completedSteps.includes(3) ? 'completed' : ''} ${completedSteps.includes(1) ? '' : 'disabled'}`}>
-                {renderStepHeader(3, "Supporting Documents", `${documents.length} document(s) added`, 2)}
+            {/* Step 2: Supporting Evidence */}
+            <div className={`wizard-step ${currentStep === 2 ? 'active' : ''} ${completedSteps.includes(2) ? 'completed' : ''} ${completedSteps.includes(1) ? '' : 'disabled'}`}>
+                {renderStepHeader(2, "Supporting Documents", `${documents.length} ${documents.length === 1 ? 'document' : 'documents'} added`, 2)}
                 <div className="step-content">
-                    <p className="step-description">Link to any Google Docs, PDFs, or websites that provide context for this decision.</p>
+
 
                     <div className="wizard-list">
                         {documents.map((d, i) => (
-                            <div key={i} className="wizard-list-item">
+                            <div key={`doc-${i}`} className="wizard-list-item">
                                 <LinkIcon size={14} />
                                 <span title={d.url}>{d.name}</span>
                                 <button type="button" onClick={() => setDocuments(documents.filter((_, idx) => idx !== i))}>
@@ -243,6 +337,7 @@ export function DecisionForm({
                             </div>
                         ))}
                     </div>
+
 
                     <div className="item-add-grid">
                         <Input
@@ -263,64 +358,116 @@ export function DecisionForm({
                     </div>
 
                     <div className="step-actions">
-                        <Button type="button" variant="primary" onClick={() => (setCompletedSteps([...completedSteps, 2]), completeStep(3))}>
+                        <Button type="button" variant="primary" onClick={() => {
+                            if (tempDocName && tempDocUrl) addDocument();
+                            completeStep(2);
+                        }}>
                             Next: People Involved
                         </Button>
                     </div>
+
                 </div>
             </div>
 
-            {/* Step 4: People Involved */}
-            <div className={`wizard-step ${currentStep === 4 ? 'active' : ''} ${completedSteps.includes(4) ? 'completed' : ''} ${completedSteps.includes(3) ? '' : 'disabled'}`}>
-                {renderStepHeader(4, "People Involved", `${people.length} person(s) consulted`, 3)}
+            {/* Step 3: People Involved */}
+            <div className={`wizard-step ${currentStep === 3 ? 'active' : ''} ${completedSteps.includes(3) ? 'completed' : ''} ${completedSteps.includes(2) ? '' : 'disabled'}`}>
+                {renderStepHeader(3, "People Involved", `${people.length} ${people.length === 1 ? 'person' : 'people'} consulted`, 3)}
                 <div className="step-content">
-                    <p className="step-description">Who was consulted or involved in preparing this decision?</p>
+
 
                     <div className="wizard-list">
-                        {people.map((p) => (
-                            <div key={p.userId} className="wizard-list-item">
+                        {people.map((p, i) => (
+                            <div key={p.userId || `ext-${i}`} className="wizard-list-item">
                                 <UserPlus size={14} />
                                 <span>{p.name}</span>
-                                <button type="button" onClick={() => setPeople(people.filter(x => x.userId !== p.userId))}>
+                                <button type="button" onClick={() => setPeople(people.filter((_, idx) => idx !== i))}>
                                     <X size={14} />
                                 </button>
                             </div>
                         ))}
                     </div>
 
-                    <div className="input-with-button">
-                        <select
-                            value={selectedUserId}
-                            onChange={(e) => setSelectedUserId(e.target.value)}
-                            className="wizard-select"
-                        >
-                            <option value="">Select a person...</option>
-                            {users.filter(u => !people.some(p => p.userId === u.id)).map(u => (
-                                <option key={u.id} value={u.id}>{u.name}</option>
-                            ))}
-                        </select>
-                        <Button type="button" variant="ghost" onClick={addPerson} disabled={!selectedUserId}>
-                            <PlusIcon />
-                        </Button>
+
+                    <div className="stakeholder-type-toggle">
+                        <label className="radio-label">
+                            <input
+                                type="radio"
+                                checked={!isExternal}
+                                onChange={() => setIsExternal(false)}
+                            />
+                            Team Member
+                        </label>
+                        <label className="radio-label">
+                            <input
+                                type="radio"
+                                checked={isExternal}
+                                onChange={() => setIsExternal(true)}
+                            />
+                            External Person
+                        </label>
                     </div>
 
+                    {!isExternal ? (
+                        <div className="input-with-button">
+                            <select
+                                value={selectedUserId}
+                                onChange={(e) => setSelectedUserId(e.target.value)}
+                                className="wizard-select"
+                            >
+                                <option value="">Select a person...</option>
+                                {users.filter(u => !people.some(p => p.userId === u.id)).map(u => (
+                                    <option key={u.id} value={u.id}>{u.name}</option>
+                                ))}
+                            </select>
+                            <Button type="button" variant="ghost" onClick={addPerson} disabled={!selectedUserId}>
+                                <PlusIcon />
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="manual-entry">
+                            <div className="input-with-button">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', flex: 1 }}>
+                                    <Input
+                                        placeholder="Full Name"
+                                        value={manualName}
+                                        onChange={(e) => setManualName(e.target.value)}
+                                    />
+                                    <Input
+                                        placeholder="Email (Optional)"
+                                        value={manualEmail}
+                                        onChange={(e) => setManualEmail(e.target.value)}
+                                    />
+                                </div>
+                                <Button type="button" variant="ghost" onClick={addPerson} disabled={!manualName}>
+                                    <PlusIcon />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+
                     <div className="step-actions">
-                        <Button type="button" variant="primary" onClick={() => completeStep(4)}>
+                        <Button type="button" variant="primary" onClick={() => {
+                            if (isExternal ? manualName : selectedUserId) addPerson();
+                            completeStep(3);
+                        }}>
                             Next: Impact
                         </Button>
+
                     </div>
+
                 </div>
             </div>
 
-            {/* Step 5: Impact / Affected Parties */}
-            <div className={`wizard-step ${currentStep === 5 ? 'active' : ''} ${completedSteps.includes(5) ? 'completed' : ''} ${completedSteps.includes(4) ? '' : 'disabled'}`}>
-                {renderStepHeader(5, "Affected Parties", `${affectedParties.length} groups/entities affected`, 4)}
+            {/* Step 4: Impact / Affected Parties */}
+            <div className={`wizard-step ${currentStep === 4 ? 'active' : ''} ${completedSteps.includes(4) ? 'completed' : ''} ${completedSteps.includes(3) ? '' : 'disabled'}`}>
+                {renderStepHeader(4, "Affected Parties", `${affectedParties.length} ${affectedParties.length === 1 ? 'party' : 'parties'} affected`, 4)}
                 <div className="step-content">
-                    <p className="step-description">Which groups, teams, or organizations are affected by this decision?</p>
+
 
                     <div className="wizard-list">
                         {affectedParties.map((party, i) => (
-                            <div key={i} className="wizard-list-item">
+                            <div key={`party-${i}-${party}`} className="wizard-list-item">
                                 <Share2 size={14} />
                                 <span>{party}</span>
                                 <button type="button" onClick={() => setAffectedParties(affectedParties.filter((_, idx) => idx !== i))}>
@@ -329,6 +476,7 @@ export function DecisionForm({
                             </div>
                         ))}
                     </div>
+
 
                     <div className="input-with-button">
                         <Input
@@ -343,28 +491,65 @@ export function DecisionForm({
                     </div>
 
                     <div className="step-actions">
-                        <Button type="button" variant="primary" onClick={() => completeStep(5)}>
+                        <Button type="button" variant="primary" onClick={() => {
+                            if (tempPartyName) addAffectedParty();
+                            completeStep(4);
+                        }}>
                             Final Review
                         </Button>
                     </div>
+
                 </div>
             </div>
 
-            {/* Step 6: Final Review & Submit */}
-            <div className={`wizard-step ${currentStep === 6 ? 'active' : ''} ${completedSteps.includes(6) ? 'completed' : ''} ${completedSteps.includes(5) ? '' : 'disabled'}`}>
-                {renderStepHeader(6, "Review & Launch", "Ready to publish", 5)}
+            {/* Step 5: Final Review & Submit (Old Step 6) */}
+            <div className={`wizard-step ${currentStep === 5 ? 'active' : ''} ${completedSteps.includes(5) ? 'completed' : ''} ${completedSteps.includes(4) ? '' : 'disabled'}`}>
+                {renderStepHeader(5, "Review & Launch", "Ready to publish", 5)}
                 <div className="step-content">
-                    <div className="review-summary-card">
-                        <p>You are about to create a decision named: <strong>"{title}"</strong>.</p>
-                        <ul className="review-stats">
-                            <li>{documents.length} Supporting Documents</li>
-                            <li>{people.length} {people.length === 1 ? 'Person' : 'People'} Consulted</li>
-                            <li>{affectedParties.length} Affected {affectedParties.length === 1 ? 'Party' : 'Parties'} listed</li>
-                        </ul>
+                    <div className="review-summary-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+                        <div className="review-intro">
+                            <p style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-secondary)' }}>You are about to create a decision named:</p>
+                            <h2 style={{ margin: 'var(--spacing-xs) 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</h2>
+                        </div>
+
+                        <div className="review-sections-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
+                            <div className="review-block">
+                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>People Consulted ({people.length})</h4>
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {people.length > 0 ? people.slice(0, 3).map((p, i) => <li key={i}>• {p.name}</li>) : <li>None</li>}
+                                    {people.length > 3 && <li style={{ fontStyle: 'italic', opacity: 0.7 }}>+ {people.length - 3} more...</li>}
+                                </ul>
+                            </div>
+
+                            <div className="review-block">
+                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>Documents ({documents.length})</h4>
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {documents.length > 0 ? documents.slice(0, 3).map((d, i) => <li key={i}>• {d.name}</li>) : <li>None</li>}
+                                    {documents.length > 3 && <li style={{ fontStyle: 'italic', opacity: 0.7 }}>+ {documents.length - 3} more...</li>}
+                                </ul>
+                            </div>
+
+                            <div className="review-block">
+                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>Affected Parties ({affectedParties.length})</h4>
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {affectedParties.length > 0 ? affectedParties.slice(0, 3).map((p, i) => <li key={i}>• {p}</li>) : <li>None</li>}
+                                    {affectedParties.length > 3 && <li style={{ fontStyle: 'italic', opacity: 0.7 }}>+ {affectedParties.length - 3} more...</li>}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="review-disclaimer" style={{ padding: 'var(--spacing-md)', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(99, 102, 241, 0.2)', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+                            <p style={{ margin: 0 }}>This will be created as a <strong>Draft</strong>. You can review all details and add specific notes before publishing it to the organization.</p>
+                        </div>
                     </div>
 
                     <div className="step-actions">
-                        <Button variant="ghost" type="button" onClick={onCancel} disabled={isLoading}>
+                        <Button variant="danger" type="button" onClick={() => {
+                            if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                                clearDraft();
+                                onCancel();
+                            }
+                        }} disabled={isLoading}>
                             Cancel
                         </Button>
                         <Button variant="primary" type="submit" isLoading={isLoading} disabled={isLoading}>
@@ -373,6 +558,7 @@ export function DecisionForm({
                     </div>
                 </div>
             </div>
+
         </form>
     );
 }

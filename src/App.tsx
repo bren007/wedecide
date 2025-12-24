@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { ToastContainer } from './components/ui/Toast';
 import { Navbar } from './components/Navbar';
+
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -14,6 +17,9 @@ import { DecisionListPage } from './pages/decisions/DecisionListPage';
 import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
 import { DecisionDetailPage } from './pages/decisions/DecisionDetailPage';
 import { DecisionEditPage } from './pages/decisions/DecisionEditPage';
+import { MeetingLayout } from './components/layouts/MeetingLayout';
+import { MeetingListPage } from './pages/meetings/MeetingListPage';
+import { MeetingDetailPage } from './pages/meetings/MeetingDetailPage';
 import './App.css';
 import { LoadingSpinner } from './components/Loading';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -28,26 +34,30 @@ function AppContent() {
   return (
     <div className="app">
       <Navbar />
+      <ToastContainer />
       <ErrorBoundary>
+
         <Routes>
           <Route
             path="/"
             element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />}
           />
 
-          {/* Public Routes (redirect to dashboard if logged in) */}
           <Route
             path="/login"
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+            element={<LoginPage />}
           />
+
           <Route
             path="/signup"
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignupPage />}
+            element={<SignupPage />}
           />
+
           <Route
             path="/forgot-password"
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />}
+            element={<ForgotPasswordPage />}
           />
+
 
           {/* Protected Routes */}
           <Route
@@ -87,6 +97,17 @@ function AppContent() {
             <Route path=":id" element={<DecisionDetailPage />} />
             <Route path=":id/edit" element={<DecisionEditPage />} />
           </Route>
+          <Route
+            path="/meetings"
+            element={
+              <ProtectedRoute>
+                <MeetingLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<MeetingListPage />} />
+            <Route path=":id" element={<MeetingDetailPage />} />
+          </Route>
         </Routes>
       </ErrorBoundary>
     </div>
@@ -96,10 +117,13 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
+
   );
 }
 

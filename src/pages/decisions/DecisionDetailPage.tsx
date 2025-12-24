@@ -19,6 +19,11 @@ export function DecisionDetailPage() {
     const [updating, setUpdating] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isUnlocking, setIsUnlocking] = useState(false);
+    const isEditable = decision ? decision.status !== 'completed' : false;
+    const canManage = isEditable || isUnlocking;
+
+
 
     async function handleStatusChange(newStatus: 'draft' | 'active' | 'completed') {
         if (!decision) return;
@@ -87,7 +92,8 @@ export function DecisionDetailPage() {
     );
 
     return (
-        <div className="decision-detail-container">
+        <div className="decision-detail-container container-entity">
+
             <div className="decision-header">
                 <button
                     onClick={() => navigate('/decisions')}
@@ -113,36 +119,65 @@ export function DecisionDetailPage() {
                         </Button>
                     )}
 
+                    {!isEditable && !isUnlocking && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsUnlocking(true)}
+                            className="btn--sm"
+                        >
+                            Enable Editing
+                        </Button>
+                    )}
+
+                    {!isEditable && isUnlocking && (
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsUnlocking(false)}
+                            className="btn--sm"
+                        >
+                            Lock Decision
+                        </Button>
+                    )}
+
+
                     {decision.status === 'active' && (
                         <Button
-                            variant="primary"
+                            variant="success"
                             onClick={() => handleStatusChange('completed')}
                             disabled={updating}
                             className="btn--sm"
-                            style={{ backgroundColor: 'var(--color-success)' }} // Needs success variant in Button
                         >
                             {updating ? 'Updating...' : 'Close (Complete)'}
                         </Button>
                     )}
 
+
                     <div className="separator" aria-hidden="true" />
 
-                    <button
-                        onClick={() => navigate(`/decisions/${decision.id}/edit`)}
-                        className="icon-button"
-                        title="Edit Decision"
-                    >
-                        <Pencil size={20} />
-                    </button>
+                    {canManage && (
+                        <button
+                            onClick={() => navigate(`/decisions/${decision.id}/edit`)}
+                            className="icon-button"
+                            title="Edit Decision"
+                        >
+                            <Pencil size={20} />
+                        </button>
+                    )}
 
-                    <button
-                        onClick={handleDelete}
-                        disabled={deleting}
-                        className="icon-button delete"
-                        title="Delete Decision"
-                    >
-                        <Trash2 size={20} />
-                    </button>
+                    {canManage && (
+                        <Button
+                            variant="danger"
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="btn--sm"
+                            title="Delete Decision"
+                        >
+                            <Trash2 size={16} />
+                        </Button>
+                    )}
+
+
+
                 </div>
             </div>
 
@@ -157,7 +192,7 @@ export function DecisionDetailPage() {
                 <h3 className="section-title">People Involved (Consultation Log)</h3>
                 <StakeholderManager
                     decisionId={decision.id}
-                    isOwner={user?.id === decision.owner_id}
+                    isOwner={user?.id === decision.owner_id && canManage}
                 />
             </div>
 
@@ -165,9 +200,38 @@ export function DecisionDetailPage() {
                 <h3 className="section-title">Documents</h3>
                 <DocumentManager
                     decisionId={decision.id}
-                    isOwner={user?.id === decision.owner_id}
+                    isOwner={user?.id === decision.owner_id && canManage}
                 />
             </div>
+
+            <div className="decision-section">
+                <h3 className="section-title">Impact / Affected Parties</h3>
+                <div className="section-content">
+                    {decision.affected_parties && decision.affected_parties.length > 0 ? (
+                        <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                            {decision.affected_parties.map((party: any) => (
+                                <li key={party.id} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 'var(--spacing-sm)',
+                                    padding: 'var(--spacing-sm) var(--spacing-md)',
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid var(--glass-border)',
+                                    color: 'var(--color-text-secondary)',
+                                    fontSize: '0.875rem'
+                                }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-secondary)' }} />
+                                    {party.name}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>No affected parties listed.</p>
+                    )}
+                </div>
+            </div>
+
         </div>
     );
 }

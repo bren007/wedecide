@@ -5,11 +5,12 @@ import { useAuth } from '../context/AuthContext';
 export interface ConsultationMember {
     id: string;
     decision_id: string;
-    user_id: string;
+    user_id?: string;
     name: string;
     email: string;
     created_at: string;
 }
+
 
 export function useConsultation(decisionId: string | undefined) {
     const { user } = useAuth();
@@ -41,7 +42,8 @@ export function useConsultation(decisionId: string | undefined) {
         }
     }
 
-    async function addMember(userId: string, name: string, email: string) {
+    async function addMember(userId: string | undefined, name: string, email: string) {
+
         if (!decisionId) return;
         try {
             const { data, error } = await supabase

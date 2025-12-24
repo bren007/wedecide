@@ -119,14 +119,17 @@ export function DocumentManager({ decisionId, isOwner }: DocumentManagerProps) {
                                 </div>
                             </div>
                             {isOwner && (
-                                <button
+                                <Button
+                                    variant="danger"
                                     onClick={() => deleteDocument(doc.id)}
                                     className="remove-btn"
                                     title="Remove Document"
+                                    size="sm"
                                 >
-                                    <Trash2 size={16} />
-                                </button>
+                                    <Trash2 size={14} />
+                                </Button>
                             )}
+
                         </div>
                     ))
                 )}

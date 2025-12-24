@@ -22,7 +22,11 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
 
     const [isAdding, setIsAdding] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState('');
+    const [isExternal, setIsExternal] = useState(false);
+    const [manualName, setManualName] = useState('');
+    const [manualEmail, setManualEmail] = useState('');
     const [adding, setAdding] = useState(false);
+
 
     // Filter out users who are already stakeholders
     const availableUsers = users.filter(user =>
@@ -30,22 +34,31 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
     );
 
     async function handleAddStakeholder() {
-        if (!selectedUserId) return;
-
-        const userToAdd = users.find(u => u.id === selectedUserId);
-        if (!userToAdd) return;
+        if (!isExternal && !selectedUserId) return;
+        if (isExternal && !manualName) return;
 
         setAdding(true);
         try {
-            await addStakeholder(userToAdd.id, userToAdd.name, userToAdd.email);
+            if (isExternal) {
+                await addStakeholder(undefined, manualName, manualEmail);
+            } else {
+                const userToAdd = users.find(u => u.id === selectedUserId);
+                if (userToAdd) {
+                    await addStakeholder(userToAdd.id, userToAdd.name, userToAdd.email);
+                }
+            }
             setIsAdding(false);
             setSelectedUserId('');
+            setManualName('');
+            setManualEmail('');
+            setIsExternal(false);
         } catch (error) {
             console.error('Failed to add stakeholder:', error);
         } finally {
             setAdding(false);
         }
     }
+
 
     if (stakeholdersLoading || usersLoading) return <LoadingSpinner />;
 
@@ -80,14 +93,17 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
                                 </div>
                             </div>
                             {isOwner && (
-                                <button
+                                <Button
+                                    variant="danger"
                                     onClick={() => removeStakeholder(stakeholder.id)}
                                     className="remove-btn"
                                     title="Remove Stakeholder"
+                                    size="sm"
                                 >
-                                    <X size={16} />
-                                </button>
+                                    <X size={14} />
+                                </Button>
                             )}
+
                         </div>
                     ))
                 )}
@@ -95,20 +111,63 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
 
             {isAdding && (
                 <div className="add-stakeholder-form">
-                    <div className="form-group">
-                        <select
-                            value={selectedUserId}
-                            onChange={(e) => setSelectedUserId(e.target.value)}
-                            className="custom-select"
-                        >
-                            <option value="">Select a team member...</option>
-                            {availableUsers.map(user => (
-                                <option key={user.id} value={user.id}>
-                                    {user.name} ({user.email})
-                                </option>
-                            ))}
-                        </select>
+                    <div className="form-group stakeholder-type-toggle">
+                        <label className="radio-label">
+                            <input
+                                type="radio"
+                                checked={!isExternal}
+                                onChange={() => setIsExternal(false)}
+                            />
+                            Team Member
+                        </label>
+                        <label className="radio-label">
+                            <input
+                                type="radio"
+                                checked={isExternal}
+                                onChange={() => setIsExternal(true)}
+                            />
+                            External Person
+                        </label>
                     </div>
+
+                    {!isExternal ? (
+                        <div className="form-group">
+                            <select
+                                value={selectedUserId}
+                                onChange={(e) => setSelectedUserId(e.target.value)}
+                                className="custom-select"
+                            >
+                                <option value="">Select a team member...</option>
+                                {availableUsers.map(user => (
+                                    <option key={user.id} value={user.id}>
+                                        {user.name} ({user.email})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <div className="manual-entry">
+                            <div className="form-group">
+                                <input
+                                    type="text"
+                                    placeholder="Full Name"
+                                    className="custom-input"
+                                    value={manualName}
+                                    onChange={(e) => setManualName(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <input
+                                    type="email"
+                                    placeholder="Email (Optional)"
+                                    className="custom-input"
+                                    value={manualEmail}
+                                    onChange={(e) => setManualEmail(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     <div className="form-actions-inline">
                         <Button
                             variant="ghost"
@@ -121,11 +180,12 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
                         <Button
                             variant="primary"
                             onClick={handleAddStakeholder}
-                            disabled={!selectedUserId || adding}
+                            disabled={(isExternal ? !manualName : !selectedUserId) || adding}
                             className="btn--sm"
                         >
                             {adding ? 'Adding...' : 'Add'}
                         </Button>
+
                     </div>
                 </div>
             )}

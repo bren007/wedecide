@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ClipboardList } from 'lucide-react';
+
 import './Dashboard.css';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -42,10 +44,20 @@ export const Dashboard: React.FC = () => {
               {loading ? (
                 <div className="loading-state">Loading decisions...</div>
               ) : decisions.length === 0 ? (
-                <div className="empty-state">
-                  <p>No decisions yet. Create your first decision to get started!</p>
+                <div className="empty-state onboarding">
+                  <div className="empty-state-icon">
+                    <ClipboardList size={48} />
+                  </div>
+                  <h4>No decisions yet</h4>
+                  <p>Start by creating your first decision to see how WeDecide helps you organize and track outcomes.</p>
+                  <Link to="/decisions/new">
+                    <Button variant="primary" size="md">
+                      + Create First Decision
+                    </Button>
+                  </Link>
                 </div>
               ) : (
+
                 <ul className="recent-decisions-list">
                   {decisions.slice(0, 5).map(decision => (
                     <li key={decision.id} className="decision-item">

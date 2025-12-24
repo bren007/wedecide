@@ -28,6 +28,7 @@ export const Navbar: React.FC = () => {
               </div>
               <Link to="/dashboard" className="nav-link">Dashboard</Link>
               <Link to="/decisions" className="nav-link">Decisions</Link>
+              <Link to="/meetings" className="nav-link">Meetings</Link>
               <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
             </>
           ) : (

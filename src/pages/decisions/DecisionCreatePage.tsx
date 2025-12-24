@@ -4,13 +4,17 @@ import { useDecisions } from '../../hooks/useDecisions';
 import { ArrowLeft } from 'lucide-react';
 import { DecisionForm, type DecisionFormData } from '../../components/decisions/DecisionForm';
 import { supabase } from '../../lib/supabase';
+import { useToasts } from '../../context/ToastContext';
 import './DecisionCreatePage.css';
+
 
 export function DecisionCreatePage() {
     const navigate = useNavigate();
     const { createDecision } = useDecisions();
+    const { showToast } = useToasts();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
 
     async function handleSubmit(data: DecisionFormData) {
         setLoading(true);
@@ -64,11 +68,15 @@ export function DecisionCreatePage() {
                 ));
             }
 
+            showToast('Decision created successfully!', 'success');
             navigate(`/decisions/${decision.id}`);
         } catch (err) {
             console.error('Decision creation failed:', err);
-            setError('Failed to create decision. Please try again.');
+            const message = 'Failed to create decision. Please try again.';
+            setError(message);
+            showToast(message, 'error');
         } finally {
+
             setLoading(false);
         }
     }

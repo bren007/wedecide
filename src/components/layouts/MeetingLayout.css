@@ -1,0 +1,14 @@
+.meeting-layout {
+    min-height: calc(100vh - 64px);
+    background-color: var(--bg-primary, #000);
+    color: var(--text-primary, #fff);
+}
+
+.meeting-layout-content {
+    width: 100%;
+}
+
+.meeting-layout-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}

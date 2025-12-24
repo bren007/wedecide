@@ -164,21 +164,3 @@
     gap: var(--spacing-sm);
     margin-top: var(--spacing-lg);
 }
-
-.remove-btn {
-    color: var(--color-text-muted);
-    padding: var(--spacing-xs);
-    border-radius: var(--radius-sm);
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.remove-btn:hover {
-    color: var(--color-error);
-    background-color: var(--color-bg-error);
-}

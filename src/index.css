@@ -58,9 +58,17 @@
 
   /* Surface & Semantic Colors */
   --color-surface: var(--color-bg-secondary);
+  --color-surface-card: #1e253c;
+  /* Slightly Lighter for depth */
   --color-surface-hover: var(--color-bg-tertiary);
   --color-error: #ef4444;
   --color-bg-error: rgba(239, 68, 68, 0.1);
+  --color-success: #10b981;
+  --color-bg-success: rgba(16, 185, 129, 0.1);
+
+  /* Subtle Highlighting */
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+  --shadow-glow-muted: 0 0 40px rgba(99, 102, 241, 0.08);
 }
 
 /* Reset & Base Styles */

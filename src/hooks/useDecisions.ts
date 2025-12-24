@@ -20,7 +20,13 @@ export interface Decision {
     organization_id: string;
     created_at: string;
     updated_at: string;
+    agenda_item_id?: string | null;
+    // Relations
+    stakeholders?: any[];
+    documents?: any[];
+    affected_parties?: any[];
 }
+
 
 export function useDecisions() {
     const { user } = useAuth();
@@ -83,14 +89,20 @@ export function useDecisions() {
 
         const { data, error } = await supabase
             .from('decisions')
-            .select('*')
+            .select(`
+                *,
+                stakeholders (*),
+                documents (*),
+                affected_parties (*)
+            `)
             .eq('id', id)
             .eq('organization_id', user.organization_id)
             .single();
 
         if (error) throw error;
-        return data as Decision;
+        return data;
     }
+
 
     async function updateDecision(id: string, updates: Partial<Decision>) {
         const { data, error } = await supabase
