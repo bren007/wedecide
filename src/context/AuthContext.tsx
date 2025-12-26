@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { PerformanceMarkers, markPerformance, measurePerformance } from '../utils/performance';
 
 interface User {
   id: string;
@@ -55,9 +56,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ): Promise<User | null> => {
     const userId = supabaseUser.id;
     // VERY STRICT retry policy during initial boot
-    const isInitialBoot = !initialFetchDoneRef.current;
-    const maxRetries = isInitialBoot ? 0 : 2; // No retries during boot, wait for INITIAL_SESSION instead
-    const currentTimeoutMs = isInitialBoot ? 3000 : 5000;
+    const maxRetries = 2; // Always allow retries
+    const currentTimeoutMs = 15000; // Increased from 5s to 15s
+
+    if (retryCount === 0) {
+      markPerformance(PerformanceMarkers.PROFILE_FETCH_START);
+    }
 
     // If a fetch is already in flight for this user, return the existing promise
     if (profileFetchRef.current) {
@@ -98,6 +102,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (rolesError) throw rolesError;
 
         console.log(`✅ [fetchUserProfile] Success: ${userId} (Roles: ${roles.length})`);
+        markPerformance(PerformanceMarkers.PROFILE_FETCH_SUCCESS);
+        measurePerformance('Profile Fetch Duration', PerformanceMarkers.PROFILE_FETCH_START, PerformanceMarkers.PROFILE_FETCH_SUCCESS);
         return {
           ...profile,
           roles: roles.map(r => r.role)
@@ -109,7 +115,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (retryCount < maxRetries) {
           const delay = 1000; // Fixed short delay for retries
           await new Promise(resolve => setTimeout(resolve, delay));
-          profileFetchRef.current = null;
+          // IMPORTANT: Do NOT clear profileFetchRef.current here if we are about to retry,
+          // so other calls still wait for the same retry chain.
           return fetchUserProfile(supabaseUser, retryCount + 1);
         }
 
@@ -130,6 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize auth state on mount
   useEffect(() => {
     let mounted = true;
+    markPerformance(PerformanceMarkers.AUTH_INIT_START);
 
     // Listen for auth changes
     const {
@@ -139,13 +147,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const currentUserId = session?.user?.id || null;
 
-      console.log(`🔵 Auth Event [${event}]:`, {
-        userId: currentUserId,
-        lastProcessed: lastProcessedUserIdRef.current,
-        initialDone: initialFetchDoneRef.current
-      });
+      // De-bounce & Handle Boot Phase
+      // 1. Skip premature SIGNED_IN during initial boot ONLY if it has no session
+      if (event === 'SIGNED_IN' && !session?.user && !initialFetchDoneRef.current) {
+        console.log('⏭️ Boot Phase: Skipping premature SIGNED_IN (No Session); waiting for INITIAL_SESSION');
+        return;
+      }
 
-      // Handle sign out immediately
+      // 2. Clear sign out immediately
       if (event === 'SIGNED_OUT' || !session?.user) {
         lastProcessedUserIdRef.current = null;
         setUser(null);
@@ -154,19 +163,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      // De-bounce: If we've already started processing this user, skip
+      // 3. De-bounce: If we've already started processing this user, skip
       if (currentUserId === lastProcessedUserIdRef.current && user?.id === currentUserId) {
         console.log('⏭️ Skipping: User already processed');
         // Still mark initialization as done if it wasn't
         if (!initialFetchDoneRef.current) {
           initialFetchDoneRef.current = true;
+          markPerformance(PerformanceMarkers.AUTH_INIT_END);
+          measurePerformance('Auth Initialization', PerformanceMarkers.AUTH_INIT_START, PerformanceMarkers.AUTH_INIT_END);
           setIsLoading(false);
         }
         return;
       }
 
       lastProcessedUserIdRef.current = currentUserId;
-      setIsLoading(true);
+
+      // ONLY set loading if we don't already have the correct user
+      if (user?.id !== currentUserId) {
+        setIsLoading(true);
+      }
 
       try {
         console.log('⏳ Processing profile for:', currentUserId);
@@ -195,19 +210,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     // Fallback: Check session once in case onAuthStateChange is slow
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted && !initialFetchDoneRef.current && !session) {
-        console.log('🏁 getSession Fallback (No Session)');
-        setIsLoading(false);
-        initialFetchDoneRef.current = true;
+    // Give it 1 second to emit INITIAL_SESSION naturally
+    setTimeout(() => {
+      if (mounted && !initialFetchDoneRef.current) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (mounted && !initialFetchDoneRef.current && !session) {
+            console.log('🏁 getSession Fallback (No Session)');
+            setIsLoading(false);
+            initialFetchDoneRef.current = true;
+          }
+        });
       }
-    });
+    }, 1000);
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [user?.id]); // Allow re-processing if user state is cleared
+  }, []); // Only subscribe once on mount
 
   const login = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -322,9 +342,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
+    const userId = user?.id;
     const { error } = await supabase.auth.signOut();
     if (error) {
       throw new Error(error.message);
+    }
+    // Clear user-specific draft if it exists
+    if (userId) {
+      localStorage.removeItem(`wedecide_decision_draft_${userId}`);
     }
     setUser(null);
   };

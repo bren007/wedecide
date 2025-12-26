@@ -3,9 +3,10 @@ import { Button } from '../Button';
 import { Input } from '../Input';
 import { X, UserPlus, Link as LinkIcon, Check, ChevronDown, Share2 } from 'lucide-react';
 import { useOrganizationUsers } from '../../hooks/useOrganizationUsers';
+import { useAuth } from '../../context/AuthContext';
 import './DecisionForm.css';
 
-const PERSISTENCE_KEY = 'wedecide_decision_draft';
+const BASE_PERSISTENCE_KEY = 'wedecide_decision_draft';
 
 
 export interface DecisionFormData {
@@ -36,7 +37,11 @@ export function DecisionForm({
     submitLabel = 'Create Decision',
     error: externalError
 }: DecisionFormProps) {
+    const { user } = useAuth();
     const { users } = useOrganizationUsers();
+
+    // User-specific persistence key
+    const PERSISTENCE_KEY = user ? `${BASE_PERSISTENCE_KEY}_${user.id}` : null;
 
     // Step state: 1: Identity & Type, 2: Evidence, 3: Consultation, 4: Impact, 5: Review
     const [currentStep, setCurrentStep] = useState(1);
@@ -63,11 +68,17 @@ export function DecisionForm({
     const [manualName, setManualName] = useState('');
     const [manualEmail, setManualEmail] = useState('');
 
+    // Validation Errors
+    const [emailError, setEmailError] = useState('');
+    const [urlError, setUrlError] = useState('');
+
 
     const formRef = useRef<HTMLFormElement>(null);
 
     // Persistence: Load from localStorage on mount
     useEffect(() => {
+        if (!PERSISTENCE_KEY) return;
+
         const saved = localStorage.getItem(PERSISTENCE_KEY);
         if (saved && !initialData) {
             try {
@@ -85,11 +96,11 @@ export function DecisionForm({
                 console.error('Failed to load draft:', e);
             }
         }
-    }, [initialData]);
+    }, [initialData, PERSISTENCE_KEY]);
 
     // Persistence: Save to localStorage on change
     useEffect(() => {
-        if (!initialData && (title || decisionText || description || people.length > 0 || documents.length > 0 || affectedParties.length > 0)) {
+        if (PERSISTENCE_KEY && !initialData && (title || decisionText || description || people.length > 0 || documents.length > 0 || affectedParties.length > 0)) {
             const data = {
                 title,
                 decision: decisionText,
@@ -103,10 +114,26 @@ export function DecisionForm({
             };
             localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(data));
         }
-    }, [title, decisionText, description, decisionType, people, documents, affectedParties, currentStep, completedSteps, initialData]);
+    }, [title, decisionText, description, decisionType, people, documents, affectedParties, currentStep, completedSteps, initialData, PERSISTENCE_KEY]);
+
+    // Sync state with initialData if it changes (e.g. on Edit page load)
+    useEffect(() => {
+        if (initialData) {
+            setTitle(initialData.title || '');
+            setDecisionText(initialData.decision || '');
+            setDescription(initialData.description || '');
+            setDecisionType(initialData.decision_type || 'approve');
+            setPeople(initialData.initialPeople || []);
+            setDocuments(initialData.initialDocuments || []);
+            setAffectedParties(initialData.affectedParties || []);
+            // Usually we stay on step 1 for edit
+        }
+    }, [initialData]);
 
     const clearDraft = () => {
-        localStorage.removeItem(PERSISTENCE_KEY);
+        if (PERSISTENCE_KEY) {
+            localStorage.removeItem(PERSISTENCE_KEY);
+        }
     };
 
     // Scroll to top on mount
@@ -162,6 +189,7 @@ export function DecisionForm({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
         await onSubmit({
             title,
             decision: decisionText,
@@ -171,13 +199,34 @@ export function DecisionForm({
             initialDocuments: documents,
             affectedParties
         });
+
+        // Clear draft AFTER successful submission
         clearDraft();
     };
 
 
+    const isValidEmail = (email: string) => {
+        if (!email) return true; // Optional email
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const isValidUrl = (url: string) => {
+        try {
+            new URL(url);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    };
+
     const addPerson = () => {
+        setEmailError('');
         if (isExternal) {
             if (!manualName) return;
+            if (manualEmail && !isValidEmail(manualEmail)) {
+                setEmailError('Please enter a valid email address');
+                return;
+            }
             setPeople([...people, { name: manualName, email: manualEmail }]);
             setManualName('');
             setManualEmail('');
@@ -193,7 +242,14 @@ export function DecisionForm({
 
 
     const addDocument = () => {
+        setUrlError('');
         if (!tempDocName || !tempDocUrl) return;
+
+        if (!isValidUrl(tempDocUrl)) {
+            setUrlError('Please enter a valid URL (including https://)');
+            return;
+        }
+
         setDocuments([...documents, { name: tempDocName, url: tempDocUrl, type: 'url' }]);
         setTempDocName('');
         setTempDocUrl('');
@@ -349,7 +405,11 @@ export function DecisionForm({
                             <Input
                                 placeholder="URL (https://...)"
                                 value={tempDocUrl}
-                                onChange={(e) => setTempDocUrl(e.target.value)}
+                                onChange={(e) => {
+                                    setTempDocUrl(e.target.value);
+                                    if (urlError) setUrlError('');
+                                }}
+                                error={urlError}
                             />
                             <Button type="button" variant="ghost" onClick={addDocument} disabled={!tempDocName || !tempDocUrl}>
                                 <PlusIcon />
@@ -359,7 +419,13 @@ export function DecisionForm({
 
                     <div className="step-actions">
                         <Button type="button" variant="primary" onClick={() => {
-                            if (tempDocName && tempDocUrl) addDocument();
+                            if (tempDocName && tempDocUrl) {
+                                if (!isValidUrl(tempDocUrl)) {
+                                    setUrlError('Please enter a valid URL');
+                                    return;
+                                }
+                                addDocument();
+                            }
                             completeStep(2);
                         }}>
                             Next: People Involved
@@ -435,7 +501,11 @@ export function DecisionForm({
                                     <Input
                                         placeholder="Email (Optional)"
                                         value={manualEmail}
-                                        onChange={(e) => setManualEmail(e.target.value)}
+                                        onChange={(e) => {
+                                            setManualEmail(e.target.value);
+                                            if (emailError) setEmailError('');
+                                        }}
+                                        error={emailError}
                                     />
                                 </div>
                                 <Button type="button" variant="ghost" onClick={addPerson} disabled={!manualName}>
@@ -448,12 +518,18 @@ export function DecisionForm({
 
                     <div className="step-actions">
                         <Button type="button" variant="primary" onClick={() => {
-                            if (isExternal ? manualName : selectedUserId) addPerson();
+                            // Only add if there is something in the manual fields or selection
+                            if (isExternal ? manualName.trim() : selectedUserId) {
+                                if (isExternal && manualEmail && !isValidEmail(manualEmail)) {
+                                    setEmailError('Please enter a valid email address');
+                                    return;
+                                }
+                                addPerson();
+                            }
                             completeStep(3);
                         }}>
                             Next: Impact
                         </Button>
-
                     </div>
 
                 </div>

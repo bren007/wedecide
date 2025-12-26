@@ -26,7 +26,13 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
     const [manualName, setManualName] = useState('');
     const [manualEmail, setManualEmail] = useState('');
     const [adding, setAdding] = useState(false);
+    const [emailError, setEmailError] = useState('');
 
+
+    const isValidEmail = (email: string) => {
+        if (!email) return true;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
 
     // Filter out users who are already stakeholders
     const availableUsers = users.filter(user =>
@@ -36,6 +42,12 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
     async function handleAddStakeholder() {
         if (!isExternal && !selectedUserId) return;
         if (isExternal && !manualName) return;
+
+        setEmailError('');
+        if (isExternal && manualEmail && !isValidEmail(manualEmail)) {
+            setEmailError('Please enter a valid email address');
+            return;
+        }
 
         setAdding(true);
         try {
@@ -160,10 +172,14 @@ export function StakeholderManager({ decisionId, isOwner }: StakeholderManagerPr
                                 <input
                                     type="email"
                                     placeholder="Email (Optional)"
-                                    className="custom-input"
+                                    className={`custom-input ${emailError ? 'input--error' : ''}`}
                                     value={manualEmail}
-                                    onChange={(e) => setManualEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setManualEmail(e.target.value);
+                                        if (emailError) setEmailError('');
+                                    }}
                                 />
+                                {emailError && <span className="input-error" style={{ color: 'var(--color-danger)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{emailError}</span>}
                             </div>
                         </div>
                     )}

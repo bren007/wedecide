@@ -7,6 +7,7 @@ import { StakeholderManager } from '../../components/decisions/StakeholderManage
 import { DocumentManager } from '../../components/decisions/DocumentManager';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/Button';
+import { AffectedPartiesManager } from '../../components/decisions/AffectedPartiesManager';
 import './DecisionDetailPage.css';
 
 export function DecisionDetailPage() {
@@ -205,31 +206,10 @@ export function DecisionDetailPage() {
             </div>
 
             <div className="decision-section">
-                <h3 className="section-title">Impact / Affected Parties</h3>
-                <div className="section-content">
-                    {decision.affected_parties && decision.affected_parties.length > 0 ? (
-                        <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                            {decision.affected_parties.map((party: any) => (
-                                <li key={party.id} style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 'var(--spacing-sm)',
-                                    padding: 'var(--spacing-sm) var(--spacing-md)',
-                                    background: 'rgba(255, 255, 255, 0.03)',
-                                    borderRadius: 'var(--radius-md)',
-                                    border: '1px solid var(--glass-border)',
-                                    color: 'var(--color-text-secondary)',
-                                    fontSize: '0.875rem'
-                                }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-secondary)' }} />
-                                    {party.name}
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>No affected parties listed.</p>
-                    )}
-                </div>
+                <AffectedPartiesManager
+                    decisionId={decision.id}
+                    isOwner={user?.id === decision.owner_id && canManage}
+                />
             </div>
 
         </div>

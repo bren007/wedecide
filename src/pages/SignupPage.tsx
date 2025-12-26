@@ -39,6 +39,12 @@ export const SignupPage: React.FC = () => {
     setError('');
     setLoading(true);
 
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setLoading(false);
+      return;
+    }
+
     try {
       await signup(name, email, password, token || undefined);
       showToast('Account created successfully!', 'success');
