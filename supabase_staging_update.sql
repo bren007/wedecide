@@ -56,7 +56,7 @@ BEGIN
     updated_at
   )
   VALUES (
-    p_user_id::text,
+    p_user_id,
     p_email,
     p_name,
     v_org_id,
@@ -72,7 +72,7 @@ BEGIN
   )
   VALUES (
     gen_random_uuid(),
-    p_user_id::text,
+    p_user_id,
     v_org_id,
     'admin'
   );
@@ -128,7 +128,7 @@ ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_read_own"
   ON users FOR SELECT
   TO authenticated
-  USING (auth.uid()::text = id);
+  USING (auth.uid() = id);
 
 -- Allow user to read organizations they belong to
 CREATE POLICY "orgs_read_own"
@@ -136,7 +136,7 @@ CREATE POLICY "orgs_read_own"
   TO authenticated
   USING (
     id IN (
-      SELECT organization_id FROM users WHERE id = auth.uid()::text
+      SELECT organization_id FROM users WHERE id = auth.uid()
     )
   );
 
@@ -144,15 +144,15 @@ CREATE POLICY "orgs_read_own"
 CREATE POLICY "roles_read_own"
   ON user_roles FOR SELECT
   TO authenticated
-  USING (user_id = auth.uid()::text);
+  USING (user_id = auth.uid());
 
 -- 5. Create WRITE Policies (UPDATE)
 -- Allow user to update their own profile
 CREATE POLICY "users_update_own"
   ON users FOR UPDATE
   TO authenticated
-  USING (auth.uid()::text = id)
-  WITH CHECK (auth.uid()::text = id);
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
 -- 6. Grant Schema Usage (Good practice)
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
