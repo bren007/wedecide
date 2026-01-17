@@ -65,6 +65,11 @@ describe('Meetings & Agenda Integration', () => {
         try {
             console.log('🧹 Cleaning up meeting test data...');
             if (organizationId) {
+                // Delete in order to satisfy FK constraints
+                await pgClient.query("DELETE FROM user_roles WHERE organization_id = $1", [organizationId]);
+                await pgClient.query("DELETE FROM decisions WHERE organization_id = $1", [organizationId]);
+                await pgClient.query("DELETE FROM meetings WHERE organization_id = $1", [organizationId]);
+                await pgClient.query("DELETE FROM users WHERE organization_id = $1", [organizationId]);
                 await pgClient.query("DELETE FROM organizations WHERE id = $1", [organizationId]);
             }
             await pgClient.query("DELETE FROM auth.users WHERE email = $1", [TEST_EMAIL]);

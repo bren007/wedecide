@@ -23,6 +23,7 @@ export function useOrganizationUsers() {
 
     async function fetchUsers() {
         try {
+            if (!user?.organization_id) return;
             setLoading(true);
             const { data, error } = await supabase
                 .from('users')

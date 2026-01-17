@@ -9,4 +9,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
     );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import type { Database } from '../types/supabase';
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);

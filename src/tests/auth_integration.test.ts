@@ -36,23 +36,20 @@ describe('Auth & Signup Integration Flow', () => {
         try {
             console.log('🧹 Cleaning up integration test data...');
 
-            // 1. Find the user ID from auth.users (via email) or public.users
-            const res = await pgClient.query("SELECT id FROM users WHERE email = $1", [TEST_EMAIL]);
-            const userId = res.rows[0]?.id;
+            // 1. Find the organization ID
+            const res = await pgClient.query("SELECT organization_id FROM users WHERE email = $1", [TEST_EMAIL]);
+            const orgId = res.rows[0]?.organization_id;
 
-            if (userId) {
-                // Delete Organization (dependent tables like decisions/users should cascade if set up correctly)
-                // If not cascading, we might leave orphans, but for now this is a best-effort cleanup.
-                const orgRes = await pgClient.query("SELECT organization_id FROM users WHERE id = $1", [userId]);
-                const orgId = orgRes.rows[0]?.organization_id;
-
-                if (orgId) {
-                    await pgClient.query("DELETE FROM organizations WHERE id = $1", [orgId]);
-                }
+            if (orgId) {
+                // Delete in order to satisfy FK constraints
+                await pgClient.query("DELETE FROM user_roles WHERE organization_id = $1", [orgId]);
+                await pgClient.query("DELETE FROM decisions WHERE organization_id = $1", [orgId]);
+                await pgClient.query("DELETE FROM meetings WHERE organization_id = $1", [orgId]);
+                await pgClient.query("DELETE FROM users WHERE organization_id = $1", [orgId]);
+                await pgClient.query("DELETE FROM organizations WHERE id = $1", [orgId]);
             }
 
-            // 2. Delete from auth.users (This attempts to delete the actual Auth account)
-            // Note: This requires the pgClient to have superuser/admin rights (postgres role usually does).
+            // 2. Delete from auth.users
             await pgClient.query("DELETE FROM auth.users WHERE email = $1", [TEST_EMAIL]);
 
             console.log('✅ Cleanup complete.');

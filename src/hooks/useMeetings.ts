@@ -40,6 +40,7 @@ export function useMeetings() {
 
     async function fetchMeetings() {
         try {
+            if (!user?.organization_id) return;
             setLoading(true);
             const { data, error } = await supabase
                 .from('meetings')

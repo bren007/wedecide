@@ -15,7 +15,7 @@ export interface Decision {
     decision: string | null;
     description: string | null;
     status: 'draft' | 'active' | 'completed';
-    decision_type: 'approve' | 'note';
+    decision_type: 'approve' | 'note' | null;
     owner_id: string;
     organization_id: string;
     created_at: string;
@@ -42,6 +42,7 @@ export function useDecisions() {
 
     async function fetchDecisions() {
         try {
+            if (!user?.organization_id) return;
             setLoading(true);
             const { data, error } = await supabase
                 .from('decisions')
@@ -58,7 +59,7 @@ export function useDecisions() {
         }
     }
 
-    async function createDecision(data: { title: string; decision?: string; description?: string; decision_type?: 'approve' | 'note' }) {
+    async function createDecision(data: { title: string; decision?: string; description?: string; decision_type?: 'approve' | 'note' | null }) {
         try {
             if (!user?.organization_id) throw new Error('No organization found');
 

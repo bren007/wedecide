@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 export interface ConsultationMember {
     id: string;
     decision_id: string;
-    user_id?: string;
+    user_id?: string | null;
     name: string;
     email: string;
     created_at: string;

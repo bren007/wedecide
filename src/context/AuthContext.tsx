@@ -12,6 +12,8 @@ interface User {
   roles: string[];
 }
 
+const PROFILE_CACHE_KEY = 'wedecide_profile_cache_v1';
+
 
 interface AuthContextType {
   user: User | null;
@@ -53,18 +55,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUserProfile = async (
     supabaseUser: SupabaseUser,
     retryCount = 0
-  ): Promise<User | null> => {
+  ): Promise<User | null | 'NETWORK_ERROR'> => {
     const userId = supabaseUser.id;
     // VERY STRICT retry policy during initial boot
-    const maxRetries = 2; // Always allow retries
-    const currentTimeoutMs = 15000; // Increased from 5s to 15s
+    const maxRetries = 2;
+    const currentTimeoutMs = 5000; // Reduced from 15s - if profile doesn't load in 5s, we should fallback to cache/retry later
 
     if (retryCount === 0) {
       markPerformance(PerformanceMarkers.PROFILE_FETCH_START);
     }
 
     // If a fetch is already in flight for this user, return the existing promise
-    if (profileFetchRef.current) {
+    // EXCEPT if we are in a retry loop (retryCount > 0), in which case we WANT to start a new fetch
+    if (profileFetchRef.current && retryCount === 0) {
       console.log(`🔗 [fetchUserProfile] Sharing promise for: ${userId}`);
       return profileFetchRef.current;
     }
@@ -104,33 +107,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log(`✅ [fetchUserProfile] Success: ${userId} (Roles: ${roles.length})`);
         markPerformance(PerformanceMarkers.PROFILE_FETCH_SUCCESS);
         measurePerformance('Profile Fetch Duration', PerformanceMarkers.PROFILE_FETCH_START, PerformanceMarkers.PROFILE_FETCH_SUCCESS);
-        return {
+
+        const profileData: User = {
           ...profile,
           roles: roles.map(r => r.role)
-        } as User;
+        };
+
+        // Cache the successful profile
+        localStorage.setItem(`${PROFILE_CACHE_KEY}_${userId}`, JSON.stringify(profileData));
+
+        return profileData;
 
       } catch (error: any) {
-        console.warn(`⚠️ [fetchUserProfile] Attempt ${retryCount + 1} failed:`, error.message || error);
-
         if (retryCount < maxRetries) {
-          const delay = 1000; // Fixed short delay for retries
+          const delay = 500; // Even shorter retry delay
           await new Promise(resolve => setTimeout(resolve, delay));
-          // IMPORTANT: Do NOT clear profileFetchRef.current here if we are about to retry,
-          // so other calls still wait for the same retry chain.
           return fetchUserProfile(supabaseUser, retryCount + 1);
         }
 
-        return null; // Give up
+        // Return a special error/marker to distinguish between "not found" and "network error"
+        if (error.message?.includes('timeout') || error.message?.includes('fetch') || error.message?.includes('Network')) {
+          console.warn('📡 [fetchUserProfile] Soft failure due to network/timeout');
+          return 'NETWORK_ERROR' as any;
+        }
+
+        return null; // Hard failure (e.g. user deleted from DB)
       }
     })();
 
     const trackedPromise = fetchPromise.finally(() => {
+      // Only clear if this is still the active promise being tracked
       if (profileFetchRef.current === trackedPromise) {
         profileFetchRef.current = null;
       }
     });
 
-    profileFetchRef.current = trackedPromise;
+    // Only track the initial call's promise for sharing
+    if (retryCount === 0) {
+      profileFetchRef.current = trackedPromise;
+    }
     return trackedPromise;
   };
 
@@ -139,7 +154,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let mounted = true;
     markPerformance(PerformanceMarkers.AUTH_INIT_START);
 
-    // Listen for auth changes
+    // 1. Instant Boot: Try to load from cache immediately
+    const initFromCache = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const cached = localStorage.getItem(`${PROFILE_CACHE_KEY}_${session.user.id}`);
+          if (cached) {
+            console.log('⚡ Instant Boot: Found cached profile for', session.user.id);
+            setUser(JSON.parse(cached));
+            setIsLoading(false); // UI can render now!
+            initialFetchDoneRef.current = true;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Cache init failed', e);
+      }
+    };
+    initFromCache();
+
+    // 2. Regular Auth Listener logic
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -147,30 +181,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const currentUserId = session?.user?.id || null;
 
-      // De-bounce & Handle Boot Phase
-      // 1. Skip premature SIGNED_IN during initial boot ONLY if it has no session
-      if (event === 'SIGNED_IN' && !session?.user && !initialFetchDoneRef.current) {
-        console.log('⏭️ Boot Phase: Skipping premature SIGNED_IN (No Session); waiting for INITIAL_SESSION');
-        return;
-      }
-
-      // 2. Clear sign out immediately
+      // Handle SIGNED_OUT immediately
       if (event === 'SIGNED_OUT' || !session?.user) {
         lastProcessedUserIdRef.current = null;
         setUser(null);
         setIsLoading(false);
         initialFetchDoneRef.current = true;
+
+        // Clear all profile caches on logout
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.startsWith(PROFILE_CACHE_KEY)) localStorage.removeItem(key);
+        });
         return;
       }
 
-      // 3. De-bounce: If we've already started processing this user, skip
-      if (currentUserId === lastProcessedUserIdRef.current && user?.id === currentUserId) {
+      // De-bounce: If we've already started processing this user AND we're not loading, skip
+      if (currentUserId === lastProcessedUserIdRef.current && user?.id === currentUserId && !isLoading) {
         console.log('⏭️ Skipping: User already processed');
-        // Still mark initialization as done if it wasn't
         if (!initialFetchDoneRef.current) {
           initialFetchDoneRef.current = true;
-          markPerformance(PerformanceMarkers.AUTH_INIT_END);
-          measurePerformance('Auth Initialization', PerformanceMarkers.AUTH_INIT_START, PerformanceMarkers.AUTH_INIT_END);
           setIsLoading(false);
         }
         return;
@@ -178,56 +208,85 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       lastProcessedUserIdRef.current = currentUserId;
 
-      // ONLY set loading if we don't already have the correct user
+      // Only set loading if we don't have a cached user for this ID
       if (user?.id !== currentUserId) {
         setIsLoading(true);
       }
 
       try {
         console.log('⏳ Processing profile for:', currentUserId);
-        const profile = await fetchUserProfile(session.user);
+        const result = await fetchUserProfile(session.user);
 
         if (mounted) {
-          if (profile) {
+          if (result === 'NETWORK_ERROR') {
+            console.warn('📡 Network error during fetch, retaining existing/cached state');
+            // If we have a cached user, we just stay with it.
+            // If we didn't have any user, we might want to show an error, but for now we just stop loading.
+            setIsLoading(false);
+            initialFetchDoneRef.current = true;
+          } else if (result) {
             console.log('✅ Auth success');
-            setUser(profile);
+            setUser(result);
           } else {
-            console.warn('⚠️ No profile found');
+            console.warn('⚠️ No profile found - forcing logout');
             setUser(null);
+            supabase.auth.signOut(); // Ensure session is cleared if profile is gone
           }
         }
       } catch (err) {
         console.error('❌ Auth process failed:', err);
       } finally {
         if (mounted) {
-          // Special handling for the very first event (usually SIGNED_IN during boot)
-          // If it fails but we haven't seen INITIAL_SESSION yet, we might want to stay in loading
-          // But for simplicity, we just set initialFetchDone to true once ANY event completes
           initialFetchDoneRef.current = true;
           setIsLoading(false);
         }
       }
     });
 
-    // Fallback: Check session once in case onAuthStateChange is slow
-    // Give it 1 second to emit INITIAL_SESSION naturally
+    // Fallback: 2 seconds is enough for a "cold" getSession
     setTimeout(() => {
       if (mounted && !initialFetchDoneRef.current) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (mounted && !initialFetchDoneRef.current && !session) {
-            console.log('🏁 getSession Fallback (No Session)');
-            setIsLoading(false);
-            initialFetchDoneRef.current = true;
-          }
-        });
+        console.log('⏰ Fallback reached: Finalizing loading state');
+        setIsLoading(false);
+        initialFetchDoneRef.current = true;
       }
-    }, 1000);
+    }, 2000);
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []); // Only subscribe once on mount
+
+  // Synchronous check for cached user to avoid initial spinner
+  // We use a ref to ensure this only runs once during the very first render phase
+  const syncCheckDoneRef = React.useRef(false);
+  if (!syncCheckDoneRef.current && !user) {
+    try {
+      // Find Supabase session token in localStorage (key varies by project ID)
+      const sessionKey = Object.keys(localStorage).find(key => key.includes('-auth-token'));
+      if (sessionKey) {
+        const sessionData = JSON.parse(localStorage.getItem(sessionKey) || '{}');
+        const userId = sessionData?.user?.id;
+        if (userId) {
+          const cachedProfile = localStorage.getItem(`${PROFILE_CACHE_KEY}_${userId}`);
+          if (cachedProfile) {
+            console.log('⚡ Instant Boot (sync): Found cached profile for', userId);
+            const parsedProfile = JSON.parse(cachedProfile);
+            // Directly update state during render for the first time
+            // This is safe because we haven't rendered children yet and we use a ref to prevent loops
+            setUser(parsedProfile);
+            setIsLoading(false);
+            initialFetchDoneRef.current = true;
+          }
+        }
+      }
+      syncCheckDoneRef.current = true;
+    } catch (e) {
+      console.warn('⚠️ Synchronous cache init failed', e);
+      syncCheckDoneRef.current = true;
+    }
+  }
 
   const login = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -240,14 +299,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     if (data.user) {
-      const profile = await fetchUserProfile(data.user);
-      setUser(profile);
+      const result = await fetchUserProfile(data.user);
+      if (result && result !== 'NETWORK_ERROR') {
+        setUser(result);
+      } else if (result === 'NETWORK_ERROR') {
+        throw new Error('Connecton error. Please try again.');
+      }
     }
   };
 
   const signup = async (name: string, email: string, password: string, token?: string) => {
     // First, sign up with Supabase Auth
-    // Store name in metadata so it's available for triggers/functions
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -324,11 +386,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Fetch the created profile ONLY if we have a session
       if (authData.session) {
-        const profile = await fetchUserProfile(authData.user);
+        const result = await fetchUserProfile(authData.user);
 
-        if (profile) {
-          console.log('✅ Signup complete! Profile:', profile);
-          setUser(profile);
+        if (result && result !== 'NETWORK_ERROR') {
+          console.log('✅ Signup complete! Profile:', result);
+          setUser(result);
+        } else if (result === 'NETWORK_ERROR') {
+          console.error('❌ Connection error after signup');
+          // Still consider signup successful if session exists, 
+          // but we won't have the profile in state yet.
         } else {
           console.error('❌ Failed to fetch profile after creation (returned null)');
         }

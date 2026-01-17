@@ -13,7 +13,7 @@ export interface DecisionFormData {
     title: string;
     decision: string;
     description: string;
-    decision_type: 'approve' | 'note';
+    decision_type: 'approve' | 'note' | null;
     initialPeople?: { userId?: string; name: string; email: string }[];
     initialDocuments?: { name: string; url: string; type: string }[];
     affectedParties?: string[];
@@ -350,7 +350,7 @@ export function DecisionForm({
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="description" className="form-label">Background & Rationale</label>
+                        <label htmlFor="description" className="form-label">Supporting Information</label>
                         <textarea
                             id="description"
                             className="form-textarea"
@@ -428,16 +428,16 @@ export function DecisionForm({
                             }
                             completeStep(2);
                         }}>
-                            Next: People Involved
+                            Next: People Consulted
                         </Button>
                     </div>
 
                 </div>
             </div>
 
-            {/* Step 3: People Involved */}
+            {/* Step 3: People Consulted */}
             <div className={`wizard-step ${currentStep === 3 ? 'active' : ''} ${completedSteps.includes(3) ? 'completed' : ''} ${completedSteps.includes(2) ? '' : 'disabled'}`}>
-                {renderStepHeader(3, "People Involved", `${people.length} ${people.length === 1 ? 'person' : 'people'} consulted`, 3)}
+                {renderStepHeader(3, "People Consulted", `${people.length} ${people.length === 1 ? 'person' : 'people'} consulted`, 3)}
                 <div className="step-content">
 
 
@@ -535,9 +535,9 @@ export function DecisionForm({
                 </div>
             </div>
 
-            {/* Step 4: Impact / Affected Parties */}
+            {/* Step 4: Stakeholders Impacted */}
             <div className={`wizard-step ${currentStep === 4 ? 'active' : ''} ${completedSteps.includes(4) ? 'completed' : ''} ${completedSteps.includes(3) ? '' : 'disabled'}`}>
-                {renderStepHeader(4, "Affected Parties", `${affectedParties.length} ${affectedParties.length === 1 ? 'party' : 'parties'} affected`, 4)}
+                {renderStepHeader(4, "Stakeholders Impacted", `${affectedParties.length} ${affectedParties.length === 1 ? 'party' : 'parties'} affected`, 4)}
                 <div className="step-content">
 
 
@@ -582,10 +582,15 @@ export function DecisionForm({
             <div className={`wizard-step ${currentStep === 5 ? 'active' : ''} ${completedSteps.includes(5) ? 'completed' : ''} ${completedSteps.includes(4) ? '' : 'disabled'}`}>
                 {renderStepHeader(5, "Review & Launch", "Ready to publish", 5)}
                 <div className="step-content">
-                    <div className="review-summary-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+                    <div className="review-summary-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
                         <div className="review-intro">
                             <p style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-secondary)' }}>You are about to create a decision named:</p>
                             <h2 style={{ margin: 'var(--spacing-xs) 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</h2>
+                        </div>
+
+                        <div className="review-decision-block" style={{ padding: 'var(--spacing-md)', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                            <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-xs)' }}>The Decision</h4>
+                            <p style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-primary)', whiteSpace: 'pre-wrap' }}>{decisionText}</p>
                         </div>
 
                         <div className="review-sections-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
@@ -606,7 +611,7 @@ export function DecisionForm({
                             </div>
 
                             <div className="review-block">
-                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>Affected Parties ({affectedParties.length})</h4>
+                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>Stakeholders Impacted ({affectedParties.length})</h4>
                                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     {affectedParties.length > 0 ? affectedParties.slice(0, 3).map((p, i) => <li key={i}>• {p}</li>) : <li>None</li>}
                                     {affectedParties.length > 3 && <li style={{ fontStyle: 'italic', opacity: 0.7 }}>+ {affectedParties.length - 3} more...</li>}
