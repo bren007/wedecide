@@ -20,10 +20,11 @@ model Organization {
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 
-  users      User[]
-  decisions  Decision[]
-  documents  Document[]
-  user_roles UserRole[]
+  users          User[]
+  decisions      Decision[]
+  documents      Document[]
+  user_roles     UserRole[]
+  meeting_groups MeetingGroup[]
 
   @@map("organizations")
 }
@@ -36,11 +37,13 @@ model User {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organization_id], references: [id])
+  organization Organization        @relation(fields: [organization_id], references: [id])
   roles        UserRole[]
   decisions    Decision[]
   documents    Document[]
   stakeholders Stakeholder[]
+  feedback     DecisionFeedback[]
+  rapid_roles  DecisionRapidRole[]
 
   @@index([email])
   @@map("users")
@@ -61,21 +64,38 @@ model UserRole {
 }
 
 model Decision {
-  id              String   @id @default(uuid())
-  title           String
-  description     String?
-  status          String   @default("draft") // draft, active, completed
-  owner_id        String
-  organization_id String
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  title              String
+  description        String?
+  status             String   @default("draft") // draft, submitted, active, completed, rejected
+  decision_type      String?  // approve, note
+  reversibility_type String?  // type1_irreversible, type2_reversible
+  owner_id           String
+  organization_id    String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
-  owner        User          @relation(fields: [owner_id], references: [id])
-  organization Organization  @relation(fields: [organization_id], references: [id])
+  owner        User                  @relation(fields: [owner_id], references: [id])
+  organization Organization          @relation(fields: [organization_id], references: [id])
   stakeholders Stakeholder[]
   documents    Document[]
+  feedback     DecisionFeedback[]
+  rapid_roles  DecisionRapidRole[]
 
   @@map("decisions")
+}
+
+model DecisionFeedback {
+  id          String   @id @default(uuid())
+  decision_id String
+  user_id     String   // The chair/reviewer who gave feedback
+  content     String
+  created_at  DateTime @default(now())
+
+  decision Decision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [user_id], references: [id])
+
+  @@map("decision_feedback")
 }
 
 model Stakeholder {
@@ -112,4 +132,35 @@ model Document {
   organization Organization @relation(fields: [organization_id], references: [id])
 
   @@map("documents")
+}
+
+model MeetingGroup {
+  id              String   @id @default(uuid())
+  organization_id String
+  name            String
+  description     String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  organization Organization        @relation(fields: [organization_id], references: [id])
+  rapid_roles  DecisionRapidRole[]
+
+  @@map("meeting_groups")
+}
+
+model DecisionRapidRole {
+  id               String   @id @default(uuid())
+  decision_id      String
+  role_type        String   // recommend, agree, perform, input, decide
+  user_id          String?
+  external_name    String?
+  external_role    String?
+  meeting_group_id String?
+  created_at       DateTime @default(now())
+
+  decision      Decision      @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  user          User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  meeting_group MeetingGroup? @relation(fields: [meeting_group_id], references: [id], onDelete: SetNull)
+
+  @@map("decision_rapid_roles")
 }
