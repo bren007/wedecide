@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDecisions } from '../../hooks/useDecisions';
+import { useRapidRoles } from '../../hooks/useRapidRoles';
 import { ArrowLeft } from 'lucide-react';
 import { DecisionForm, type DecisionFormData } from '../../components/decisions/DecisionForm';
 import { LoadingSpinner } from '../../components/Loading';
@@ -13,6 +14,7 @@ export function DecisionEditPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { getDecision, updateDecision } = useDecisions();
+    const { getRapidRoles, saveRapidRoles } = useRapidRoles();
     const { showToast } = useToasts();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -27,11 +29,15 @@ export function DecisionEditPage() {
                 setLoading(true);
                 const data = await getDecision(id);
                 if (data) {
+                    // Load RAPID roles
+                    const rapidRoles = await getRapidRoles(id);
+
                     setInitialData({
                         title: data.title,
                         decision: data.decision || '',
                         description: data.description || '',
                         decision_type: data.decision_type,
+                        reversibility_type: data.reversibility_type,
                         initialPeople: (data.stakeholders || []).map((s: any) => ({
                             userId: s.user_id,
                             name: s.name,
@@ -42,7 +48,8 @@ export function DecisionEditPage() {
                             url: d.url,
                             type: d.type
                         })),
-                        affectedParties: (data.affected_parties || []).map((p: any) => p.name)
+                        affectedParties: (data.affected_parties || []).map((p: any) => p.name),
+                        rapidRoles
                     });
                 }
                 else {
@@ -69,10 +76,16 @@ export function DecisionEditPage() {
                 title: data.title,
                 decision: data.decision,
                 description: data.description,
-                decision_type: data.decision_type
+                decision_type: data.decision_type,
+                reversibility_type: data.reversibility_type
             });
 
             if (!decision) throw new Error('Failed to update decision');
+
+            // 2. Save RAPID Roles
+            if (data.rapidRoles) {
+                await saveRapidRoles(id, data.rapidRoles);
+            }
 
             // 2. Sync Stakeholders (Delete All + Insert New)
             await supabase.from('stakeholders').delete().eq('decision_id', id);

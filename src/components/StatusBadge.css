@@ -26,3 +26,15 @@
     color: #065f46;
     border: 1px solid #a7f3d0;
 }
+
+.status-badge.rejected {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.status-badge.submitted {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #e9d5ff;
+}

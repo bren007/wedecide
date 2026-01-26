@@ -4,6 +4,8 @@ import { Input } from '../Input';
 import { X, UserPlus, Link as LinkIcon, Check, ChevronDown, Share2 } from 'lucide-react';
 import { useOrganizationUsers } from '../../hooks/useOrganizationUsers';
 import { useAuth } from '../../context/AuthContext';
+import { RapidRolesManager } from './RapidRolesManager';
+import type { RapidRoleAssignment } from '../../hooks/useRapidRoles';
 import './DecisionForm.css';
 
 const BASE_PERSISTENCE_KEY = 'wedecide_decision_draft';
@@ -14,9 +16,17 @@ export interface DecisionFormData {
     decision: string;
     description: string;
     decision_type: 'approve' | 'note' | null;
+    reversibility_type?: 'type1_irreversible' | 'type2_reversible' | null;
     initialPeople?: { userId?: string; name: string; email: string }[];
     initialDocuments?: { name: string; url: string; type: string }[];
     affectedParties?: string[];
+    rapidRoles?: {
+        recommend: RapidRoleAssignment[];
+        agree: RapidRoleAssignment[];
+        perform: RapidRoleAssignment[];
+        input: RapidRoleAssignment[];
+        decide: RapidRoleAssignment[];
+    };
 }
 
 
@@ -52,12 +62,27 @@ export function DecisionForm({
     const [decisionText, setDecisionText] = useState(initialData?.decision || '');
     const [description, setDescription] = useState(initialData?.description || '');
     const [decisionType, setDecisionType] = useState<'approve' | 'note'>(initialData?.decision_type || 'approve');
+    const [reversibilityType, setReversibilityType] = useState<'type1_irreversible' | 'type2_reversible' | null>(initialData?.reversibility_type || null);
 
     // List Fields
     const [people, setPeople] = useState<{ userId?: string; name: string; email: string }[]>(initialData?.initialPeople || []);
     const [documents, setDocuments] = useState<{ name: string; url: string; type: string }[]>(initialData?.initialDocuments || []);
-
     const [affectedParties, setAffectedParties] = useState<string[]>(initialData?.affectedParties || []);
+
+    // RAPID Roles
+    const [rapidRoles, setRapidRoles] = useState<{
+        recommend: RapidRoleAssignment[];
+        agree: RapidRoleAssignment[];
+        perform: RapidRoleAssignment[];
+        input: RapidRoleAssignment[];
+        decide: RapidRoleAssignment[];
+    }>(initialData?.rapidRoles || {
+        recommend: user ? [{ role_type: 'recommend', user_id: user.id, user_name: user.name }] : [],
+        agree: [],
+        perform: [],
+        input: [],
+        decide: []
+    });
 
     // Temp state for adding items
     const [selectedUserId, setSelectedUserId] = useState('');
@@ -74,6 +99,7 @@ export function DecisionForm({
 
 
     const formRef = useRef<HTMLFormElement>(null);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
     // Persistence: Load from localStorage on mount
     useEffect(() => {
@@ -87,9 +113,11 @@ export function DecisionForm({
                 if (data.decision) setDecisionText(data.decision);
                 if (data.description) setDescription(data.description);
                 if (data.decision_type) setDecisionType(data.decision_type);
+                if (data.reversibility_type) setReversibilityType(data.reversibility_type);
                 if (data.initialPeople) setPeople(data.initialPeople);
                 if (data.initialDocuments) setDocuments(data.initialDocuments);
                 if (data.affectedParties) setAffectedParties(data.affectedParties);
+                if (data.rapidRoles) setRapidRoles(data.rapidRoles);
                 if (data.currentStep) setCurrentStep(data.currentStep);
                 if (data.completedSteps) setCompletedSteps(data.completedSteps);
             } catch (e) {
@@ -106,15 +134,53 @@ export function DecisionForm({
                 decision: decisionText,
                 description,
                 decision_type: decisionType,
+                reversibility_type: reversibilityType,
                 initialPeople: people,
                 initialDocuments: documents,
                 affectedParties,
+                rapidRoles,
                 currentStep,
                 completedSteps
             };
             localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(data));
         }
-    }, [title, decisionText, description, decisionType, people, documents, affectedParties, currentStep, completedSteps, initialData, PERSISTENCE_KEY]);
+    }, [title, decisionText, description, decisionType, reversibilityType, people, documents, affectedParties, rapidRoles, currentStep, completedSteps, initialData, PERSISTENCE_KEY]);
+
+    // Page Visibility API: Save to sessionStorage when tab becomes hidden
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden && PERSISTENCE_KEY) {
+                // User is switching tabs - save immediately to sessionStorage as backup
+                const data = {
+                    title,
+                    decision: decisionText,
+                    description,
+                    decision_type: decisionType,
+                    reversibility_type: reversibilityType,
+                    initialPeople: people,
+                    initialDocuments: documents,
+                    affectedParties,
+                    rapidRoles,
+                    currentStep,
+                    completedSteps,
+                    savedAt: new Date().toISOString()
+                };
+                sessionStorage.setItem(PERSISTENCE_KEY, JSON.stringify(data));
+                localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(data));
+                console.log('💾 Form data saved (tab hidden)');
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [title, decisionText, description, decisionType, reversibilityType, people, documents, affectedParties, rapidRoles, currentStep, completedSteps, PERSISTENCE_KEY]);
+
+    // Update last saved timestamp when data changes
+    useEffect(() => {
+        if (PERSISTENCE_KEY && !initialData && (title || decisionText || description || people.length > 0 || documents.length > 0 || affectedParties.length > 0)) {
+            setLastSaved(new Date());
+        }
+    }, [title, decisionText, description, people, documents, affectedParties, rapidRoles, PERSISTENCE_KEY, initialData]);
 
     // Sync state with initialData if it changes (e.g. on Edit page load)
     useEffect(() => {
@@ -123,9 +189,11 @@ export function DecisionForm({
             setDecisionText(initialData.decision || '');
             setDescription(initialData.description || '');
             setDecisionType(initialData.decision_type || 'approve');
+            setReversibilityType(initialData.reversibility_type || null);
             setPeople(initialData.initialPeople || []);
             setDocuments(initialData.initialDocuments || []);
             setAffectedParties(initialData.affectedParties || []);
+            if (initialData.rapidRoles) setRapidRoles(initialData.rapidRoles);
             // Usually we stay on step 1 for edit
         }
     }, [initialData]);
@@ -195,9 +263,11 @@ export function DecisionForm({
             decision: decisionText,
             description,
             decision_type: decisionType,
+            reversibility_type: reversibilityType,
             initialPeople: people,
             initialDocuments: documents,
-            affectedParties
+            affectedParties,
+            rapidRoles
         });
 
         // Clear draft AFTER successful submission
@@ -290,6 +360,27 @@ export function DecisionForm({
 
             {externalError && <div className="decision-error-message">{externalError}</div>}
 
+            {/* Draft Saved Indicator */}
+            {lastSaved && !initialData && (
+                <div style={{
+                    position: 'fixed',
+                    top: '100px',
+                    right: '20px',
+                    padding: '10px 16px',
+                    background: 'rgba(34, 197, 94, 0.15)',
+                    border: '1px solid rgba(34, 197, 94, 0.4)',
+                    borderRadius: '8px',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: 'rgb(34, 197, 94)',
+                    zIndex: 9999,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    backdropFilter: 'blur(8px)'
+                }}>
+                    ✓ Draft saved at {lastSaved.toLocaleTimeString()}
+                </div>
+            )}
+
             {/* Step 1: Decision Details */}
             <div className={`wizard-step ${currentStep === 1 ? 'active' : ''} ${completedSteps.includes(1) ? 'completed' : ''}`}>
                 {renderStepHeader(1, "Name & Context", title || "Untitled Decision", 1)}
@@ -344,6 +435,35 @@ export function DecisionForm({
                                 <div className="type-text">
                                     <strong>Note</strong>
                                     <span>For the record</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Reversibility</label>
+                        <p className="form-hint" style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>
+                            How easily can this decision be changed or reversed?
+                        </p>
+                        <div className="type-options horizontal">
+                            <div
+                                className={`type-card compact ${reversibilityType === 'type1_irreversible' ? 'selected' : ''}`}
+                                onClick={() => setReversibilityType('type1_irreversible')}
+                            >
+                                <div className="type-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)' }}>🚪</div>
+                                <div className="type-text">
+                                    <strong>Type 1 (Irreversible)</strong>
+                                    <span>One-way door decisions that are difficult or impossible to reverse once made</span>
+                                </div>
+                            </div>
+                            <div
+                                className={`type-card compact ${reversibilityType === 'type2_reversible' ? 'selected' : ''}`}
+                                onClick={() => setReversibilityType('type2_reversible')}
+                            >
+                                <div className="type-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: 'var(--color-success)' }}>🔄</div>
+                                <div className="type-text">
+                                    <strong>Type 2 (Reversible)</strong>
+                                    <span>Two-way door decisions that can be easily changed or reversed if needed</span>
                                 </div>
                             </div>
                         </div>
@@ -428,106 +548,29 @@ export function DecisionForm({
                             }
                             completeStep(2);
                         }}>
-                            Next: People Consulted
+                            Next: RAPID Roles
                         </Button>
                     </div>
 
                 </div>
             </div>
 
-            {/* Step 3: People Consulted */}
+            {/* Step 3: RAPID Roles */}
             <div className={`wizard-step ${currentStep === 3 ? 'active' : ''} ${completedSteps.includes(3) ? 'completed' : ''} ${completedSteps.includes(2) ? '' : 'disabled'}`}>
-                {renderStepHeader(3, "People Consulted", `${people.length} ${people.length === 1 ? 'person' : 'people'} consulted`, 3)}
+                {renderStepHeader(3, "RAPID Roles", `Accountability framework defined`, 3)}
                 <div className="step-content">
+                    <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>
+                        Define who is involved in this decision using the RAPID framework for clear accountability.
+                    </p>
 
-
-                    <div className="wizard-list">
-                        {people.map((p, i) => (
-                            <div key={p.userId || `ext-${i}`} className="wizard-list-item">
-                                <UserPlus size={14} />
-                                <span>{p.name}</span>
-                                <button type="button" onClick={() => setPeople(people.filter((_, idx) => idx !== i))}>
-                                    <X size={14} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-
-                    <div className="stakeholder-type-toggle">
-                        <label className="radio-label">
-                            <input
-                                type="radio"
-                                checked={!isExternal}
-                                onChange={() => setIsExternal(false)}
-                            />
-                            Team Member
-                        </label>
-                        <label className="radio-label">
-                            <input
-                                type="radio"
-                                checked={isExternal}
-                                onChange={() => setIsExternal(true)}
-                            />
-                            External Person
-                        </label>
-                    </div>
-
-                    {!isExternal ? (
-                        <div className="input-with-button">
-                            <select
-                                value={selectedUserId}
-                                onChange={(e) => setSelectedUserId(e.target.value)}
-                                className="wizard-select"
-                            >
-                                <option value="">Select a person...</option>
-                                {users.filter(u => !people.some(p => p.userId === u.id)).map(u => (
-                                    <option key={u.id} value={u.id}>{u.name}</option>
-                                ))}
-                            </select>
-                            <Button type="button" variant="ghost" onClick={addPerson} disabled={!selectedUserId}>
-                                <PlusIcon />
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="manual-entry">
-                            <div className="input-with-button">
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', flex: 1 }}>
-                                    <Input
-                                        placeholder="Full Name"
-                                        value={manualName}
-                                        onChange={(e) => setManualName(e.target.value)}
-                                    />
-                                    <Input
-                                        placeholder="Email (Optional)"
-                                        value={manualEmail}
-                                        onChange={(e) => {
-                                            setManualEmail(e.target.value);
-                                            if (emailError) setEmailError('');
-                                        }}
-                                        error={emailError}
-                                    />
-                                </div>
-                                <Button type="button" variant="ghost" onClick={addPerson} disabled={!manualName}>
-                                    <PlusIcon />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
+                    <RapidRolesManager
+                        roles={rapidRoles}
+                        onChange={setRapidRoles}
+                        disabled={isLoading}
+                    />
 
                     <div className="step-actions">
-                        <Button type="button" variant="primary" onClick={() => {
-                            // Only add if there is something in the manual fields or selection
-                            if (isExternal ? manualName.trim() : selectedUserId) {
-                                if (isExternal && manualEmail && !isValidEmail(manualEmail)) {
-                                    setEmailError('Please enter a valid email address');
-                                    return;
-                                }
-                                addPerson();
-                            }
-                            completeStep(3);
-                        }}>
+                        <Button type="button" variant="primary" onClick={() => completeStep(3)}>
                             Next: Impact
                         </Button>
                     </div>
@@ -595,13 +638,47 @@ export function DecisionForm({
 
                         <div className="review-sections-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
                             <div className="review-block">
-                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>People Consulted ({people.length})</h4>
-                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    {people.length > 0 ? people.slice(0, 3).map((p, i) => <li key={i}>• {p.name}</li>) : <li>None</li>}
-                                    {people.length > 3 && <li style={{ fontStyle: 'italic', opacity: 0.7 }}>+ {people.length - 3} more...</li>}
-                                </ul>
+                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>Decision Type</h4>
+                                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                                    {decisionType === 'approve' ? '✓ Approve (Needs agreement)' : '📝 Note (For the record)'}
+                                </p>
                             </div>
 
+                            <div className="review-block">
+                                <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>Reversibility</h4>
+                                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                                    {reversibilityType === 'type1_irreversible' ? '🚪 Type 1 (Irreversible)' :
+                                        reversibilityType === 'type2_reversible' ? '🔄 Type 2 (Reversible)' :
+                                            'Not specified'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="review-block">
+                            <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>RAPID Roles</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                                {Object.entries(rapidRoles).map(([roleKey, assignments]) => {
+                                    const roleLabels = {
+                                        recommend: 'R - Recommend',
+                                        agree: 'A - Agree',
+                                        perform: 'P - Perform',
+                                        input: 'I - Input',
+                                        decide: 'D - Decide'
+                                    };
+                                    return (
+                                        <div key={roleKey} style={{ fontSize: '0.875rem' }}>
+                                            <strong style={{ color: 'var(--color-text-primary)' }}>{roleLabels[roleKey as keyof typeof roleLabels]}:</strong>{' '}
+                                            <span style={{ color: 'var(--color-text-secondary)' }}>
+                                                {assignments.length === 0 ? 'None' :
+                                                    assignments.map(a => a.user_name || a.meeting_group_name || a.external_name).join(', ')}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="review-sections-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
                             <div className="review-block">
                                 <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>Documents ({documents.length})</h4>
                                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -618,25 +695,25 @@ export function DecisionForm({
                                 </ul>
                             </div>
                         </div>
-
-                        <div className="review-disclaimer" style={{ padding: 'var(--spacing-md)', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(99, 102, 241, 0.2)', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
-                            <p style={{ margin: 0 }}>This will be created as a <strong>Draft</strong>. You can review all details and add specific notes before publishing it to the organization.</p>
-                        </div>
                     </div>
 
-                    <div className="step-actions">
-                        <Button variant="danger" type="button" onClick={() => {
-                            if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-                                clearDraft();
-                                onCancel();
-                            }
-                        }} disabled={isLoading}>
-                            Cancel
-                        </Button>
-                        <Button variant="primary" type="submit" isLoading={isLoading} disabled={isLoading}>
-                            {submitLabel}
-                        </Button>
+                    <div className="review-disclaimer" style={{ padding: 'var(--spacing-md)', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(99, 102, 241, 0.2)', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+                        <p style={{ margin: 0 }}>This will be created as a <strong>Draft</strong>. You can review all details and add specific notes before publishing it to the organization.</p>
                     </div>
+                </div>
+
+                <div className="step-actions">
+                    <Button variant="danger" type="button" onClick={() => {
+                        if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                            clearDraft();
+                            onCancel();
+                        }
+                    }} disabled={isLoading}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" type="submit" isLoading={isLoading} disabled={isLoading}>
+                        {submitLabel}
+                    </Button>
                 </div>
             </div>
 

@@ -77,9 +77,34 @@
 }
 
 .nav-user-name {
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     font-size: 0.875rem;
     font-weight: 600;
+}
+
+.nav-role-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    margin-left: var(--spacing-sm);
+    letter-spacing: 0.05em;
+}
+
+.nav-role-badge.chair {
+    background: var(--color-bg-success);
+    color: var(--color-success);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.nav-role-badge.admin {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--color-primary-light);
+    border-color: rgba(99, 102, 241, 0.2);
 }
 
 .navbar-links {

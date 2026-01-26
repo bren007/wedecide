@@ -121,39 +121,42 @@ export interface Database {
                     id: string
                     title: string
                     description: string | null
-                    status: "draft" | "active" | "completed"
+                    status: "draft" | "submitted" | "active" | "completed" | "rejected"
                     owner_id: string
                     organization_id: string
                     created_at: string
                     updated_at: string
                     decision: string | null
                     decision_type: "note" | "approve" | null
+                    reversibility_type: "type1_irreversible" | "type2_reversible" | null
                     agenda_item_id: string | null
                 }
                 Insert: {
                     id?: string
                     title: string
                     description?: string | null
-                    status?: "draft" | "active" | "completed"
+                    status?: "draft" | "submitted" | "active" | "completed" | "rejected"
                     owner_id: string
                     organization_id: string
                     created_at?: string
                     updated_at?: string
                     decision?: string | null
                     decision_type?: "note" | "approve" | null
+                    reversibility_type?: "type1_irreversible" | "type2_reversible" | null
                     agenda_item_id?: string | null
                 }
                 Update: {
                     id?: string
                     title?: string
                     description?: string | null
-                    status?: "draft" | "active" | "completed"
+                    status?: "draft" | "submitted" | "active" | "completed" | "rejected"
                     owner_id?: string
                     organization_id?: string
                     created_at?: string
                     updated_at?: string
                     decision?: string | null
                     decision_type?: "note" | "approve" | null
+                    reversibility_type?: "type1_irreversible" | "type2_reversible" | null
                     agenda_item_id?: string | null
                 }
                 Relationships: [
@@ -167,6 +170,49 @@ export interface Database {
                         foreignKeyName: "decisions_organization_id_fkey"
                         columns: ["organization_id"]
                         referencedRelation: "organizations"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "decisions_agenda_item_id_fkey"
+                        columns: ["agenda_item_id"]
+                        referencedRelation: "agenda_items"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            decision_feedback: {
+                Row: {
+                    id: string
+                    decision_id: string
+                    user_id: string
+                    content: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    decision_id: string
+                    user_id: string
+                    content: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    decision_id?: string
+                    user_id?: string
+                    content?: string
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "decision_feedback_decision_id_fkey"
+                        columns: ["decision_id"]
+                        referencedRelation: "decisions"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "decision_feedback_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "users"
                         referencedColumns: ["id"]
                     }
                 ]
@@ -382,6 +428,92 @@ export interface Database {
                         foreignKeyName: "agenda_items_meeting_id_fkey"
                         columns: ["meeting_id"]
                         referencedRelation: "meetings"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            },
+            meeting_groups: {
+                Row: {
+                    id: string
+                    organization_id: string
+                    name: string
+                    description: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    organization_id: string
+                    name: string
+                    description?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    organization_id?: string
+                    name?: string
+                    description?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "meeting_groups_organization_id_fkey"
+                        columns: ["organization_id"]
+                        referencedRelation: "organizations"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            },
+            decision_rapid_roles: {
+                Row: {
+                    id: string
+                    decision_id: string
+                    role_type: "recommend" | "agree" | "perform" | "input" | "decide"
+                    user_id: string | null
+                    external_name: string | null
+                    external_role: string | null
+                    meeting_group_id: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    decision_id: string
+                    role_type: "recommend" | "agree" | "perform" | "input" | "decide"
+                    user_id?: string | null
+                    external_name?: string | null
+                    external_role?: string | null
+                    meeting_group_id?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    decision_id?: string
+                    role_type: "recommend" | "agree" | "perform" | "input" | "decide"
+                    user_id?: string | null
+                    external_name?: string | null
+                    external_role?: string | null
+                    meeting_group_id?: string | null
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "decision_rapid_roles_decision_id_fkey"
+                        columns: ["decision_id"]
+                        referencedRelation: "decisions"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "decision_rapid_roles_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "decision_rapid_roles_meeting_group_id_fkey"
+                        columns: ["meeting_group_id"]
+                        referencedRelation: "meeting_groups"
                         referencedColumns: ["id"]
                     }
                 ]

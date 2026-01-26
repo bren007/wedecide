@@ -158,3 +158,101 @@
     background-color: var(--color-surface-hover);
     color: var(--color-text-primary);
 }
+
+.status-badge.rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-badge.submitted {
+    background: rgba(139, 92, 246, 0.1);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* New Highlight Sections */
+.highlight-section {
+    background: rgba(99, 102, 241, 0.05);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.highlight-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--color-primary);
+}
+
+.main-decision-text p {
+    font-size: 1.125rem;
+    color: var(--color-text-primary);
+    font-weight: 500;
+}
+
+/* Feedback Alert */
+.feedback-alert {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-left: 4px solid var(--color-error);
+}
+
+.feedback-title {
+    color: var(--color-error);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.feedback-item {
+    padding: var(--spacing-sm) 0;
+}
+
+.feedback-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.feedback-content {
+    font-style: italic;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.feedback-date {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.status-info-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.status-explainer {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.chair-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-finalize {
+    border-color: var(--color-text-muted) !important;
+    color: var(--color-text-muted) !important;
+    transition: all var(--transition-base);
+}
+
+.btn-finalize:hover {
+    background-color: var(--color-surface-hover) !important;
+    border-color: var(--color-text-primary) !important;
+    color: var(--color-text-primary) !important;
+    box-shadow: none !important;
+}

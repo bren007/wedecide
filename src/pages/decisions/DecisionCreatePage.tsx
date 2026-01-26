@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDecisions } from '../../hooks/useDecisions';
+import { useRapidRoles } from '../../hooks/useRapidRoles';
 import { ArrowLeft } from 'lucide-react';
 import { DecisionForm, type DecisionFormData } from '../../components/decisions/DecisionForm';
 import { supabase } from '../../lib/supabase';
@@ -11,6 +12,7 @@ import './DecisionCreatePage.css';
 export function DecisionCreatePage() {
     const navigate = useNavigate();
     const { createDecision } = useDecisions();
+    const { saveRapidRoles } = useRapidRoles();
     const { showToast } = useToasts();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -26,10 +28,20 @@ export function DecisionCreatePage() {
                 title: data.title,
                 decision: data.decision,
                 description: data.description,
-                decision_type: data.decision_type
+                decision_type: data.decision_type,
+                reversibility_type: data.reversibility_type
             });
 
             if (!decision) throw new Error('Failed to create decision object');
+
+            // 2. Save RAPID Roles
+            console.log('📋 RAPID Roles data from form:', data.rapidRoles);
+            if (data.rapidRoles) {
+                await saveRapidRoles(decision.id, data.rapidRoles);
+                console.log('✅ RAPID Roles saved for decision:', decision.id);
+            } else {
+                console.warn('⚠️ No RAPID roles data to save');
+            }
 
             // 2. Add People Involved (Consultation Log)
             if (data.initialPeople && data.initialPeople.length > 0) {

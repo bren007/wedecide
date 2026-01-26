@@ -58,8 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ): Promise<User | null | 'NETWORK_ERROR'> => {
     const userId = supabaseUser.id;
     // VERY STRICT retry policy during initial boot
-    const maxRetries = 2;
-    const currentTimeoutMs = 5000; // Reduced from 15s - if profile doesn't load in 5s, we should fallback to cache/retry later
+    const maxRetries = 1;
+    const currentTimeoutMs = 2000; // Reduced to 2s - if profile doesn't load in 2s, we should fallback to cache
 
     if (retryCount === 0) {
       markPerformance(PerformanceMarkers.PROFILE_FETCH_START);
@@ -120,14 +120,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       } catch (error: any) {
         if (retryCount < maxRetries) {
-          const delay = 500; // Even shorter retry delay
+          const delay = 300; // Even shorter retry delay
           await new Promise(resolve => setTimeout(resolve, delay));
           return fetchUserProfile(supabaseUser, retryCount + 1);
         }
 
         // Return a special error/marker to distinguish between "not found" and "network error"
         if (error.message?.includes('timeout') || error.message?.includes('fetch') || error.message?.includes('Network')) {
-          console.warn('📡 [fetchUserProfile] Soft failure due to network/timeout');
+          console.warn('📡 [fetchUserProfile] Soft failure due to network/timeout (Expected during flaky network)');
           return 'NETWORK_ERROR' as any;
         }
 
@@ -225,8 +225,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsLoading(false);
             initialFetchDoneRef.current = true;
           } else if (result) {
-            console.log('✅ Auth success');
-            setUser(result);
+            // DEEP EQUALITY CHECK to prevent unnecessary re-renders
+            // This is critical for preventing page reloads/effect triggers on window focus
+            const isUnchanged = user &&
+              result.id === user.id &&
+              JSON.stringify(result) === JSON.stringify(user);
+
+            if (isUnchanged) {
+              console.log('✅ Auth success (State unchanged, skipping update)');
+            } else {
+              console.log('✅ Auth success (Updating state)');
+              setUser(result);
+            }
           } else {
             console.warn('⚠️ No profile found - forcing logout');
             setUser(null);

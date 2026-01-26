@@ -5,6 +5,7 @@
     flex-direction: column;
     gap: var(--spacing-sm);
     padding: var(--spacing-xl);
+    padding-bottom: calc(var(--spacing-xl) * 1.5);
 }
 
 .container-entity {
@@ -327,7 +328,7 @@
 }
 
 .step-actions {
-    margin-top: var(--spacing-xl);
+    margin-top: var(--spacing-md);
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-md);

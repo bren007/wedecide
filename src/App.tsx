@@ -17,6 +17,7 @@ import { DecisionListPage } from './pages/decisions/DecisionListPage';
 import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
 import { DecisionDetailPage } from './pages/decisions/DecisionDetailPage';
 import { DecisionEditPage } from './pages/decisions/DecisionEditPage';
+import { DecisionTriagePage } from './pages/decisions/DecisionTriagePage';
 import { MeetingLayout } from './components/layouts/MeetingLayout';
 import { MeetingListPage } from './pages/meetings/MeetingListPage';
 import { MeetingDetailPage } from './pages/meetings/MeetingDetailPage';
@@ -94,6 +95,7 @@ function AppContent() {
           >
             <Route index element={<DecisionListPage />} />
             <Route path="new" element={<DecisionCreatePage />} />
+            <Route path="triage" element={<DecisionTriagePage />} />
             <Route path=":id" element={<DecisionDetailPage />} />
             <Route path=":id/edit" element={<DecisionEditPage />} />
           </Route>

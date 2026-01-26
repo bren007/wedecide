@@ -14,7 +14,7 @@ export const MeetingDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { getMeeting, createAgendaItem, deleteAgendaItem, updateMeeting, deleteMeeting, linkDecisionToAgendaItem } = useMeetings();
-    const { decisions, refresh: refreshDecisions } = useDecisions();
+    const { decisions, loading: decisionsLoading, refresh: refreshDecisions } = useDecisions();
     const { isChair, isAdmin } = useAuth();
     const { showToast } = useToasts();
 
@@ -22,6 +22,7 @@ export const MeetingDetailPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showAddAgenda, setShowAddAgenda] = useState(false);
     const [newItemTitle, setNewItemTitle] = useState('');
+    const [isAddingDecision, setIsAddingDecision] = useState(true);
     const [showDecisionPicker, setShowDecisionPicker] = useState<string | null>(null); // Agenda ID
 
     useEffect(() => {
@@ -42,19 +43,29 @@ export const MeetingDetailPage: React.FC = () => {
         }
     };
 
-    const handleAddAgendaItem = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAddAgendaItem = async (e?: React.FormEvent, decisionId?: string, customTitle?: string) => {
+        if (e) e.preventDefault();
+        const title = customTitle || newItemTitle;
+        if (!title) return;
+
         try {
-            await createAgendaItem(id!, {
-                title: newItemTitle,
+            const newItem = await createAgendaItem(id!, {
+                title: title,
                 order_index: (meeting?.agenda_items?.length || 0) + 1
             });
+
+            if (decisionId) {
+                await linkDecisionToAgendaItem(decisionId, newItem.id);
+            }
+
             setNewItemTitle('');
+            setIsAddingDecision(false);
             setShowAddAgenda(false);
             loadMeeting();
-            showToast('Agenda item added', 'success');
+            refreshDecisions();
+            showToast(decisionId ? 'Decision added to agenda' : 'Agenda item added', 'success');
         } catch (err: any) {
-            showToast('Failed to add agenda item', 'error');
+            showToast('Failed to add item', 'error');
         }
     };
 
@@ -256,26 +267,75 @@ export const MeetingDetailPage: React.FC = () => {
                 <div className="modal-overlay" onClick={() => setShowAddAgenda(false)}>
                     <div className="modal-card" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>New Agenda Item</h3>
+                            <h3>Add Agenda Item</h3>
                             <button className="close-btn" onClick={() => setShowAddAgenda(false)}><X size={20} /></button>
                         </div>
-                        <form onSubmit={handleAddAgendaItem}>
-                            <div className="form-group">
-                                <label>Item Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newItemTitle}
-                                    onChange={e => setNewItemTitle(e.target.value)}
-                                    placeholder="e.g., Financial Report Q3"
-                                    autoFocus
-                                />
+
+                        <div className="modal-tabs">
+                            <button
+                                className={`modal-tab ${isAddingDecision ? 'active' : ''}`}
+                                onClick={() => setIsAddingDecision(true)}
+                            >
+                                Link Decision
+                            </button>
+                            <button
+                                className={`modal-tab ${!isAddingDecision ? 'active' : ''}`}
+                                onClick={() => setIsAddingDecision(false)}
+                            >
+                                Custom Item
+                            </button>
+                        </div>
+
+                        {isAddingDecision ? (
+                            <div className="decision-picker-section">
+                                <p className="picker-hint">Select an approved decision to add as an agenda item.</p>
+                                <div className="decision-picker-scroll">
+                                    {decisionsLoading ? (
+                                        <div className="picker-loading">Loading decisions...</div>
+                                    ) : (decisions.filter(d => !d.agenda_item_id && d.status === 'active').length > 0) ? (
+                                        <div className="picker-grid">
+                                            {decisions.filter(d => !d.agenda_item_id && d.status === 'active').map(d => (
+                                                <div key={d.id} className="picker-option">
+                                                    <div className="option-info">
+                                                        <span className="option-title">{d.title}</span>
+                                                        <span className={`option-status status-${d.status}`}>{d.status}</span>
+                                                    </div>
+                                                    <button
+                                                        className="btn-primary btn-sm"
+                                                        onClick={() => handleAddAgendaItem(undefined, d.id, d.title)}
+                                                    >
+                                                        Add to Agenda
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="empty-picker-state">
+                                            <p>No unlinked "Active" decisions found.</p>
+                                            <button className="btn-secondary btn-sm" onClick={() => refreshDecisions()}>Refresh List</button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary" onClick={() => setShowAddAgenda(false)}>Cancel</button>
-                                <button type="submit" className="btn-primary">Add to Agenda</button>
-                            </div>
-                        </form>
+                        ) : (
+                            <form onSubmit={handleAddAgendaItem}>
+                                <div className="form-group">
+                                    <label>Item Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newItemTitle}
+                                        onChange={e => setNewItemTitle(e.target.value)}
+                                        placeholder="e.g., Financial Report Q3"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="modal-actions">
+                                    <button type="button" className="btn-secondary" onClick={() => setShowAddAgenda(false)}>Cancel</button>
+                                    <button type="submit" className="btn-primary">Add to Agenda</button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
@@ -289,9 +349,11 @@ export const MeetingDetailPage: React.FC = () => {
                         </div>
                         <p className="modal-subtitle">Select a decision to present during this agenda item.</p>
                         <div className="decision-picker-scroll">
-                            {decisions.filter(d => !d.agenda_item_id).length > 0 ? (
+                            {decisionsLoading ? (
+                                <div className="picker-loading">Loading decisions...</div>
+                            ) : (decisions.filter(d => !d.agenda_item_id && d.status === 'active').length > 0) ? (
                                 <div className="picker-grid">
-                                    {decisions.filter(d => !d.agenda_item_id).map(d => (
+                                    {decisions.filter(d => !d.agenda_item_id && d.status === 'active').map(d => (
                                         <div key={d.id} className="picker-option">
                                             <div className="option-info">
                                                 <span className="option-title">{d.title}</span>
@@ -309,7 +371,7 @@ export const MeetingDetailPage: React.FC = () => {
                             ) : (
                                 <div className="empty-picker-state">
                                     <p>No unlinked decisions available.</p>
-                                    <button className="btn-secondary" onClick={() => navigate('/decisions/new')}>Create New Decision</button>
+                                    <button className="btn-secondary" onClick={() => refreshDecisions()}>Refresh List</button>
                                 </div>
                             )}
                         </div>

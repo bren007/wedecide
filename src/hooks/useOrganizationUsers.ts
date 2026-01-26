@@ -25,6 +25,9 @@ export function useOrganizationUsers() {
         try {
             if (!user?.organization_id) return;
             setLoading(true);
+
+            console.log('🔍 [useOrganizationUsers] Fetching users for org:', user.organization_id);
+
             const { data, error } = await supabase
                 .from('users')
                 .select('id, email, name, created_at')
@@ -32,8 +35,12 @@ export function useOrganizationUsers() {
                 .order('name');
 
             if (error) throw error;
+
+            console.log('✅ [useOrganizationUsers] Loaded users:', data);
+
             setUsers(data || []);
         } catch (e) {
+            console.error('❌ [useOrganizationUsers] Error:', e);
             setError(e as Error);
         } finally {
             setLoading(false);

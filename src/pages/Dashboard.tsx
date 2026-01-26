@@ -7,10 +7,19 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import { useDecisions } from '../hooks/useDecisions';
+import { StatusBadge } from '../components/StatusBadge';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { decisions, loading } = useDecisions();
+
+  React.useEffect(() => {
+    if (decisions.length > 0) {
+      console.log(`📊 [Dashboard] Decisions populated: ${decisions.length} items`);
+    } else if (!loading) {
+      console.log('📊 [Dashboard] Decisions loaded (empty)');
+    }
+  }, [decisions.length, loading]);
 
   const activeDecisions = decisions.filter(d => d.status === 'active').length;
   const completedDecisions = decisions.filter(d => d.status === 'completed').length;
@@ -64,9 +73,7 @@ export const Dashboard: React.FC = () => {
                       <Link to={`/decisions/${decision.id}`}>
                         <div className="decision-info">
                           <span className="decision-title">{decision.title}</span>
-                          <span className={`status-badge status-${decision.status}`}>
-                            {decision.status}
-                          </span>
+                          <StatusBadge status={decision.status} />
                         </div>
                         <span className="decision-date">
                           {new Date(decision.created_at).toLocaleDateString()}
