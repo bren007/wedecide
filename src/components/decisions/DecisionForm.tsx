@@ -84,6 +84,16 @@ export function DecisionForm({
         decide: []
     });
 
+    // Ensure 'Recommend' has a default if empty (e.g. legacy data or edit mode)
+    useEffect(() => {
+        if (user && rapidRoles.recommend.length === 0) {
+            setRapidRoles(prev => ({
+                ...prev,
+                recommend: [{ role_type: 'recommend', user_id: user.id, user_name: user.name }]
+            }));
+        }
+    }, [user]); // Run once when user loads or if roles strictly match dependency logic (but we limit side effects)
+
     // Temp state for adding items
     const [selectedUserId, setSelectedUserId] = useState('');
     const [tempDocName, setTempDocName] = useState('');
@@ -193,10 +203,20 @@ export function DecisionForm({
             setPeople(initialData.initialPeople || []);
             setDocuments(initialData.initialDocuments || []);
             setAffectedParties(initialData.affectedParties || []);
-            if (initialData.rapidRoles) setRapidRoles(initialData.rapidRoles);
+            setAffectedParties(initialData.affectedParties || []);
+
+            // Ensure Rapid Roles, and default Recommend to creator if missing (even in edit mode if empty)
+            const roles = initialData.rapidRoles || {
+                recommend: [], agree: [], perform: [], input: [], decide: []
+            };
+            if (user && (!roles.recommend || roles.recommend.length === 0)) {
+                roles.recommend = [{ role_type: 'recommend', user_id: user.id, user_name: user.name }];
+            }
+            setRapidRoles(roles);
+
             // Usually we stay on step 1 for edit
         }
-    }, [initialData]);
+    }, [initialData, user]);
 
     const clearDraft = () => {
         if (PERSISTENCE_KEY) {
@@ -211,30 +231,24 @@ export function DecisionForm({
 
     // Precisely anchor active step to navbar during transitions
     useEffect(() => {
-        const activeStep = formRef.current?.querySelector('.wizard-step.active') as HTMLElement;
-        if (activeStep) {
-            const navHeight = 90; // Header offset
-            const startTime = Date.now();
-            const duration = 500; // Match 0.4s CSS + buffer
-            let frameId: number;
-
-            const stickToTop = () => {
-                const elapsed = Date.now() - startTime;
-                const rect = activeStep.getBoundingClientRect();
-                const delta = rect.top - navHeight;
-
-                if (Math.abs(delta) > 0.5) {
-                    window.scrollBy(0, delta);
-                }
-
-                if (elapsed < duration) {
-                    frameId = requestAnimationFrame(stickToTop);
-                }
-            };
-
-            frameId = requestAnimationFrame(stickToTop);
-            return () => cancelAnimationFrame(frameId);
+        // For Step 1, just scroll to the very top of the page
+        if (currentStep === 1) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
         }
+
+        // For other steps, wait for the collapse animation (400ms) to finish/stabilize
+        // This prevents the "anchored to bottom" issue where the content shifts up as previous steps collapse
+        const timer = setTimeout(() => {
+            const activeStep = formRef.current?.querySelector('.wizard-step.active');
+            if (activeStep) {
+                // Scroll to the top of the step, leaving a bit of headroom for the navbar
+                const y = activeStep.getBoundingClientRect().top + window.scrollY - 120; // 120px offset for header + padding
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }, 400); // Sync with CSS transition time (0.4s)
+
+        return () => clearTimeout(timer);
     }, [currentStep]);
 
 
@@ -700,24 +714,24 @@ export function DecisionForm({
                     <div className="review-disclaimer" style={{ padding: 'var(--spacing-md)', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(99, 102, 241, 0.2)', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
                         <p style={{ margin: 0 }}>This will be created as a <strong>Draft</strong>. You can review all details and add specific notes before publishing it to the organization.</p>
                     </div>
-                </div>
 
-                <div className="step-actions">
-                    <Button variant="danger" type="button" onClick={() => {
-                        if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-                            clearDraft();
-                            onCancel();
-                        }
-                    }} disabled={isLoading}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" type="submit" isLoading={isLoading} disabled={isLoading}>
-                        {submitLabel}
-                    </Button>
+                    <div className="step-actions">
+                        <Button variant="danger" type="button" onClick={() => {
+                            if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                                clearDraft();
+                                onCancel();
+                            }
+                        }} disabled={isLoading}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary" type="submit" isLoading={isLoading} disabled={isLoading}>
+                            {submitLabel}
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-        </form>
+        </form >
     );
 }
 

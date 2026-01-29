@@ -227,10 +227,16 @@
     color: var(--color-text-muted);
 }
 
+.status-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
 .status-info-actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .status-explainer {

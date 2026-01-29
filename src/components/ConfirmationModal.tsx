@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './Button';
-import { AlertTriangle, Info } from 'lucide-react';
+import { AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import './ConfirmationModal.css';
 
 interface ConfirmationModalProps {
@@ -11,7 +11,7 @@ interface ConfirmationModalProps {
     message: string;
     confirmText?: string;
     cancelText?: string;
-    variant?: 'danger' | 'warning' | 'info';
+    variant?: 'danger' | 'warning' | 'info' | 'success';
     isLoading?: boolean;
 }
 
@@ -41,6 +41,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 return <AlertTriangle size={24} className={variant === 'danger' ? 'text-danger' : 'text-warning'} style={{ marginRight: '12px', color: variant === 'danger' ? '#ef4444' : '#f59e0b' }} />;
             case 'info':
                 return <Info size={24} className="text-info" style={{ marginRight: '12px', color: '#3b82f6' }} />;
+            case 'success':
+                return <CheckCircle size={24} className="text-success" style={{ marginRight: '12px', color: '#10b981' }} />;
             default:
                 return null;
         }
@@ -51,6 +53,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     const getButtonVariant = () => {
         if (variant === 'info') return 'primary';
         if (variant === 'warning') return 'danger'; // Map warning to danger as fallback
+        if (variant === 'success') return 'success';
         return variant as any;
     };
 

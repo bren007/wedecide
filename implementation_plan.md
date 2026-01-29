@@ -15,31 +15,28 @@ Enhance the existing Meeting Management features to provide a complete workflow 
     - [ ] Add "Submit" action for Decision Drafts (Owner only).
     - [ ] Validation: Ensure all required fields are present before submission.
 
-## 2. Meeting Management Improvements
-- [ ] **Edit Meeting Details**
-    - [ ] Add "Edit" button to `MeetingDetailPage` header.
-    - [ ] Reuse the "Create Meeting" form logic/modal to allow updating Title, Date, Location, and Description.
-- [ ] **Cancel/Delete Workflow**
-    - [ ] Improve delete confirmation (double check with "Archive" vs "Delete" semantics if needed, currently hard delete).
-
-## 2. Agenda Management
-- [ ] **Reorder Agenda Items**
-    - [ ] Add "Move Up" / "Move Down" buttons for agenda items.
-    - [ ] Implement backend update for `order_index`.
-- [ ] **Edit Agenda Items**
-    - [ ] Allow renaming agenda items inline or via a modal.
-    - [ ] Edit/Add descriptions to agenda items (currently only Title is managed in UI).
+## 2. Meeting Management Improvements (Phase 1)
+- [ ] **Schema Synchronization**
+    - [ ] Add `Meeting` and `AgendaItem` models to `schema.prisma` (currently missing).
+    - [ ] Add `MeetingAttendee` model to track invitations and presence.
+- [ ] **Core Meeting Management**
+    - [ ] **Edit Meeting**: Modal/Page to update Title, Date, Location, Description.
+    - [ ] **Cancel/Delete**: Soft delete or status update to 'cancelled'.
+- [ ] **Agenda Management**
+    - [ ] **Reordering**: Implement "Move Up" / "Move Down" buttons for agenda items (backend updates `order_index`).
+    - [ ] **Edit Items**: Allow inline editing of Item Title and Description.
+    - [ ] **Minutes/Notes**: Add `notes` field to `AgendaItem` to capture minutes during the meeting.
+- [ ] **Attendee Management**
+    - [ ] **Invite Users**: Functionality to select users from the Organization to invite.
+    - [ ] **Track Attendance**: Mark users as Present/Absent during the meeting.
 
 ## 3. Decision Integration
-- [ ] **Review Decision Linking**
-    - [ ] Verify the "Link Decision" picker works correctly (currently implemented).
-    - [ ] Ensure linked decisions are visually distinct and navigating to them works.
 - [ ] **"Presented" Status**
-    - [ ] (Optional) When a meeting is "Completed", should linked decisions automatically move state? (To be discussed).
+    - [ ] When a meeting is "Completed", automatically prompt to move linked, active decisions to `Completed` (or keep as is, relying on the new "Finalize" button).
 
 ## 4. UI/UX Polish
 - [ ] **Empty States**: Ensure nice empty states for meetings with no agenda.
-- [ ] **Navigation**: Ensure explicit "Back to Meeting" from a Decision page if referring to it.
+- [ ] **Navigation**: Explicit "Back to Meeting" from a Decision page if referred.
 
 ## Technical Tasks
 - [ ] **Route Protection**: Ensure only Org Members can see meetings, only Admins/Chairs can edit.

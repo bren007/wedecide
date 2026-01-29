@@ -328,7 +328,7 @@
 }
 
 .step-actions {
-    margin-top: var(--spacing-md);
+    margin-top: var(--spacing-xl);
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-md);

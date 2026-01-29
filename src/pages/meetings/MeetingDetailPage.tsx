@@ -6,14 +6,23 @@ import { useAuth } from '../../context/AuthContext';
 import { useToasts } from '../../context/ToastContext';
 import {
     Calendar, MapPin, Clock, ArrowLeft, Plus,
-    Trash2, Gavel, FileText, X, Link as LinkIcon
+    Trash2, Gavel, FileText, X, Link as LinkIcon, Edit,
+    ArrowUp, ArrowDown, Users
 } from 'lucide-react';
+import { MeetingForm, type MeetingFormData } from '../../components/meetings/MeetingForm';
+import { AgendaItemForm, type AgendaFormData } from '../../components/meetings/AgendaItemForm';
+import { AttendeePicker } from '../../components/meetings/AttendeePicker';
+import type { AgendaItem } from '../../hooks/useMeetings';
 import './MeetingDetailPage.css';
 
 export const MeetingDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getMeeting, createAgendaItem, deleteAgendaItem, updateMeeting, deleteMeeting, linkDecisionToAgendaItem } = useMeetings();
+    const {
+        getMeeting, createAgendaItem, deleteAgendaItem, updateMeeting, deleteMeeting,
+        linkDecisionToAgendaItem, reorderAgendaItem, updateAgendaItem,
+        inviteAttendee, removeAttendee, updateAttendeeStatus
+    } = useMeetings();
     const { decisions, loading: decisionsLoading, refresh: refreshDecisions } = useDecisions();
     const { isChair, isAdmin } = useAuth();
     const { showToast } = useToasts();
@@ -113,6 +122,23 @@ export const MeetingDetailPage: React.FC = () => {
         }
     };
 
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+
+    const handleUpdateMeeting = async (data: MeetingFormData) => {
+        try {
+            setIsEditing(true);
+            const updated = await updateMeeting(id!, data);
+            setMeeting(updated);
+            setShowEditModal(false);
+            showToast('Meeting updated successfully', 'success');
+        } catch (err: any) {
+            showToast('Failed to update meeting', 'error');
+        } finally {
+            setIsEditing(false);
+        }
+    };
+
     const handleDeleteMeeting = async () => {
         if (!window.confirm('Permanently delete this meeting?')) return;
         try {
@@ -121,6 +147,69 @@ export const MeetingDetailPage: React.FC = () => {
             showToast('Meeting deleted', 'success');
         } catch (err: any) {
             showToast('Failed to delete meeting', 'error');
+        }
+    };
+
+
+
+    const [editingAgendaItem, setEditingAgendaItem] = useState<AgendaItem | null>(null);
+    const [isSubmittingAgenda, setIsSubmittingAgenda] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
+
+    const handleInviteAttendee = async (userId: string) => {
+        try {
+            await inviteAttendee(id!, userId);
+            loadMeeting();
+            showToast('Invitation sent', 'success');
+        } catch (err) {
+            showToast('Failed to invite user', 'error');
+        }
+    };
+
+    const handleRemoveAttendee = async (userId: string) => {
+        if (!confirm('Remove this attendee?')) return;
+        try {
+            await removeAttendee(id!, userId);
+            loadMeeting();
+            showToast('Attendee removed', 'success');
+        } catch (err) {
+            showToast('Failed to remove attendee', 'error');
+        }
+    };
+
+    const handleAttendeeStatusChange = async (userId: string, status: string) => {
+        try {
+            await updateAttendeeStatus(id!, userId, status);
+            loadMeeting();
+            showToast('Status updated', 'success');
+        } catch (err) {
+            showToast('Failed to update status', 'error');
+        }
+    };
+
+    const handleReorder = async (itemId: string, direction: 'up' | 'down') => {
+        if (!meeting?.agenda_items) return;
+        // Optimistic update could happen here, but for now just wait
+        try {
+            await reorderAgendaItem(meeting.agenda_items, itemId, direction);
+            loadMeeting();
+        } catch (err: any) {
+            showToast('Failed to reorder item', 'error');
+        }
+    };
+
+    const handleUpdateAgendaItem = async (data: AgendaFormData) => {
+        if (!editingAgendaItem) return;
+        try {
+            setIsSubmittingAgenda(true);
+            await updateAgendaItem(editingAgendaItem.id, data);
+            setEditingAgendaItem(null);
+            loadMeeting();
+            showToast('Agenda item updated', 'success');
+        } catch (err: any) {
+            showToast('Failed to update item', 'error');
+        } finally {
+            setIsSubmittingAgenda(false);
         }
     };
 
@@ -169,6 +258,9 @@ export const MeetingDetailPage: React.FC = () => {
                                     Complete Meeting
                                 </button>
                             )}
+                            <button className="btn-icon-secondary" onClick={() => setShowEditModal(true)} title="Edit Meeting">
+                                <Edit size={18} />
+                            </button>
                             <button className="btn-icon-danger" onClick={handleDeleteMeeting} title="Delete Meeting">
                                 <Trash2 size={18} />
                             </button>
@@ -246,9 +338,30 @@ export const MeetingDetailPage: React.FC = () => {
                                         )}
                                     </div>
                                     {meeting.status !== 'completed' && (isChair || isAdmin) && (
-                                        <button className="agenda-item-delete" onClick={() => handleDeleteItem(item.id)}>
-                                            <Trash2 size={16} />
-                                        </button>
+                                        <div className="agenda-actions">
+                                            <div className="reorder-controls">
+                                                <button
+                                                    className="btn-icon-tiny"
+                                                    onClick={() => handleReorder(item.id, 'up')}
+                                                    disabled={index === 0}
+                                                >
+                                                    <ArrowUp size={14} />
+                                                </button>
+                                                <button
+                                                    className="btn-icon-tiny"
+                                                    onClick={() => handleReorder(item.id, 'down')}
+                                                    disabled={index === (meeting.agenda_items?.length || 0) - 1}
+                                                >
+                                                    <ArrowDown size={14} />
+                                                </button>
+                                            </div>
+                                            <button className="agenda-item-edit" onClick={() => setEditingAgendaItem(item)} title="Edit Item">
+                                                <Edit size={16} />
+                                            </button>
+                                            <button className="agenda-item-delete" onClick={() => handleDeleteItem(item.id)} title="Delete Item">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             ))
@@ -260,6 +373,63 @@ export const MeetingDetailPage: React.FC = () => {
                             </div>
                         )}
                     </div>
+                </section>
+
+                <section className="attendees-section-detail">
+                    <div className="section-header-detail">
+                        <h2>Attendees</h2>
+                        {(isChair || isAdmin) && (
+                            <button className="add-agenda-btn" onClick={() => setShowInviteModal(true)}>
+                                <Users size={18} />
+                                <span>Invite</span>
+                            </button>
+                        )}
+                    </div>
+                    {meeting.attendees && meeting.attendees.length > 0 ? (
+                        <div className="attendees-list">
+                            {meeting.attendees.map(attendee => (
+                                <div key={attendee.id} className="attendee-card">
+                                    <div className="attendee-info">
+                                        <div className="attendee-avatar">{attendee.user?.name?.charAt(0) || '?'}</div>
+                                        <div className="attendee-details">
+                                            <span className="attendee-name">{attendee.user?.name || 'Unknown User'}</span>
+                                            <span className="attendee-email">{attendee.user?.email}</span>
+                                        </div>
+                                    </div>
+                                    <div className="attendee-actions">
+                                        {(isChair || isAdmin) ? (
+                                            <select
+                                                className={`status-select status-${attendee.status}`}
+                                                value={attendee.status}
+                                                onChange={(e) => handleAttendeeStatusChange(attendee.user_id, e.target.value)}
+                                            >
+                                                <option value="invited">Invited</option>
+                                                <option value="accepted">Accepted</option>
+                                                <option value="declined">Declined</option>
+                                                <option value="present">Present</option>
+                                                <option value="absent">Absent</option>
+                                            </select>
+                                        ) : (
+                                            <span className={`status-badge status-${attendee.status}`}>{attendee.status}</span>
+                                        )}
+                                        {(isChair || isAdmin) && (
+                                            <button
+                                                className="btn-icon-tiny danger"
+                                                onClick={() => handleRemoveAttendee(attendee.user_id)}
+                                                title="Remove Attendee"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="empty-state-small">
+                            <p>No attendees invited yet.</p>
+                        </div>
+                    )}
                 </section>
             </main>
 
@@ -377,6 +547,42 @@ export const MeetingDetailPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {showEditModal && meeting && (
+                <MeetingForm
+                    title="Edit Meeting Details"
+                    submitLabel="Save Changes"
+                    initialData={{
+                        ...meeting,
+                        description: meeting.description || '',
+                        location: meeting.location || ''
+                    }}
+                    onSubmit={handleUpdateMeeting}
+                    onCancel={() => setShowEditModal(false)}
+                    isSubmitting={isEditing}
+                />
+            )}
+
+            {editingAgendaItem && (
+                <AgendaItemForm
+                    title="Edit Agenda Item"
+                    initialData={{
+                        title: editingAgendaItem.title,
+                        description: editingAgendaItem.description || '',
+                        notes: editingAgendaItem.notes || ''
+                    }}
+                    onSubmit={handleUpdateAgendaItem}
+                    onCancel={() => setEditingAgendaItem(null)}
+                    isSubmitting={isSubmittingAgenda}
+                />
+            )}
+            {showInviteModal && meeting && (
+                <AttendeePicker
+                    excludeUserIds={meeting.attendees?.map(a => a.user_id) || []}
+                    onInvite={handleInviteAttendee}
+                    onClose={() => setShowInviteModal(false)}
+                />
             )}
         </div>
     );

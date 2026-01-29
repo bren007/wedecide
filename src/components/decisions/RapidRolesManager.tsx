@@ -261,15 +261,27 @@ export function RapidRolesManager({ roles, onChange, disabled = false }: RapidRo
                                 <div className="input-with-button">
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', flex: 1 }}>
                                         <Input
-                                            placeholder="Full Name"
+                                            placeholder="Full Name (Press Enter to add)"
                                             value={state.externalName}
                                             onChange={(e) => updateRoleState(roleType, { externalName: e.target.value })}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    if (state.externalName) addAssignment(roleType);
+                                                }
+                                            }}
                                             disabled={disabled}
                                         />
                                         <Input
                                             placeholder="Role/Title (Optional)"
                                             value={state.externalRole}
                                             onChange={(e) => updateRoleState(roleType, { externalRole: e.target.value })}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    if (state.externalName) addAssignment(roleType);
+                                                }
+                                            }}
                                             disabled={disabled}
                                         />
                                     </div>

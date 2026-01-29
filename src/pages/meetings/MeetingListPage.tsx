@@ -3,7 +3,8 @@ import { useMeetings, type Meeting } from '../../hooks/useMeetings';
 import { useAuth } from '../../context/AuthContext';
 import { useToasts } from '../../context/ToastContext';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Clock, ChevronRight, Plus, X } from 'lucide-react';
+import { Calendar, MapPin, Clock, ChevronRight, Plus } from 'lucide-react';
+import { MeetingForm, type MeetingFormData } from '../../components/meetings/MeetingForm';
 import './MeetingListPage.css';
 
 export const MeetingListPage: React.FC = () => {
@@ -12,22 +13,14 @@ export const MeetingListPage: React.FC = () => {
     const { showToast } = useToasts();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [newMeeting, setNewMeeting] = useState({
-        title: '',
-        scheduled_at: '',
-        description: '',
-        location: ''
-    });
 
-    const handleCreateMeeting = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleCreateMeeting = async (data: MeetingFormData) => {
         if (isSubmitting) return;
 
         try {
             setIsSubmitting(true);
-            await createMeeting(newMeeting);
+            await createMeeting(data);
             setShowCreateModal(false);
-            setNewMeeting({ title: '', scheduled_at: '', description: '', location: '' });
             showToast('Meeting created successfully', 'success');
         } catch (err: any) {
             showToast(err.message || 'Failed to create meeting', 'error');
@@ -107,78 +100,13 @@ export const MeetingListPage: React.FC = () => {
             </div>
 
             {showCreateModal && (
-                <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-                    <div className="modal-card" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Schedule Meeting</h3>
-                            <button className="close-btn" onClick={() => setShowCreateModal(false)}>
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <form onSubmit={handleCreateMeeting}>
-                            <div className="form-group">
-                                <label>Meeting Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newMeeting.title}
-                                    onChange={e => setNewMeeting({ ...newMeeting, title: e.target.value })}
-                                    placeholder="e.g., Q4 Strategy Session"
-                                    autoFocus
-                                />
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Date & Time</label>
-                                    <input
-                                        type="datetime-local"
-                                        required
-                                        value={newMeeting.scheduled_at}
-                                        onChange={e => setNewMeeting({ ...newMeeting, scheduled_at: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Location / Link</label>
-                                <div className="input-with-icon">
-                                    <MapPin size={18} />
-                                    <input
-                                        type="text"
-                                        value={newMeeting.location}
-                                        onChange={e => setNewMeeting({ ...newMeeting, location: e.target.value })}
-                                        placeholder="Physical room or URL"
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Brief Description</label>
-                                <textarea
-                                    value={newMeeting.description}
-                                    onChange={e => setNewMeeting({ ...newMeeting, description: e.target.value })}
-                                    placeholder="Add context for attendees..."
-                                    rows={3}
-                                />
-                            </div>
-                            <div className="modal-actions">
-                                <button
-                                    type="button"
-                                    className="btn-secondary"
-                                    onClick={() => setShowCreateModal(false)}
-                                    disabled={isSubmitting}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn-primary"
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? 'Creating...' : 'Schedule Meeting'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <MeetingForm
+                    onSubmit={handleCreateMeeting}
+                    onCancel={() => setShowCreateModal(false)}
+                    isSubmitting={isSubmitting}
+                    submitLabel="Schedule Meeting"
+                    title="Schedule Meeting"
+                />
             )}
         </div>
     );

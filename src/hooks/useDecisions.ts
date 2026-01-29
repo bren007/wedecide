@@ -29,6 +29,10 @@ export interface Decision {
     documents?: any[];
     affected_parties?: any[];
     feedback?: any[];
+    owner?: {
+        name: string;
+        email: string;
+    };
 }
 
 
@@ -94,7 +98,7 @@ export function useDecisions() {
 
                 const query = supabase
                     .from('decisions')
-                    .select('*')
+                    .select('*, owner:users(name, email)') // Correctly join with users table
                     .eq('organization_id', user.organization_id)
                     .order('created_at', { ascending: false });
 

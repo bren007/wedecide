@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { useDecisions } from '../../hooks/useDecisions';
 import type { Decision } from '../../hooks/useDecisions';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +15,9 @@ export const DecisionTriagePage: React.FC = () => {
     const navigate = useNavigate();
 
     const [selectedDecision, setSelectedDecision] = useState<Decision | null>(null);
+    const [decisionToApprove, setDecisionToApprove] = useState<string | null>(null);
+    const [showApproveModal, setShowApproveModal] = useState(false);
+
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectionFeedback, setRejectionFeedback] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,20 +27,32 @@ export const DecisionTriagePage: React.FC = () => {
             <div className="triage-access-denied">
                 <h2>Access Denied</h2>
                 <p>Only the Chairperson can triage decisions.</p>
-                <button className="btn-primary" onClick={() => navigate('/dashboard')}>Go to Dashboard</button>
+                <div style={{ marginTop: '1rem' }}>
+                    <button className="btn-primary" onClick={() => navigate('/dashboard')}>Go to Dashboard</button>
+                </div>
             </div>
         );
     }
 
     const submittedDecisions = decisions.filter(d => d.status === 'submitted');
 
-    const handleApprove = async (id: string) => {
-        if (!window.confirm('Are you sure you want to approve this decision for the agenda? It will become Active.')) return;
+    const initiateApprove = (id: string) => {
+        setDecisionToApprove(id);
+        setShowApproveModal(true);
+    };
+
+    const confirmApprove = async () => {
+        if (!decisionToApprove) return;
+        setIsSubmitting(true);
         try {
-            await approveDecision(id);
+            await approveDecision(decisionToApprove);
             showToast('Decision approved and marked as Active', 'success');
+            setShowApproveModal(false);
+            setDecisionToApprove(null);
         } catch (err: any) {
             showToast('Failed to approve decision', 'error');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -87,30 +103,32 @@ export const DecisionTriagePage: React.FC = () => {
                                 <div className="triage-card-header">
                                     <div className="decision-info">
                                         <h3>{decision.title}</h3>
-                                        <span className="decision-type-badge">{decision.decision_type || 'Decide'}</span>
+                                        <div className="decision-badges">
+                                            <span className="decision-type-badge">{decision.decision_type || 'Decide'}</span>
+                                        </div>
                                         <p className="decision-meta">
-                                            Submitted by User • {new Date(decision.updated_at).toLocaleDateString()}
+                                            Submitted by {decision.owner?.name || 'User'} • {new Date(decision.updated_at).toLocaleDateString()}
                                         </p>
                                     </div>
                                     <div className="triage-actions">
                                         <button
-                                            className="btn-icon view-btn"
+                                            className="btn-ghost-sm"
                                             onClick={() => navigate(`/decisions/${decision.id}`)}
-                                            title="View Details"
                                         >
-                                            <ChevronRight size={20} />
+                                            View Details
+                                            <ChevronRight size={16} />
                                         </button>
                                     </div>
                                 </div>
                                 <div className="triage-card-body">
                                     {decision.decision && (
                                         <div className="decision-preview-section">
-                                            <label>Decision:</label>
+                                            <label>Decision</label>
                                             <p className="decision-text">{decision.decision}</p>
                                         </div>
                                     )}
                                     <div className="description-preview-section">
-                                        <label>Supporting Info:</label>
+                                        <label>Supporting Info</label>
                                         <p className="description-text">
                                             {decision.description || 'No description provided.'}
                                         </p>
@@ -120,13 +138,15 @@ export const DecisionTriagePage: React.FC = () => {
                                     <button
                                         className="btn-danger-outline"
                                         onClick={() => handleOpenReject(decision)}
+                                        disabled={isSubmitting}
                                     >
                                         <XCircle size={18} />
                                         Request Changes
                                     </button>
                                     <button
                                         className="btn-success"
-                                        onClick={() => handleApprove(decision.id)}
+                                        onClick={() => initiateApprove(decision.id)}
+                                        disabled={isSubmitting}
                                     >
                                         <CheckCircle size={18} />
                                         Accept for Agenda
@@ -138,6 +158,19 @@ export const DecisionTriagePage: React.FC = () => {
                 )}
             </div>
 
+            {/* Confirmation Modal for Approval */}
+            <ConfirmationModal
+                isOpen={showApproveModal}
+                onClose={() => setShowApproveModal(false)}
+                onConfirm={confirmApprove}
+                title="Accept for Agenda?"
+                message="Are you sure you want to approve this decision? It will become 'Active' and ready for inclusion in the board agenda."
+                confirmText="Accept Decision"
+                variant="success"
+                isLoading={isSubmitting}
+            />
+
+            {/* Custom Modal for Rejection (Request Changes) */}
             {showRejectModal && (
                 <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
                     <div className="modal-card" onClick={e => e.stopPropagation()}>
@@ -146,22 +179,27 @@ export const DecisionTriagePage: React.FC = () => {
                             <button className="close-btn" onClick={() => setShowRejectModal(false)}>×</button>
                         </div>
                         <form onSubmit={handleReject}>
-                            <div className="form-group">
-                                <label>Feedback for Author</label>
-                                <textarea
-                                    className="feedback-input"
-                                    rows={4}
-                                    value={rejectionFeedback}
-                                    onChange={e => setRejectionFeedback(e.target.value)}
-                                    placeholder="Explain what needs to be improved..."
-                                    required
-                                    autoFocus
-                                />
+                            <div className="modal-body">
+                                <p className="modal-description">
+                                    Please provide specific feedback for the author. This will return the decision to "Draft" status.
+                                </p>
+                                <div className="form-group">
+                                    <label>Feedback for Author</label>
+                                    <textarea
+                                        className="feedback-input"
+                                        rows={4}
+                                        value={rejectionFeedback}
+                                        onChange={e => setRejectionFeedback(e.target.value)}
+                                        placeholder="Explain what needs to be improved..."
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
                             </div>
                             <div className="modal-actions">
                                 <button type="button" className="btn-secondary" onClick={() => setShowRejectModal(false)}>Cancel</button>
                                 <button type="submit" className="btn-danger" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Sending...' : 'Submit'}
+                                    {isSubmitting ? 'Sending...' : 'Request Changes'}
                                 </button>
                             </div>
                         </form>
