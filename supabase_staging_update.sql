@@ -128,7 +128,7 @@ ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_read_own"
   ON users FOR SELECT
   TO authenticated
-  USING (auth.uid() = id);
+  USING (auth.uid()::text = id);
 
 -- Allow user to read organizations they belong to
 CREATE POLICY "orgs_read_own"
@@ -136,7 +136,7 @@ CREATE POLICY "orgs_read_own"
   TO authenticated
   USING (
     id IN (
-      SELECT organization_id FROM users WHERE id = auth.uid()
+      SELECT organization_id FROM users WHERE id = auth.uid()::text
     )
   );
 
@@ -144,16 +144,118 @@ CREATE POLICY "orgs_read_own"
 CREATE POLICY "roles_read_own"
   ON user_roles FOR SELECT
   TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = auth.uid()::text);
 
 -- 5. Create WRITE Policies (UPDATE)
 -- Allow user to update their own profile
 CREATE POLICY "users_update_own"
   ON users FOR UPDATE
   TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
+  USING (auth.uid()::text = id)
+  WITH CHECK (auth.uid()::text = id);
 
 -- 6. Grant Schema Usage (Good practice)
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+
+-- ============================================
+-- FIX RLS 403 & Type Errors (Secure Version)
+-- ============================================
+
+-- 1. Create a robust SECURITY DEFINER function to get org ID
+-- This bypasses RLS on the users table and handles type casting safely.
+CREATE OR REPLACE FUNCTION public.get_auth_org_id()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT organization_id 
+  FROM public.users 
+  WHERE id = auth.uid()::text 
+  LIMIT 1;
+$$;
+
+-- 2. Drop existing policies (Clean Slate)
+DROP POLICY IF EXISTS "Users can view org meetings" ON meetings;
+DROP POLICY IF EXISTS "Admins can manage meetings" ON meetings;
+DROP POLICY IF EXISTS "Users can view agenda items" ON agenda_items;
+DROP POLICY IF EXISTS "Admins can manage agenda items" ON agenda_items;
+DROP POLICY IF EXISTS "Users can view meeting attendees" ON meeting_attendees;
+DROP POLICY IF EXISTS "Admins can manage meeting attendees" ON meeting_attendees;
+
+-- 3. Meetings Policies (Using function)
+CREATE POLICY "Users can view org meetings"
+ON meetings FOR SELECT
+USING (
+  organization_id::text = get_auth_org_id()::text
+);
+
+CREATE POLICY "Admins can manage meetings"
+ON meetings FOR ALL
+USING (
+  organization_id::text = get_auth_org_id()::text
+  AND EXISTS (
+    SELECT 1 FROM user_roles ur 
+    WHERE ur.user_id = auth.uid()::text 
+    AND ur.role IN ('admin', 'chair')
+  )
+);
+
+-- 4. Agenda Items Policies (Using function)
+CREATE POLICY "Users can view agenda items"
+ON agenda_items FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM meetings m
+    WHERE m.id::text = agenda_items.meeting_id::text
+    AND m.organization_id::text = get_auth_org_id()::text
+  )
+);
+
+CREATE POLICY "Admins can manage agenda items"
+ON agenda_items FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM meetings m
+    WHERE m.id::text = agenda_items.meeting_id::text
+    AND m.organization_id::text = get_auth_org_id()::text
+    AND EXISTS (
+      SELECT 1 FROM user_roles ur 
+      WHERE ur.user_id = auth.uid()::text 
+      AND ur.role IN ('admin', 'chair')
+    )
+  )
+);
+
+-- 5. Meeting Attendees Policies (Using function)
+CREATE POLICY "Users can view meeting attendees"
+ON meeting_attendees FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM meetings m
+    WHERE m.id::text = meeting_attendees.meeting_id::text
+    AND m.organization_id::text = get_auth_org_id()::text
+  )
+);
+
+CREATE POLICY "Admins can manage meeting attendees"
+ON meeting_attendees FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM meetings m
+    WHERE m.id::text = meeting_attendees.meeting_id::text
+    AND m.organization_id::text = get_auth_org_id()::text
+    AND EXISTS (
+      SELECT 1 FROM user_roles ur 
+      WHERE ur.user_id = auth.uid()::text 
+      AND ur.role IN ('admin', 'chair')
+    )
+  )
+);
+
+-- Fix for "Function Search Path Mutable" warning
+-- This ensures the function runs with a fixed search_path, preventing potential hijacking.
+
+ALTER FUNCTION public.get_user_organization_id() SET search_path = public;
