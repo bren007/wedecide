@@ -249,7 +249,7 @@ export function useMeetings() {
         if (error) throw error;
     }
 
-    async function updateAttendeeStatus(meetingId: string, userId: string, status: string) {
+    async function updateAttendeeStatus(meetingId: string, userId: string, status: "invited" | "accepted" | "declined" | "present" | "absent") {
         // @ts-ignore
         const { data, error } = await supabase
             .from('meeting_attendees')

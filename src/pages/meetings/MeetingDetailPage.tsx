@@ -177,7 +177,7 @@ export const MeetingDetailPage: React.FC = () => {
         }
     };
 
-    const handleAttendeeStatusChange = async (userId: string, status: string) => {
+    const handleAttendeeStatusChange = async (userId: string, status: "invited" | "accepted" | "declined" | "present" | "absent") => {
         try {
             await updateAttendeeStatus(id!, userId, status);
             loadMeeting();
@@ -401,7 +401,7 @@ export const MeetingDetailPage: React.FC = () => {
                                             <select
                                                 className={`status-select status-${attendee.status}`}
                                                 value={attendee.status}
-                                                onChange={(e) => handleAttendeeStatusChange(attendee.user_id, e.target.value)}
+                                                onChange={(e) => handleAttendeeStatusChange(attendee.user_id, e.target.value as "invited" | "accepted" | "declined" | "present" | "absent")}
                                             >
                                                 <option value="invited">Invited</option>
                                                 <option value="accepted">Accepted</option>

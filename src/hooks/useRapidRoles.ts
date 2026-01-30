@@ -79,7 +79,7 @@ export function useRapidRoles() {
             const insertData: any[] = [];
 
             Object.entries(roles).forEach(([roleType, assignments]) => {
-                assignments.forEach((assignment) => {
+                assignments.forEach((assignment: RapidRoleAssignment) => {
                     insertData.push({
                         decision_id: decisionId,
                         role_type: roleType,

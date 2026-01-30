@@ -11,23 +11,20 @@ import { supabase } from '../lib/supabase';
 describe.skip('Meetings RLS Policies', () => {
     let org1Id: string;
     let org2Id: string;
-    let user1Id: string;
-    let user2Id: string;
-    let meeting1Id: string;
-    let meeting2Id: string;
+
 
     beforeAll(async () => {
         // Create two organizations
         const { data: org1 } = await supabase
             .from('organizations')
-            .insert({ name: 'Test Org 1 RLS' })
+            .insert({ name: 'Test Org 1 RLS', slug: 'test-org-1-rls' })
             .select()
             .single();
         org1Id = org1!.id;
 
         const { data: org2 } = await supabase
             .from('organizations')
-            .insert({ name: 'Test Org 2 RLS' })
+            .insert({ name: 'Test Org 2 RLS', slug: 'test-org-2-rls' })
             .select()
             .single();
         org2Id = org2!.id;

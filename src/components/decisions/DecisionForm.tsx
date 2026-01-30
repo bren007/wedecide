@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../Button';
 import { Input } from '../Input';
-import { X, UserPlus, Link as LinkIcon, Check, ChevronDown, Share2 } from 'lucide-react';
-import { useOrganizationUsers } from '../../hooks/useOrganizationUsers';
+import { X, Link as LinkIcon, Check, ChevronDown, Share2 } from 'lucide-react';
+
 import { useAuth } from '../../context/AuthContext';
 import { RapidRolesManager } from './RapidRolesManager';
 import type { RapidRoleAssignment } from '../../hooks/useRapidRoles';
@@ -48,7 +48,7 @@ export function DecisionForm({
     error: externalError
 }: DecisionFormProps) {
     const { user } = useAuth();
-    const { users } = useOrganizationUsers();
+
 
     // User-specific persistence key
     const PERSISTENCE_KEY = user ? `${BASE_PERSISTENCE_KEY}_${user.id}` : null;
@@ -95,16 +95,13 @@ export function DecisionForm({
     }, [user]); // Run once when user loads or if roles strictly match dependency logic (but we limit side effects)
 
     // Temp state for adding items
-    const [selectedUserId, setSelectedUserId] = useState('');
+
     const [tempDocName, setTempDocName] = useState('');
     const [tempDocUrl, setTempDocUrl] = useState('');
     const [tempPartyName, setTempPartyName] = useState('');
-    const [isExternal, setIsExternal] = useState(false);
-    const [manualName, setManualName] = useState('');
-    const [manualEmail, setManualEmail] = useState('');
+
 
     // Validation Errors
-    const [emailError, setEmailError] = useState('');
     const [urlError, setUrlError] = useState('');
 
 
@@ -289,11 +286,6 @@ export function DecisionForm({
     };
 
 
-    const isValidEmail = (email: string) => {
-        if (!email) return true; // Optional email
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    };
-
     const isValidUrl = (url: string) => {
         try {
             new URL(url);
@@ -303,26 +295,7 @@ export function DecisionForm({
         }
     };
 
-    const addPerson = () => {
-        setEmailError('');
-        if (isExternal) {
-            if (!manualName) return;
-            if (manualEmail && !isValidEmail(manualEmail)) {
-                setEmailError('Please enter a valid email address');
-                return;
-            }
-            setPeople([...people, { name: manualName, email: manualEmail }]);
-            setManualName('');
-            setManualEmail('');
-        } else {
-            if (!selectedUserId) return;
-            const userToAdd = users.find(u => u.id === selectedUserId);
-            if (userToAdd && !people.some(p => p.userId === selectedUserId)) {
-                setPeople([...people, { userId: userToAdd.id, name: userToAdd.name, email: userToAdd.email }]);
-                setSelectedUserId('');
-            }
-        }
-    };
+
 
 
     const addDocument = () => {

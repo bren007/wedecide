@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserPlus, X, Check } from 'lucide-react';
+import { Search, UserPlus, X } from 'lucide-react';
 import { useMeetings } from '../../hooks/useMeetings';
 
 interface AttendeePickerProps {

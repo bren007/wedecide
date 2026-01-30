@@ -466,6 +466,46 @@ export interface Database {
                     }
                 ]
             },
+            meeting_attendees: {
+                Row: {
+                    id: string
+                    meeting_id: string
+                    user_id: string
+                    status: "invited" | "accepted" | "declined" | "present" | "absent"
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    meeting_id: string
+                    user_id: string
+                    status?: "invited" | "accepted" | "declined" | "present" | "absent"
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    meeting_id?: string
+                    user_id?: string
+                    status?: "invited" | "accepted" | "declined" | "present" | "absent"
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "meeting_attendees_meeting_id_fkey"
+                        columns: ["meeting_id"]
+                        referencedRelation: "meetings"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "meeting_attendees_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            },
             decision_rapid_roles: {
                 Row: {
                     id: string
