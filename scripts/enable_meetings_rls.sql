@@ -1,93 +1,41 @@
 -- ============================================
--- Enable RLS for Meetings, Agenda Items, and Affected Parties
--- ============================================
--- This migration adds Row Level Security policies to prevent
--- cross-organization data access vulnerabilities.
-
--- ============================================
--- STEP 1: Enable RLS on all three tables
+-- FIX RLS 403 & Type Errors (Secure Version)
 -- ============================================
 
-ALTER TABLE affected_parties ENABLE ROW LEVEL SECURITY;
-ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE agenda_items ENABLE ROW LEVEL SECURITY;
+-- 1. Create a robust SECURITY DEFINER function to get org ID
+-- This bypasses RLS on the users table and handles type casting safely.
+CREATE OR REPLACE FUNCTION public.get_auth_org_id()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT organization_id 
+  FROM public.users 
+  WHERE id = auth.uid()::text 
+  LIMIT 1;
+$$;
 
--- ============================================
--- STEP 2: Drop existing policies (if any)
--- ============================================
-
-DROP POLICY IF EXISTS "Users can view affected_parties of their org decisions" ON affected_parties;
-DROP POLICY IF EXISTS "Decision owners can add affected_parties" ON affected_parties;
-DROP POLICY IF EXISTS "Decision owners can remove affected_parties" ON affected_parties;
-
+-- 2. Drop existing policies (Clean Slate)
 DROP POLICY IF EXISTS "Users can view org meetings" ON meetings;
 DROP POLICY IF EXISTS "Admins can manage meetings" ON meetings;
-
 DROP POLICY IF EXISTS "Users can view agenda items" ON agenda_items;
 DROP POLICY IF EXISTS "Admins can manage agenda items" ON agenda_items;
+DROP POLICY IF EXISTS "Users can view meeting attendees" ON meeting_attendees;
+DROP POLICY IF EXISTS "Admins can manage meeting attendees" ON meeting_attendees;
 
--- ============================================
--- STEP 3: Affected Parties Policies
--- ============================================
-
--- View: Members of the same organization (via the decision's organization)
-CREATE POLICY "Users can view affected_parties of their org decisions"
-ON affected_parties FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM decisions d
-    JOIN users u ON u.organization_id = d.organization_id
-    WHERE d.id = affected_parties.decision_id
-    AND u.id = auth.uid()::text
-  )
-);
-
--- Insert: Decision Owner only
-CREATE POLICY "Decision owners can add affected_parties"
-ON affected_parties FOR INSERT
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM decisions d
-    WHERE d.id = affected_parties.decision_id
-    AND d.owner_id = auth.uid()::text
-  )
-);
-
--- Delete: Decision Owner only
-CREATE POLICY "Decision owners can remove affected_parties"
-ON affected_parties FOR DELETE
-USING (
-  EXISTS (
-    SELECT 1 FROM decisions d
-    WHERE d.id = affected_parties.decision_id
-    AND d.owner_id = auth.uid()::text
-  )
-);
-
--- ============================================
--- STEP 4: Meetings Policies
--- ============================================
-
--- View: All users in the organization can view meetings
+-- 3. Meetings Policies (Using function)
 CREATE POLICY "Users can view org meetings"
 ON meetings FOR SELECT
 USING (
-  organization_id IN (
-    SELECT u.organization_id 
-    FROM users u 
-    WHERE u.id = auth.uid()::text
-  )
+  organization_id = get_auth_org_id()
 );
 
--- Manage: Only Admins and Chairs can create, update, delete meetings
 CREATE POLICY "Admins can manage meetings"
 ON meetings FOR ALL
 USING (
-  organization_id IN (
-    SELECT u.organization_id 
-    FROM users u 
-    WHERE u.id = auth.uid()::text
-  )
+  organization_id = get_auth_org_id()
   AND EXISTS (
     SELECT 1 FROM user_roles ur 
     WHERE ur.user_id = auth.uid()::text 
@@ -95,37 +43,50 @@ USING (
   )
 );
 
--- ============================================
--- STEP 5: Agenda Items Policies
--- ============================================
-
--- View: All users can view agenda items for meetings in their organization
+-- 4. Agenda Items Policies (Using function)
 CREATE POLICY "Users can view agenda items"
 ON agenda_items FOR SELECT
 USING (
   EXISTS (
     SELECT 1 FROM meetings m
     WHERE m.id = agenda_items.meeting_id
-    AND m.organization_id IN (
-      SELECT u.organization_id 
-      FROM users u 
-      WHERE u.id = auth.uid()::text
-    )
+    AND m.organization_id = get_auth_org_id()
   )
 );
 
--- Manage: Only Admins and Chairs can create, update, delete agenda items
 CREATE POLICY "Admins can manage agenda items"
 ON agenda_items FOR ALL
 USING (
   EXISTS (
     SELECT 1 FROM meetings m
     WHERE m.id = agenda_items.meeting_id
-    AND m.organization_id IN (
-      SELECT u.organization_id 
-      FROM users u 
-      WHERE u.id = auth.uid()::text
+    AND m.organization_id = get_auth_org_id()
+    AND EXISTS (
+      SELECT 1 FROM user_roles ur 
+      WHERE ur.user_id = auth.uid()::text 
+      AND ur.role IN ('admin', 'chair')
     )
+  )
+);
+
+-- 5. Meeting Attendees Policies (Using function)
+CREATE POLICY "Users can view meeting attendees"
+ON meeting_attendees FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM meetings m
+    WHERE m.id = meeting_attendees.meeting_id
+    AND m.organization_id = get_auth_org_id()
+  )
+);
+
+CREATE POLICY "Admins can manage meeting attendees"
+ON meeting_attendees FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM meetings m
+    WHERE m.id = meeting_attendees.meeting_id
+    AND m.organization_id = get_auth_org_id()
     AND EXISTS (
       SELECT 1 FROM user_roles ur 
       WHERE ur.user_id = auth.uid()::text 
