@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const userId = supabaseUser.id;
     // VERY STRICT retry policy during initial boot
     const maxRetries = 1;
-    const currentTimeoutMs = 2000; // Reduced to 2s - if profile doesn't load in 2s, we should fallback to cache
+    const currentTimeoutMs = 10000; // Increased to 10s for Staging latency
 
     if (retryCount === 0) {
       markPerformance(PerformanceMarkers.PROFILE_FETCH_START);
@@ -253,14 +253,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    // Fallback: 2 seconds is enough for a "cold" getSession
+    // Fallback: 12 seconds is enough for a "cold" getSession and slow DB
     setTimeout(() => {
       if (mounted && !initialFetchDoneRef.current) {
         console.log('⏰ Fallback reached: Finalizing loading state');
         setIsLoading(false);
         initialFetchDoneRef.current = true;
       }
-    }, 2000);
+    }, 12000);
 
     return () => {
       mounted = false;

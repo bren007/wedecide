@@ -55,6 +55,7 @@ describe('Decision Creation Integration', () => {
         expect(decCheck.rows[0].decision_type).toBe('note');
 
         // Cleanup
+        await pgClient.query("DELETE FROM affected_parties WHERE decision_id = $1", [decisionId]);
         await pgClient.query("DELETE FROM decisions WHERE id = $1", [decisionId]);
     });
 });

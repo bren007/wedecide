@@ -1,0 +1,133 @@
+
+> wedecide@0.0.0 test
+> vitest run src/tests/meetings_integration.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv4.0.15 [39m[90mC:/Users/blair/.gemini/antigravity/scratch/WeDecide[39m
+
+[90mstdout[2m | src/tests/meetings_integration.test.ts
+[22m[39m[dotenv@17.2.3] injecting env (4) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+[90mstdout[2m | src/tests/meetings_integration.test.ts[2m > [22m[2mMeetings & Agenda Integration
+[22m[39mRPC Data: {
+  organization_id: [32m'5ff55ec8-7589-4faa-913c-1f3b672da277'[39m,
+  success: [33mtrue[39m
+}
+Organization ID: 5ff55ec8-7589-4faa-913c-1f3b672da277
+
+[90mstdout[2m | src/tests/meetings_integration.test.ts[2m > [22m[2mMeetings & Agenda Integration
+[22m[39m🧹 Cleaning up meeting test data...
+
+[90mstdout[2m | src/tests/meetings_integration.test.ts[2m > [22m[2mMeetings & Agenda Integration
+[22m[39m✅ Cleanup complete.
+
+ [31m❯[39m src/tests/meetings_integration.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[33m 8627[2mms[22m[39m
+[31m     [31m×[31m should create a meeting[39m[33m 388[2mms[22m[39m
+[31m     [31m×[31m should create an agenda item for the meeting[39m[33m 418[2mms[22m[39m
+[31m     [31m×[31m should create a decision and link it to the agenda item[39m[33m 706[2mms[22m[39m
+[31m     [31m×[31m should verify the meeting remains visible to the organization[39m[33m 331[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 4 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/tests/meetings_integration.test.ts[2m > [22mMeetings & Agenda Integration[2m > [22mshould create a meeting
+[31m[1mAssertionError[22m: expected { code: '23502', details: null, …(2) } to be null[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+{
+  "code": "23502",
+  "details": null,
+  "hint": null,
+  "message": "null value in column \"status\" of relation \"meetings\" violates not-null constraint",
+}
+
+[36m [2m❯[22m src/tests/meetings_integration.test.ts:[2m103:23[22m[39m
+    [90m101| [39m            [33m.[39m[34msingle[39m()[33m;[39m
+    [90m102| [39m
+    [90m103| [39m        [34mexpect[39m(error)[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m104| [39m        [34mexpect[39m(data)[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m105| [39m        meetingId [33m=[39m data[33m.[39mid[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/meetings_integration.test.ts[2m > [22mMeetings & Agenda Integration[2m > [22mshould create an agenda item for the meeting
+[31m[1mAssertionError[22m: expected { code: '42501', details: null, …(2) } to be null[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+{
+  "code": "42501",
+  "details": null,
+  "hint": null,
+  "message": "new row violates row-level security policy for table \"agenda_items\"",
+}
+
+[36m [2m❯[22m src/tests/meetings_integration.test.ts:[2m121:23[22m[39m
+    [90m119| [39m            [33m.[39m[34msingle[39m()[33m;[39m
+    [90m120| [39m
+    [90m121| [39m        [34mexpect[39m(error)[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m122| [39m        [34mexpect[39m(data)[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m123| [39m        agendaItemId [33m=[39m data[33m.[39mid[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/meetings_integration.test.ts[2m > [22mMeetings & Agenda Integration[2m > [22mshould create a decision and link it to the agenda item
+[31m[1mAssertionError[22m: expected { code: 'PGRST116', …(3) } to be null[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+{
+  "code": "PGRST116",
+  "details": "The result contains 0 rows",
+  "hint": null,
+  "message": "Cannot coerce the result to a single JSON object",
+}
+
+[36m [2m❯[22m src/tests/meetings_integration.test.ts:[2m153:27[22m[39m
+    [90m151| [39m            [33m.[39m[34msingle[39m()[33m;[39m
+    [90m152| [39m
+    [90m153| [39m        [34mexpect[39m(linkError)[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   | [39m                          [31m^[39m
+    [90m154| [39m        [34mexpect[39m(linkedDec[33m.[39magenda_item_id)[33m.[39m[34mtoBe[39m(agendaItemId)[33m;[39m
+    [90m155| [39m        console[33m.[39m[34mlog[39m([32m'✅ Decision Linked to Agenda.'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/tests/meetings_integration.test.ts[2m > [22mMeetings & Agenda Integration[2m > [22mshould verify the meeting remains visible to the organization
+[31m[1mAssertionError[22m: expected { code: '22P02', details: null, …(2) } to be null[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+{
+  "code": "22P02",
+  "details": null,
+  "hint": null,
+  "message": "invalid input syntax for type uuid: \"undefined\"",
+}
+
+[36m [2m❯[22m src/tests/meetings_integration.test.ts:[2m165:23[22m[39m
+    [90m163| [39m            [33m.[39m[34msingle[39m()[33m;[39m
+    [90m164| [39m
+    [90m165| [39m        [34mexpect[39m(error)[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   | [39m                      [31m^[39m
+    [90m166| [39m        [34mexpect[39m(data[33m.[39mid)[33m.[39m[34mtoBe[39m(meetingId)[33m;[39m
+    [90m167| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[90m (4)[39m
+[2m   Start at [22m 12:05:49
+[2m   Duration [22m 9.03s[2m (transform 38ms, setup 0ms, import 198ms, tests 8.63s, environment 0ms)[22m
+
