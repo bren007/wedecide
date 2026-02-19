@@ -209,7 +209,7 @@ export const CommandCenterPage: React.FC = () => {
 
 // --- SUB-COMPONENTS ---
 
-const Gauge = ({ label, value, limit, isOver, unit, format }: any) => {
+const Gauge = ({ label, value, limit, isOver, format }: any) => {
     // Determine color based on usage %
     const percent = Math.min((value / limit) * 100, 100);
     const colorClass = isOver ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]' : percent > 90 ? 'text-yellow-400' : 'text-slate-100';
