@@ -165,6 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(JSON.parse(cached));
             setIsLoading(false); // UI can render now!
             initialFetchDoneRef.current = true;
+            lastProcessedUserIdRef.current = session.user.id; // Fix: Mark as processed
           }
         }
       } catch (e) {
@@ -196,9 +197,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      // De-bounce: If we've already started processing this user AND we're not loading, skip
-      if (currentUserId === lastProcessedUserIdRef.current && user?.id === currentUserId && !isLoading) {
-        console.log('⏭️ Skipping: User already processed');
+      // De-bounce: If we've already processed this user (via cache or previous run), skip
+      // We rely on refs, not state, to avoid stale interactions in this closure
+      if (currentUserId === lastProcessedUserIdRef.current) {
+        console.log('⏭️ Skipping: User already processed (Ref check)');
         if (!initialFetchDoneRef.current) {
           initialFetchDoneRef.current = true;
           setIsLoading(false);
@@ -209,9 +211,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       lastProcessedUserIdRef.current = currentUserId;
 
       // Only set loading if we don't have a cached user for this ID
-      if (user?.id !== currentUserId) {
-        setIsLoading(true);
-      }
+      // We check if the state matches the current ID. If not, we show loading.
+      // Note: We can't trust 'user' state here due to closure, but we can trust that
+      // if initFromCache worked, lastProcessedUserIdRef IS set.
+      setIsLoading(true);
 
       try {
         console.log('⏳ Processing profile for:', currentUserId);

@@ -17,7 +17,7 @@ export const Navbar: React.FC = () => {
     <nav className="navbar">
       <div className="container navbar-container">
         <Link to="/" className="navbar-logo">
-          <span className="logo-text">WeDecide</span>
+          <span className="logo-text">Governance Engine</span>
         </Link>
 
         <div className="navbar-links">
@@ -29,12 +29,8 @@ export const Navbar: React.FC = () => {
                   {isChair ? 'Chair' : (user?.roles?.[0] ? user.roles[0].charAt(0).toUpperCase() + user.roles[0].slice(1) : 'Member')}
                 </span>
               </div>
-              <Link to="/dashboard" className="nav-link">Dashboard</Link>
-              <Link to="/decisions" className="nav-link">Decisions</Link>
-              {isChair && (
-                <Link to="/decisions/triage" className="nav-link">Triage</Link>
-              )}
-              <Link to="/meetings" className="nav-link">Meetings</Link>
+              <Link to="/command-center" className="nav-link">Command Center</Link>
+              <Link to="/settings" className="nav-link">Settings</Link>
               <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
             </>
           ) : (

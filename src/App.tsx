@@ -11,7 +11,10 @@ import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
-import { Dashboard } from './pages/Dashboard';
+
+import { CommandCenterPage } from './pages/CommandCenterPage';
+import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
+import { StrategicIngestionPage } from './pages/StrategicIngestionPage';
 import { DecisionLayout } from './components/layouts/DecisionLayout';
 import { DecisionListPage } from './pages/decisions/DecisionListPage';
 import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
@@ -41,7 +44,7 @@ function AppContent() {
         <Routes>
           <Route
             path="/"
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />}
+            element={isAuthenticated ? <Navigate to="/command-center" replace /> : <LandingPage />}
           />
 
           <Route
@@ -63,9 +66,29 @@ function AppContent() {
           {/* Protected Routes */}
           <Route
             path="/dashboard"
+            element={<Navigate to="/command-center" replace />}
+          />
+          <Route
+            path="/command-center"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <CommandCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/propose-initiative"
+            element={
+              <ProtectedRoute>
+                <InitiativeProposalPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/strategic-ingestion"
+            element={
+              <ProtectedRoute>
+                <StrategicIngestionPage />
               </ProtectedRoute>
             }
           />
