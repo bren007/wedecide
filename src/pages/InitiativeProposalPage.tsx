@@ -17,8 +17,11 @@ export const InitiativeProposalPage: React.FC = () => {
     const [title, setTitle] = useState('');
     const [pillarId, setPillarId] = useState('');
     const [focusSlots, setFocusSlots] = useState(3);
-    const [capex, setCapex] = useState(0);
-    const [opex, setOpex] = useState(0);
+    const [capexCurrent, setCapexCurrent] = useState(0);
+    const [opexCurrent, setOpexCurrent] = useState(0);
+    const [totalCost, setTotalCost] = useState(0);
+    const [isMultiYear, setIsMultiYear] = useState(false);
+    const [futureOpex, setFutureOpex] = useState(0);
     const [shortTermWin, setShortTermWin] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -70,8 +73,11 @@ export const InitiativeProposalPage: React.FC = () => {
                     title,
                     strategic_pillar_id: pillarId || null,
                     focus_slots: focusSlots,
-                    capex_required: capex,
-                    opex_required: opex,
+                    capex_current_fy: capexCurrent,
+                    opex_current_fy: opexCurrent,
+                    total_initiative_cost: totalCost,
+                    is_multi_year: isMultiYear,
+                    future_annual_opex: isMultiYear ? futureOpex : 0,
                     short_term_win: shortTermWin,
                     status: 'proposed'
                 });
@@ -152,33 +158,78 @@ export const InitiativeProposalPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* CAPEX */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">CAPEX Requirement ($)</label>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">CAPEX (Current FY)</label>
                             <input
                                 type="number"
                                 min="0"
                                 step="1000"
-                                value={capex}
-                                onChange={e => setCapex(Number(e.target.value))}
+                                value={capexCurrent}
+                                onChange={e => setCapexCurrent(Number(e.target.value))}
                                 className="w-full bg-navy-900 border border-navy-700 rounded px-4 py-2 text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             />
                         </div>
 
                         {/* OPEX */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">OPEX Requirement ($)</label>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">OPEX (Current FY)</label>
                             <input
                                 type="number"
                                 min="0"
                                 step="1000"
-                                value={opex}
-                                onChange={e => setOpex(Number(e.target.value))}
+                                value={opexCurrent}
+                                onChange={e => setOpexCurrent(Number(e.target.value))}
+                                className="w-full bg-navy-900 border border-navy-700 rounded px-4 py-2 text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            />
+                        </div>
+
+                        {/* Total Cost */}
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Total Initiative Cost (Lifetime) <span className="text-red-400">*</span></label>
+                            <input
+                                type="number"
+                                min="0"
+                                step="1000"
+                                required
+                                value={totalCost}
+                                onChange={e => setTotalCost(Number(e.target.value))}
                                 className="w-full bg-navy-900 border border-navy-700 rounded px-4 py-2 text-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             />
                         </div>
                     </div>
 
+                    {/* Fiscal Tail / Multi-Year */}
+                    <div className="flex flex-col gap-4 border-t border-navy-700 pt-6">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="isMultiYear"
+                                checked={isMultiYear}
+                                onChange={e => setIsMultiYear(e.target.checked)}
+                                className="w-5 h-5 rounded border-navy-700 bg-navy-900 text-blue-500 focus:ring-blue-500"
+                            />
+                            <label htmlFor="isMultiYear" className="text-sm font-medium text-slate-300">
+                                This is a Multi-Year Initiative (Spans beyond Current FY)
+                            </label>
+                        </div>
+
+                        {isMultiYear && (
+                            <div className="pl-8">
+                                <label className="block text-sm font-medium text-purple-300 mb-1">Future Annual OPEX ("Fiscal Tail")</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1000"
+                                    value={futureOpex}
+                                    onChange={e => setFutureOpex(Number(e.target.value))}
+                                    className="w-full max-w-sm bg-navy-900 border border-purple-900/50 rounded px-4 py-2 text-white font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">Estimated recurring "keep the lights on" cost after delivery.</p>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Short Term Win */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 border-t border-navy-700 pt-6">
                         <input
                             type="checkbox"
                             id="shortTermWin"

@@ -11,8 +11,11 @@ export interface CapacitySettings {
 export interface Initiative {
     id: string;
     focus_slots: number;
-    capex_required: number;
-    opex_required: number;
+    capex_current_fy: number;
+    opex_current_fy: number;
+    total_initiative_cost: number;
+    is_multi_year: boolean;
+    future_annual_opex: number;
     title: string;
     status: 'proposed' | 'approved' | 'active' | 'paused' | 'archived' | 'completed';
     strategic_pillar_id?: string;
@@ -94,24 +97,62 @@ export function useSandboxState() {
 
     const hasChanges = JSON.stringify(dbInitiatives) !== JSON.stringify(localInitiatives);
 
-    const commitChanges = async () => {
+    const commitChanges = async (rationale?: string) => {
         setSaving(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+
             // Find changed initiatives
-            const changes = localInitiatives.filter(local => {
-                const original = dbInitiatives.find(db => db.id === local.id);
-                return original && original.status !== local.status;
-            });
+            const changes = localInitiatives
+                .map(local => {
+                    const original = dbInitiatives.find(db => db.id === local.id);
+                    if (!original || original.status === local.status) return null;
+                    return { local, original };
+                })
+                .filter(Boolean) as { local: Initiative, original: Initiative }[];
 
             if (changes.length === 0) return;
 
-            // Update each changed initiative
-            for (const item of changes) {
-                const { error } = await supabase
+            // Process updates and ledger entries
+            for (const { local, original } of changes) {
+                // 1. Update Initiative Status
+                const { error: updateError } = await supabase
                     .from('initiatives' as any)
-                    .update({ status: item.status })
-                    .eq('id', item.id);
-                if (error) throw error;
+                    .update({ status: local.status })
+                    .eq('id', local.id);
+
+                if (updateError) throw updateError;
+
+                // 2. Determine Action Type
+                let actionType = 'update';
+                if (original.status === 'proposed' && local.status === 'active') actionType = 'approve';
+                else if (original.status === 'active' && local.status === 'paused') actionType = 'pause';
+                else if (original.status === 'paused' && local.status === 'active') actionType = 'resume';
+
+                // 3. Log to Strategic Ledger
+                if (user) {
+                    let finalRationale = rationale || `Changed status from ${original.status} to ${local.status}`;
+
+                    // Automated Audit Note if activated with Future OPEX
+                    if (actionType === 'approve' || actionType === 'resume') {
+                        if (local.future_annual_opex > 0) {
+                            finalRationale += `\n[Future Commitment Warning: Adds $${local.future_annual_opex}/yr to OPEX]`;
+                        }
+                    }
+
+                    const { error: ledgerError } = await supabase
+                        .from('strategic_ledger' as any)
+                        .insert({
+                            org_id: (await supabase.from('users').select('organization_id').eq('id', user.id).single()).data?.organization_id, // Fetch org_id fresh
+                            initiative_id: local.id,
+                            chair_id: user.id,
+                            action_type: actionType,
+                            rationale: finalRationale,
+                            replaced_ids: [] // Future: Explicit swap logic
+                        });
+
+                    if (ledgerError) console.warn('Ledger logging failed:', ledgerError);
+                }
             }
 
             // Refresh data from DB to confirm and reset
@@ -130,6 +171,7 @@ export function useSandboxState() {
             currentFocusLoad: 0,
             currentCapexLoad: 0,
             currentOpexLoad: 0,
+            currentFutureOpexLoad: 0,
             focusLimit: 0,
             capexLimit: 0,
             opexLimit: 0,
@@ -144,13 +186,15 @@ export function useSandboxState() {
         const activeItems = localInitiatives.filter(i => ['active', 'approved'].includes(i.status));
 
         const currentFocusLoad = activeItems.reduce((sum, init) => sum + (init.focus_slots || 0), 0);
-        const currentCapexLoad = activeItems.reduce((sum, init) => sum + (Number(init.capex_required) || 0), 0);
-        const currentOpexLoad = activeItems.reduce((sum, init) => sum + (Number(init.opex_required) || 0), 0);
+        const currentCapexLoad = activeItems.reduce((sum, init) => sum + (Number(init.capex_current_fy) || 0), 0);
+        const currentOpexLoad = activeItems.reduce((sum, init) => sum + (Number(init.opex_current_fy) || 0), 0);
+        const currentFutureOpexLoad = activeItems.reduce((sum, init) => sum + (Number(init.future_annual_opex) || 0), 0);
 
         return {
             currentFocusLoad,
             currentCapexLoad,
             currentOpexLoad,
+            currentFutureOpexLoad,
             focusLimit: settings.total_focus_slots,
             capexLimit: Number(settings.total_capex_limit),
             opexLimit: Number(settings.total_opex_limit),

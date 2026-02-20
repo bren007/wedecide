@@ -113,16 +113,20 @@ export const useAIMapping = () => {
             - description
             - focus_slots (1-10)
             - strategic_pillar_id (UUID)
-            - capex_required (number)
-            - opex_required (number)
+            - capex_current_fy (number)
+            - opex_current_fy (number)
+            - total_initiative_cost (number)
+            - is_multi_year (boolean)
+            - future_annual_opex (number)
             - novelty_score (1-5)
             - dependency_count
             - value_drop
             - funding_status
+            - strategic_tradeoff
 
             Return a strict JSON object where keys are CSV headers and values are Internal Schema Fields. 
             Only map if confident. If no match, omit.
-            Example: {"Project Name": "title", "Cost": "capex_required"}
+            Example: {"Project Name": "title", "Cost FY": "capex_current_fy"}
             Output JSON only.
             `;
 

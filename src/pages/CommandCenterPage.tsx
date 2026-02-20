@@ -1,7 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSandboxState } from '../hooks/useSandboxState';
-import { ArrowRight, Save, CirclePause, TriangleAlert, Zap, Clock, LayoutDashboard, ListFilter } from 'lucide-react';
+import { ArrowRight, Save, CirclePause, TriangleAlert, Zap, Clock, LayoutDashboard, ListFilter, Check } from 'lucide-react';
 import { Button } from '../components/Button';
+import { MeetingControls } from '../components/MeetingControls';
+import { useMeetingState } from '../hooks/useMeetingState';
+import { CommitModal } from '../components/CommitModal';
 
 // --- VISUAL HELPERS ---
 
@@ -42,6 +45,7 @@ export const CommandCenterPage: React.FC = () => {
         currentCapexLoad,
         capexLimit,
         currentOpexLoad,
+        currentFutureOpexLoad,
         opexLimit,
         isOverFocus,
         isOverCapex,
@@ -55,6 +59,28 @@ export const CommandCenterPage: React.FC = () => {
         hasChanges,
         saving
     } = useSandboxState();
+
+    const {
+        currentMeeting,
+        loading: meetingLoading,
+        startMeeting,
+        endMeeting
+    } = useMeetingState();
+
+    const [isCommitOpen, setIsCommitOpen] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    const handleCommit = () => {
+        if (!hasChanges) return;
+        setIsCommitOpen(true);
+    };
+
+    const executeCommit = async (rationale: string) => {
+        await commitChanges(rationale);
+        setIsCommitOpen(false);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+    };
 
     const proposedList = useMemo(() =>
         initiatives.filter(i => ['proposed', 'paused'].includes(i.status)),
@@ -105,12 +131,23 @@ export const CommandCenterPage: React.FC = () => {
                     <div className="w-px h-10 bg-slate-800"></div>
                     <Gauge label="CAPEX" value={currentCapexLoad} limit={capexLimit} isOver={isOverCapex} unit="$" format={formatK} />
                     <div className="w-px h-10 bg-slate-800"></div>
-                    <Gauge label="OPEX" value={currentOpexLoad} limit={opexLimit} isOver={isOverOpex} unit="$" format={formatK} />
+                    <Gauge label="OPEX" value={currentOpexLoad} limit={opexLimit} isOver={isOverOpex} unit="$" format={formatK} ghostValue={currentFutureOpexLoad} />
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <a href="/strategic-ledger" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors px-3 py-2 hover:bg-slate-800 rounded-lg group" title="View Strategic Ledger">
+                        <ListFilter size={20} className="group-hover:text-purple-400 transition-colors" />
+                        <span className="text-sm font-bold hidden 2xl:block">Strategic Ledger</span>
+                    </a>
+                    <MeetingControls
+                        meeting={currentMeeting}
+                        loading={meetingLoading}
+                        onStart={() => startMeeting()}
+                        onEnd={() => endMeeting()}
+                    />
+                    <div className="h-8 w-px bg-slate-800 mx-2"></div>
                     <Button
-                        onClick={commitChanges}
+                        onClick={handleCommit}
                         disabled={!hasChanges || saving}
                         variant={hasChanges ? 'primary' : 'secondary'}
                         className={`transition-all duration-300 ${hasChanges ? 'shadow-[0_0_20px_rgba(59,130,246,0.4)] scale-105 border-blue-500 ring-1 ring-blue-400/50' : 'opacity-50 grayscale border-slate-700'}`}
@@ -119,7 +156,19 @@ export const CommandCenterPage: React.FC = () => {
                         {saving ? 'Committing...' : hasChanges ? 'Commit Changes' : 'No Changes'}
                     </Button>
                 </div>
+                {showSuccess && (
+                    <div className="flex items-center gap-2 text-green-400 text-sm font-bold animate-in fade-in slide-in-from-right-4 duration-300 px-2">
+                        <Check size={16} /> Saved!
+                    </div>
+                )}
             </header>
+
+            <CommitModal
+                isOpen={isCommitOpen}
+                onClose={() => setIsCommitOpen(false)}
+                onCommit={executeCommit}
+                saving={saving}
+            />
 
             {/* --- MAIN BOARD --- */}
             <div className="flex-1 min-h-0 p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-[1920px] mx-auto w-full">
@@ -203,24 +252,34 @@ export const CommandCenterPage: React.FC = () => {
                 </Column>
 
             </div>
-        </div>
+        </div >
     );
 };
 
 // --- SUB-COMPONENTS ---
 
-const Gauge = ({ label, value, limit, isOver, format }: any) => {
+const Gauge = ({ label, value, limit, isOver, format, ghostValue }: any) => {
     // Determine color based on usage %
     const percent = Math.min((value / limit) * 100, 100);
     const colorClass = isOver ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]' : percent > 90 ? 'text-yellow-400' : 'text-slate-100';
 
     return (
         <div className={`flex flex-col items-center min-w-[120px] ${isOver ? 'animate-pulse' : ''}`}>
-            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1">{label}</span>
+            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 flex items-center gap-1">
+                {label}
+                {ghostValue > 0 && (
+                    <span title={`+ ${format ? format(ghostValue) : ghostValue} Future Recurring`} className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_5px_rgba(168,85,247,0.8)]"></span>
+                )}
+            </span>
             <div className={`font-mono text-xl font-bold leading-none flex items-baseline gap-1 ${colorClass}`}>
                 {format ? format(value) : value}
                 <span className="text-slate-600 text-xs font-medium ml-0.5">/ {format ? format(limit) : limit}</span>
             </div>
+            {ghostValue > 0 && (
+                <div className="text-[9px] font-mono text-purple-400 uppercase tracking-widest mt-1">
+                    +{format ? format(ghostValue) : ghostValue} Tail
+                </div>
+            )}
         </div>
     );
 };
@@ -254,14 +313,21 @@ const InitiativeCard = ({ data, pillarName, onMove, actionIcon: Icon, variant }:
             <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-r-full transition-colors duration-300 ${isProposed ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]' : 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]'}`}></div>
 
             <div className="pl-5">
-                {/* Header: Title & Quick Win */}
+                {/* Header: Title & Quick Win & Tail Indicator */}
                 <div className="flex justify-between items-start mb-3">
                     <h3 className="font-bold text-slate-100 text-base leading-snug pr-4 tracking-tight">{data.title}</h3>
-                    {data.short_term_win && (
-                        <div className="shrink-0 text-green-400 bg-green-500/10 p-1.5 rounded-md border border-green-500/20" title="Quick Win">
-                            <Clock size={14} />
-                        </div>
-                    )}
+                    <div className="flex gap-2">
+                        {data.is_multi_year && (
+                            <div className="shrink-0 text-purple-400 bg-purple-500/10 p-1.5 rounded-md border border-purple-500/20 cursor-help" title={`Current FY: ${formatK(data.capex_current_fy + data.opex_current_fy)} | Total Cost: ${formatK(data.total_initiative_cost)} | Future Annual OpEx: ${formatK(data.future_annual_opex)}`}>
+                                <Zap size={14} className="fill-purple-400/20" />
+                            </div>
+                        )}
+                        {data.short_term_win && (
+                            <div className="shrink-0 text-green-400 bg-green-500/10 p-1.5 rounded-md border border-green-500/20" title="Quick Win">
+                                <Clock size={14} />
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Metadata Row */}
@@ -283,11 +349,11 @@ const InitiativeCard = ({ data, pillarName, onMove, actionIcon: Icon, variant }:
                     <div className="flex gap-6 text-xs font-mono text-slate-500">
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase font-bold text-slate-600 mb-0.5">Capex</span>
-                            <span className="text-slate-300 font-bold text-sm">{formatK(data.capex_required)}</span>
+                            <span className="text-slate-300 font-bold text-sm">{formatK(data.capex_current_fy)}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase font-bold text-slate-600 mb-0.5">Opex</span>
-                            <span className="text-slate-300 font-bold text-sm">{formatK(data.opex_required)}</span>
+                            <span className="text-slate-300 font-bold text-sm">{formatK(data.opex_current_fy)}</span>
                         </div>
                     </div>
 

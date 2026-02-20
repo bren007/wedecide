@@ -15,6 +15,7 @@ import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { CommandCenterPage } from './pages/CommandCenterPage';
 import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
 import { StrategicIngestionPage } from './pages/StrategicIngestionPage';
+import { StrategicLedgerPage } from './pages/StrategicLedgerPage';
 import { DecisionLayout } from './components/layouts/DecisionLayout';
 import { DecisionListPage } from './pages/decisions/DecisionListPage';
 import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
@@ -89,6 +90,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <StrategicIngestionPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/strategic-ledger"
+            element={
+              <ProtectedRoute>
+                <StrategicLedgerPage />
               </ProtectedRoute>
             }
           />

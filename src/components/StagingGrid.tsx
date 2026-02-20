@@ -8,14 +8,18 @@ export interface StagingInitiative {
     description?: string;
     focus_slots: number | null;
     strategic_pillar_id: string | null;
-    capex_required: number;
-    opex_required: number;
+    capex_current_fy: number;
+    opex_current_fy: number;
+    total_initiative_cost: number;
+    is_multi_year: boolean;
+    future_annual_opex: number;
     novelty_score: number | null;
     dependency_count: number;
     value_drop?: string;
     funding_status: 'funded' | 'partially_funded' | 'not_funded' | 'pending';
     sponsor?: string;
     isAiSuggested?: boolean;
+    strategic_tradeoff?: string;
 }
 
 const AiHighlight: React.FC<{ active?: boolean, children: React.ReactNode }> = ({ active, children }) => (
@@ -154,11 +158,20 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                                 <Info size={12} className="text-slate-500 cursor-help" />
                             </div>
                         </th>
-                        <th className="p-3 border-b border-navy-700 w-28 text-right">CAPEX</th>
-                        <th className="p-3 border-b border-navy-700 w-28 text-right">OPEX</th>
+                        <th className="p-3 border-b border-navy-700 w-28 text-right">CAPEX (FY)</th>
+                        <th className="p-3 border-b border-navy-700 w-28 text-right">OPEX (FY)</th>
+                        <th className="p-3 border-b border-navy-700 w-28 text-right">Total Cost</th>
+                        <th className="p-3 border-b border-navy-700 w-28 text-center" title="Multi-Year?">M-Y?</th>
+                        <th className="p-3 border-b border-navy-700 w-28 text-right">Future OpEx</th>
                         <th className="p-3 border-b border-navy-700 min-w-[150px]">
                             <div className="flex items-center gap-1" title="Must be [Verb] + [Object] + [Metric] within the configured horizon">
                                 Value Drop
+                                <Info size={12} className="text-slate-500 cursor-help" />
+                            </div>
+                        </th>
+                        <th className="p-3 border-b border-navy-700 min-w-[200px]">
+                            <div className="flex items-center gap-1" title="If this project is approved, which other type of work are we most willing to sacrifice?">
+                                Strategic Trade-off <span className="text-red-400">*</span>
                                 <Info size={12} className="text-slate-500 cursor-help" />
                             </div>
                         </th>
@@ -221,25 +234,58 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                                 </AiHighlight>
                             </td>
 
-                            {/* CAPEX */}
+                            {/* CAPEX FY */}
                             <td className="p-0 border-r border-navy-700/50">
                                 <InputCell
                                     type="number"
-                                    value={row.capex_required}
-                                    onChange={(v) => updateRow(index, 'capex_required', v)}
+                                    value={row.capex_current_fy}
+                                    onChange={(v) => updateRow(index, 'capex_current_fy', v)}
                                     min={0}
                                     className="text-right font-mono text-slate-300"
                                 />
                             </td>
 
-                            {/* OPEX */}
+                            {/* OPEX FY */}
                             <td className="p-0 border-r border-navy-700/50">
                                 <InputCell
                                     type="number"
-                                    value={row.opex_required}
-                                    onChange={(v) => updateRow(index, 'opex_required', v)}
+                                    value={row.opex_current_fy}
+                                    onChange={(v) => updateRow(index, 'opex_current_fy', v)}
                                     min={0}
                                     className="text-right font-mono text-slate-300"
+                                />
+                            </td>
+
+                            {/* Total Cost */}
+                            <td className="p-0 border-r border-navy-700/50">
+                                <InputCell
+                                    type="number"
+                                    value={row.total_initiative_cost}
+                                    onChange={(v) => updateRow(index, 'total_initiative_cost', v)}
+                                    min={0}
+                                    className="text-right font-mono text-slate-300"
+                                    required
+                                />
+                            </td>
+
+                            {/* Multi Year */}
+                            <td className="p-0 border-r border-navy-700/50 text-center">
+                                <input
+                                    type="checkbox"
+                                    checked={row.is_multi_year}
+                                    onChange={(e) => updateRow(index, 'is_multi_year', e.target.checked)}
+                                    className="w-4 h-4 rounded border-navy-700 bg-navy-900 text-blue-500 focus:ring-blue-500"
+                                />
+                            </td>
+
+                            {/* Future OpEx */}
+                            <td className="p-0 border-r border-navy-700/50">
+                                <InputCell
+                                    type="number"
+                                    value={row.future_annual_opex}
+                                    onChange={(v) => updateRow(index, 'future_annual_opex', v)}
+                                    min={0}
+                                    className={`text-right font-mono ${row.is_multi_year ? 'text-purple-300' : 'text-slate-500'}`}
                                 />
                             </td>
 
@@ -250,6 +296,17 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                                     onChange={(v) => updateRow(index, 'value_drop', v)}
                                     placeholder="e.g. Increase sales by 10%"
                                     className="text-xs"
+                                />
+                            </td>
+
+                            {/* Strategic Trade-off */}
+                            <td className="p-0 border-r border-navy-700/50">
+                                <InputCell
+                                    value={row.strategic_tradeoff}
+                                    onChange={(v) => updateRow(index, 'strategic_tradeoff', v)}
+                                    placeholder="What will we stop doing?"
+                                    required
+                                    className="text-xs italic text-amber-200/80"
                                 />
                             </td>
 
@@ -266,7 +323,7 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                     ))}
                     {data.length === 0 && (
                         <tr>
-                            <td colSpan={9} className="p-8 text-center text-slate-500 italic">
+                            <td colSpan={10} className="p-8 text-center text-slate-500 italic">
                                 No data loaded. Upload a CSV to begin.
                             </td>
                         </tr>

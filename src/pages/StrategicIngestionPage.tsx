@@ -81,8 +81,11 @@ export const StrategicIngestionPage: React.FC = () => {
 
                     const focusVal = getValue('focus_slots', ['focus', 'focus slots', 'complexity']);
                     const titleVal = getValue('title', ['title', 'initiative', 'name', 'project']);
-                    const capexVal = getValue('capex_required', ['capex', 'cost', 'investment']);
-                    const opexVal = getValue('opex_required', ['opex', 'operational cost']);
+                    const capexVal = getValue('capex_current_fy', ['capex', 'cost', 'investment', 'capex_required', 'capex_current_fy']);
+                    const opexVal = getValue('opex_current_fy', ['opex', 'operational cost', 'opex_required', 'opex_current_fy']);
+                    const totalCostVal = getValue('total_initiative_cost', ['total cost', 'total_initiative_cost']);
+                    const isMultiYearVal = getValue('is_multi_year', ['is_multi_year', 'multi year', 'multi-year']);
+                    const futureOpexVal = getValue('future_annual_opex', ['future_annual_opex', 'future opex', 'tail']);
                     const noveltyVal = getValue('novelty_score', ['novelty', 'novelty score', 'innovation']);
 
                     return {
@@ -91,8 +94,11 @@ export const StrategicIngestionPage: React.FC = () => {
                         description: getValue('description', ['description', 'desc', 'summary']) || '',
                         focus_slots: parseInt(focusVal || '0') || null,
                         strategic_pillar_id: null,
-                        capex_required: parseFloat(capexVal || '0') || 0,
-                        opex_required: parseFloat(opexVal || '0') || 0,
+                        capex_current_fy: parseFloat(capexVal || '0') || 0,
+                        opex_current_fy: parseFloat(opexVal || '0') || 0,
+                        total_initiative_cost: parseFloat(totalCostVal || '0') || 0,
+                        is_multi_year: isMultiYearVal === 'true' || isMultiYearVal === 'Yes' || isMultiYearVal === '1' || isMultiYearVal === true,
+                        future_annual_opex: parseFloat(futureOpexVal || '0') || 0,
                         novelty_score: parseInt(noveltyVal || '0') || null, // Default null to prompt inference
                         dependency_count: parseInt(getValue('dependency_count', ['dependencies', 'deps']) || '0') || 0,
                         value_drop: getValue('value_drop', ['value drop', 'value']) || '',
@@ -157,8 +163,11 @@ export const StrategicIngestionPage: React.FC = () => {
                     title: item.title,
                     focus_slots: item.focus_slots,
                     strategic_pillar_id: item.strategic_pillar_id,
-                    capex_required: item.capex_required,
-                    opex_required: item.opex_required,
+                    capex_current_fy: item.capex_current_fy,
+                    opex_current_fy: item.opex_current_fy,
+                    total_initiative_cost: item.total_initiative_cost,
+                    is_multi_year: item.is_multi_year,
+                    future_annual_opex: item.future_annual_opex,
                     novelty_score: item.novelty_score,
                     dependency_count: item.dependency_count,
                     value_drop: item.value_drop,
