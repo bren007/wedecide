@@ -65,7 +65,7 @@ export const SignupPage: React.FC = () => {
         <div className="auth-container fade-in">
           <Card className="auth-card">
             <h1 className="auth-title">{token ? 'Join Organization' : 'Get Started'}</h1>
-            <p className="auth-subtitle">{token ? 'Create your account to accept the invitation' : 'Create your WeDecide account'}</p>
+            <p className="auth-subtitle">{token ? 'Create your account to accept the invitation' : 'Create your AlturaGov account'}</p>
 
             <form onSubmit={handleSubmit} className="auth-form">
               <Input

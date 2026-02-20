@@ -17,7 +17,7 @@ export const Navbar: React.FC = () => {
     <nav className="navbar">
       <div className="container navbar-container">
         <Link to="/" className="navbar-logo">
-          <span className="logo-text">Governance Engine</span>
+          <span className="logo-text">AlturaGov</span>
         </Link>
 
         <div className="navbar-links">

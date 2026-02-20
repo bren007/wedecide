@@ -23,6 +23,7 @@ import { DecisionDetailPage } from './pages/decisions/DecisionDetailPage';
 import { DecisionEditPage } from './pages/decisions/DecisionEditPage';
 import { DecisionTriagePage } from './pages/decisions/DecisionTriagePage';
 import { MeetingLayout } from './components/layouts/MeetingLayout';
+import { PublicLayout } from './components/layouts/PublicLayout';
 import { MeetingListPage } from './pages/meetings/MeetingListPage';
 import { MeetingDetailPage } from './pages/meetings/MeetingDetailPage';
 import './App.css';
@@ -43,10 +44,12 @@ function AppContent() {
       <ErrorBoundary>
 
         <Routes>
-          <Route
-            path="/"
-            element={isAuthenticated ? <Navigate to="/command-center" replace /> : <LandingPage />}
-          />
+          <Route element={<PublicLayout />}>
+            <Route
+              path="/"
+              element={isAuthenticated ? <Navigate to="/command-center" replace /> : <LandingPage />}
+            />
+          </Route>
 
           <Route
             path="/login"
