@@ -208,13 +208,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
+      // Also skip TOKEN_REFRESHED events once initial fetch is done
+      // (they fire on tab focus, navigation, etc. and don't need a profile re-fetch)
+      if (event === 'TOKEN_REFRESHED' && initialFetchDoneRef.current) {
+        console.log('⏭️ Skipping TOKEN_REFRESHED: initial fetch already done');
+        lastProcessedUserIdRef.current = currentUserId;
+        return;
+      }
+
       lastProcessedUserIdRef.current = currentUserId;
 
-      // Only set loading if we don't have a cached user for this ID
-      // We check if the state matches the current ID. If not, we show loading.
-      // Note: We can't trust 'user' state here due to closure, but we can trust that
-      // if initFromCache worked, lastProcessedUserIdRef IS set.
-      setIsLoading(true);
+      // Only show loading spinner if we DON'T already have a cached user
+      const cached = localStorage.getItem(`${PROFILE_CACHE_KEY}_${currentUserId}`);
+      if (!cached) {
+        setIsLoading(true);
+      }
 
       try {
         console.log('⏳ Processing profile for:', currentUserId);

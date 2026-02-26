@@ -1,19 +1,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from '../lib/supabase';
 
 export interface Meeting {
     id: string;
     organization_id: string;
     title: string;
-    started_at: string;
-    ended_at?: string;
+    started_at: string | null;
+    ended_at: string | null;
     snapshot_start?: any;
     snapshot_end?: any;
+    status?: string;
 }
 
 export const useMeetingState = () => {
@@ -44,10 +41,10 @@ export const useMeetingState = () => {
                 .is('ended_at', null)
                 .order('started_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (data) {
-                setCurrentMeeting(data);
+                setCurrentMeeting(data as unknown as Meeting);
             } else {
                 setCurrentMeeting(null);
             }
@@ -74,6 +71,7 @@ export const useMeetingState = () => {
 
             const { data: userData } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
             const orgId = userData?.organization_id;
+            if (!orgId) throw new Error("No Organization");
 
             // 1. Capture Snapshot (Initiatives + Capacity)
             const { data: initiatives } = await supabase.from('initiatives').select('*').eq('org_id', orgId);
@@ -83,13 +81,13 @@ export const useMeetingState = () => {
             const { data: meeting, error } = await supabase.from('meetings').insert({
                 organization_id: orgId,
                 title,
-                status: 'in_progress',
+                status: 'in_progress' as const,
                 started_at: new Date().toISOString(),
                 snapshot_start: { initiatives, capacity }
             }).select().single();
 
             if (error) throw error;
-            setCurrentMeeting(meeting);
+            setCurrentMeeting(meeting as unknown as Meeting);
             return meeting;
 
         } catch (err: any) {
@@ -109,6 +107,7 @@ export const useMeetingState = () => {
             if (!user) throw new Error("No user");
             const { data: userData } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
             const orgId = userData?.organization_id;
+            if (!orgId) throw new Error("No Organization");
 
             const { data: initiatives } = await supabase.from('initiatives').select('*').eq('org_id', orgId);
             const { data: capacity } = await supabase.from('capacity_settings').select('*').eq('org_id', orgId).single();
