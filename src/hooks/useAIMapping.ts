@@ -111,14 +111,15 @@ export const useAIMapping = () => {
             Internal Schema Fields:
             - title
             - description
-            - focus_slots (1-10)
+            - complexity_stakeholder (1, 3, or 5)
+            - complexity_tech (1, 3, or 5)
+            - complexity_dependency (1, 3, or 5)
             - strategic_pillar_id (UUID)
             - capex_current_fy (number)
             - opex_current_fy (number)
             - total_initiative_cost (number)
             - is_multi_year (boolean)
             - future_annual_opex (number)
-            - novelty_score (1-5)
             - dependency_count
             - value_drop
             - funding_status
@@ -154,17 +155,18 @@ export const useAIMapping = () => {
             const batchSize = 10;
             const results = [...initiatives];
 
-            // Filter rows that need AI help (missing focus, novelty, OR pillar)
-            const toProcessAll = initiatives.filter(row => !row.focus_slots || !row.novelty_score || !row.strategic_pillar_id);
+            // Filter rows that need AI help (missing any complexity OR pillar)
+            const toProcessAll = initiatives.filter(row => !row.complexity_stakeholder || !row.complexity_tech || !row.complexity_dependency || !row.strategic_pillar_id);
 
             for (let i = 0; i < toProcessAll.length; i += batchSize) {
                 const batch = toProcessAll.slice(i, i + batchSize);
 
                 const prompt = `
                 Analyze the following initiatives and infer:
-                1. 'focus_slots' (1=small, 3=medium, 5=large effort).
-                2. 'novelty_score' (1=BAU, 5=New/Innovative).
-                3. 'strategic_pillar_id' (UUID). Choose the BEST match from the provided Pillars list. If no good match, return null.
+                1. 'complexity_stakeholder' (1=Internal, 3=Multi-Dept, 5=Ministerial/Public).
+                2. 'complexity_tech' (1=BAU, 3=New Integration, 5=First-of-kind/R&D).
+                3. 'complexity_dependency' (1=Standalone, 3=1-2 Links, 5=Critical Path for 3+).
+                4. 'strategic_pillar_id' (UUID). Choose the BEST match from the provided Pillars list. If no good match, return null.
 
                 Pillars List:
                 ${JSON.stringify(pillars)}
@@ -172,7 +174,7 @@ export const useAIMapping = () => {
                 Input Initiatives:
                 ${JSON.stringify(batch.map(r => ({ id: r.id, title: r.title, description: r.description })))}
 
-                Return a strict JSON array of objects with 'id', 'focus_slots', 'novelty_score', 'strategic_pillar_id', and 'reasoning'.
+                Return a strict JSON array of objects with 'id', 'complexity_stakeholder', 'complexity_tech', 'complexity_dependency', 'strategic_pillar_id', and 'reasoning'.
                 Output strictly valid JSON array.
                 `;
 
@@ -186,8 +188,9 @@ export const useAIMapping = () => {
                         if (idx !== -1) {
                             results[idx] = {
                                 ...results[idx],
-                                focus_slots: results[idx].focus_slots || inf.focus_slots,
-                                novelty_score: results[idx].novelty_score || inf.novelty_score,
+                                complexity_stakeholder: results[idx].complexity_stakeholder || inf.complexity_stakeholder,
+                                complexity_tech: results[idx].complexity_tech || inf.complexity_tech,
+                                complexity_dependency: results[idx].complexity_dependency || inf.complexity_dependency,
                                 strategic_pillar_id: results[idx].strategic_pillar_id || inf.strategic_pillar_id,
                                 isAiSuggested: true
                             };
