@@ -73,7 +73,7 @@ ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 -- RLS Policies
 
 -- Helper function to get current user's org_id
-DROP FUNCTION IF EXISTS get_auth_user_org_id();
+DROP FUNCTION IF EXISTS get_auth_user_org_id() CASCADE;
 CREATE OR REPLACE FUNCTION get_auth_user_org_id()
 RETURNS UUID AS $$
   SELECT organization_id FROM users WHERE id = auth.uid()

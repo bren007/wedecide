@@ -3,73 +3,55 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
 
-// Load .env.local
 console.log('📝 Loading environment from .env.local...');
-const result = dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env.local' });
 
-if (result.error) {
-    console.error('❌ Could not load .env.local file');
-    process.exit(1);
-}
-
+// Use staging URL explicitly to ensure we deploy to staging even though .env is dev
+const connectionString = "postgresql://postgres.bxiylyhkxdyreveervhj:XA%2Ay%3F47%3Ff3YbY%243@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
-    // ---------------------------------------------------------
-    // STEP 1: Update Prisma Schema (DB Push)
-    // ---------------------------------------------------------
-    console.log('\n🔄 STEP 1: Syncing Prisma Schema to Staging DB...');
-    try {
-        // We pass the loaded env vars to the child process so Prisma sees them
-        execSync('npx prisma db push --accept-data-loss', {
-            stdio: 'inherit',
-            env: { ...process.env }
-        });
-        console.log('✅ Prisma sync complete.');
-    } catch (error) {
-        console.error('❌ Prisma db push failed.');
-        process.exit(1);
-    }
-
-    // ---------------------------------------------------------
-    // STEP 2: Apply Supabase SQL (RLS & Functions)
-    // ---------------------------------------------------------
-    console.log('\n🔄 STEP 2: Applying Supabase SQL Scripts...');
-
-    // We prefer DIRECT_URL for migrations, fallback to DATABASE_URL
-    const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-
-    if (!connectionString) {
-        console.error('❌ Error: DIRECT_URL or DATABASE_URL not found in .env.local');
-        process.exit(1);
-    }
+    console.log('🚀 Starting Manual Staging Deployment via raw SQL...');
+    console.log(`🔌 Connecting to: ${connectionString.replace(/:[^:@]*@/, ':****@')}`);
 
     const client = new Client({
         connectionString,
-        ssl: { rejectUnauthorized: false }
+        ssl: { rejectUnauthorized: false },
+        connectionTimeoutMillis: 10000,
     });
 
     try {
         await client.connect();
+        console.log('✅ Connected.');
 
-        const sqlPath = path.join(__dirname, 'supabase_staging_update.sql');
-        console.log(`   Reading SQL from ${sqlPath}...`);
-        const sql = fs.readFileSync(sqlPath, 'utf8');
+        const files = [
+            'supabase/migrations/pivot_to_strategic_governance.sql',
+            'rpc_update_leads.sql'
+        ];
 
-        console.log('   Executing SQL...');
-        await client.query(sql);
-        console.log('✅ Supabase SQL applied successfully!');
+        for (const file of files) {
+            const sqlPath = path.join(__dirname, file);
+            if (!fs.existsSync(sqlPath)) {
+                console.warn(`⚠️ File not found: ${sqlPath}, skipping...`);
+                continue;
+            }
+            console.log(`📖 Reading SQL from ${sqlPath}...`);
+            const sql = fs.readFileSync(sqlPath, 'utf8');
+
+            console.log(`▶️ Executing SQL for ${file}...`);
+            await client.query(sql);
+            console.log(`✅ Applied ${file} successfully.`);
+        }
+
+        console.log('🎉 Staging Environment Update Complete.');
 
     } catch (err) {
-        console.error('❌ Error executing SQL script:', err);
+        console.error('❌ Error executing SQL:', err);
         process.exit(1);
     } finally {
         await client.end();
     }
-
-    console.log('\n🚀 Staging Update Complete! You can now git push.');
 }
 
 main();
