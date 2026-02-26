@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Target, ShieldCheck, Zap, Play, CirclePause, TriangleAlert } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { Target, ShieldCheck, Zap, Play, CirclePause, TriangleAlert, ArrowRight } from 'lucide-react';
 import './LandingPage.css';
 
 const Gauge = ({ label, value, limit, isOver }: any) => {
@@ -19,11 +19,9 @@ const Gauge = ({ label, value, limit, isOver }: any) => {
 };
 
 export const LandingPage: React.FC = () => {
-  // Lead Capture State
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
 
-  // Mini-Sandbox State
+  // Sandbox State
   const limit = 10;
   const [capacity, setCapacity] = useState(8); // Start at 8/10
   const dummyInitiativeCost = 3;
@@ -34,18 +32,6 @@ export const LandingPage: React.FC = () => {
     // Toggle state for demo purposes
     if (capacity === 8) setCapacity(8 + dummyInitiativeCost);
     else setCapacity(8);
-  };
-
-  const handleLeadCapture = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    try {
-      await supabase.from('leads' as any).insert([{ email }]);
-      setSubmitted(true);
-      setEmail('');
-    } catch (err) {
-      console.error('Lead capture error:', err);
-    }
   };
 
   return (
@@ -60,28 +46,18 @@ export const LandingPage: React.FC = () => {
               <span className="text-strategic-gold">Your Capacity is a Reality.</span>
             </h1>
             <p className="hero-subtitle">
-              Break the "Illusion of Infinite Capacity." AlturaGov enforces the physics of organizational focus, turning over-committed backlogs into governed strategic intent.
+              Stop funding the noise. AlturaGov enforces the Physics of Focus — giving you the evidence to prove what your organisation can realistically deliver, and the standing to defend what it cannot.
             </p>
-            <div className="hero-cta-wrapper">
-              <form onSubmit={handleLeadCapture} className="lead-form">
-                {!submitted ? (
-                  <>
-                    <input
-                      type="email"
-                      placeholder="Enter work email address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="lead-input"
-                      required
-                    />
-                    <button type="submit" className="btn-action-blue glow-effect" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
-                      Request Strategic Audit
-                    </button>
-                  </>
-                ) : (
-                  <div className="lead-success text-green-400 font-bold">Request received. Our team will contact you shortly.</div>
-                )}
-              </form>
+            <div className="hero-cta-wrapper flex flex-col items-center mt-6">
+              <button
+                onClick={() => navigate('/audit')}
+                className="bg-action-blue text-white font-bold py-4 px-10 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:shadow-[0_0_35px_rgba(59,130,246,0.7)] hover:-translate-y-1 transition-all flex items-center gap-3 text-lg mb-3"
+              >
+                Get Your Strategic Capacity Audit <ArrowRight size={20} />
+              </button>
+              <p className="text-sm text-slate-400 font-medium max-w-lg text-center">
+                A fixed-fee diagnostic that proves what your organisation can deliver — and gives you the evidence to act on it.
+              </p>
             </div>
           </div>
         </div>
@@ -165,26 +141,26 @@ export const LandingPage: React.FC = () => {
           <div className="bento-grid">
 
             <div className="bento-tile">
-              <div className="tile-icon text-action-blue"><Zap size={32} /></div>
-              <h3 className="tile-title">Enforce the Physics of Focus</h3>
+              <div className="tile-icon text-action-blue"><ShieldCheck size={32} /></div>
+              <h3 className="tile-title">Protect What Matters</h3>
               <p className="tile-copy">
-                Organizations don't fail for lack of ideas; they fail for lack of focus. Our "Focus Slot" engine prevents you from approving work your leadership team cannot steer.
+                Most organisations don't fail because of bad strategy. They fail because they approve more than they can steer. AlturaGov anchors your portfolio to what your organisation can realistically deliver — so your highest-priority programmes get the focus they were promised.
               </p>
             </div>
 
             <div className="bento-tile">
               <div className="tile-icon text-strategic-gold"><Target size={32} /></div>
-              <h3 className="tile-title">Ensure Strategic Integrity</h3>
+              <h3 className="tile-title">End Strategic Drift</h3>
               <p className="tile-copy">
-                Eliminate "Strategic Drift." Every initiative is forced into alignment with your core pillars. If a project doesn't move the needle, it doesn't get a slot.
+                When everything is a priority, nothing is. AlturaGov enforces a clear line between what advances your strategy and what consumes capacity without moving it. If an initiative can't be tied to a core pillar, it doesn't get a slot.
               </p>
             </div>
 
             <div className="bento-tile">
-              <div className="tile-icon text-green-400"><ShieldCheck size={32} /></div>
-              <h3 className="tile-title">Establish Defensible Governance</h3>
+              <div className="tile-icon text-green-400"><Zap size={32} /></div>
+              <h3 className="tile-title">Lead with Confidence When the Questions Come</h3>
               <p className="tile-copy">
-                Replace ambiguity with an immutable record of truth. AlturaGov provides the visible logic and audit trail to back your trade-offs. Every decision is logged and rationalized, ensuring transparency for stakeholders and auditors alike.
+                Ambiguity is a liability. Every trade-off made inside AlturaGov is reasoned, recorded, and retrievable. When ministers, auditors, or oversight bodies ask why a decision was made, you have a clear, defensible answer — not a memory, not a spreadsheet, a record.
               </p>
             </div>
 

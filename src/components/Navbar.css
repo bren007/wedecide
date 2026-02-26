@@ -4,9 +4,9 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--glass-border);
+    background: var(--color-bg-primary);
+    /* Uses slate-950 */
+    border-bottom: 1px solid var(--color-border);
     padding: var(--spacing-md) 0;
 }
 
@@ -21,17 +21,21 @@
 }
 
 .logo-text {
-    font-size: 1.5rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    transition: all var(--transition-base);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #fff;
+    transition: color var(--transition-base);
 }
 
 .logo-text:hover {
-    filter: brightness(1.2);
+    color: var(--color-primary-light);
+}
+
+.navbar-logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
 }
 
 .navbar-links {

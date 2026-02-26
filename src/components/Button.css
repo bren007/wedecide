@@ -60,24 +60,31 @@
 
 /* Variants */
 .btn--primary {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    background-color: var(--color-primary);
     color: white;
-    box-shadow: var(--shadow-md), var(--shadow-glow);
+    box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
 }
 
 .btn--primary:hover {
-    box-shadow: var(--shadow-lg), 0 0 30px rgba(99, 102, 241, 0.5);
+    background-color: var(--color-primary-hover);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
     transform: translateY(-2px);
 }
 
 .btn--secondary {
-    background: linear-gradient(135deg, var(--color-secondary) 0%, #0891b2 100%);
-    color: white;
-    box-shadow: var(--shadow-md);
+    background-color: #1e293b;
+    /* slate-800 */
+    color: #e2e8f0;
+    /* slate-200 */
+    border: 1px solid #334155;
+    /* slate-700 */
+    box-shadow: var(--shadow-sm);
 }
 
 .btn--secondary:hover {
-    box-shadow: var(--shadow-lg);
+    background-color: #334155;
+    /* slate-700 */
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
 

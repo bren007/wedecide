@@ -86,7 +86,9 @@ export const StrategicIngestionPage: React.FC = () => {
                     const totalCostVal = getValue('total_initiative_cost', ['total cost', 'total_initiative_cost']);
                     const isMultiYearVal = getValue('is_multi_year', ['is_multi_year', 'multi year', 'multi-year']);
                     const futureOpexVal = getValue('future_annual_opex', ['future_annual_opex', 'future opex', 'tail']);
-                    const noveltyVal = getValue('novelty_score', ['novelty', 'novelty score', 'innovation']);
+                    const stakeholderVal = getValue('complexity_stakeholder', ['stakeholder', 'stakeholder friction', 'internal']);
+                    const techVal = getValue('complexity_tech', ['tech', 'novelty', 'integration', 'innovation']);
+                    const dependencyVal = getValue('complexity_dependency', ['dependency', 'dependency depth', 'links', 'downstream']);
 
                     return {
                         id: `row-${index}-${Date.now()}`,
@@ -99,7 +101,9 @@ export const StrategicIngestionPage: React.FC = () => {
                         total_initiative_cost: parseFloat(totalCostVal || '0') || 0,
                         is_multi_year: isMultiYearVal === 'true' || isMultiYearVal === 'Yes' || isMultiYearVal === '1' || isMultiYearVal === true,
                         future_annual_opex: parseFloat(futureOpexVal || '0') || 0,
-                        novelty_score: parseInt(noveltyVal || '0') || null, // Default null to prompt inference
+                        complexity_stakeholder: parseInt(stakeholderVal || '0') || null,
+                        complexity_tech: parseInt(techVal || '0') || null,
+                        complexity_dependency: parseInt(dependencyVal || '0') || null,
                         dependency_count: parseInt(getValue('dependency_count', ['dependencies', 'deps']) || '0') || 0,
                         value_drop: getValue('value_drop', ['value drop', 'value']) || '',
                         funding_status: 'pending' // Default
@@ -122,16 +126,20 @@ export const StrategicIngestionPage: React.FC = () => {
 
     const handleBulkApplyFocus = () => {
         if (!bulkFocus) return;
-        setStagingData(prev => prev.map(item => ({ ...item, focus_slots: Number(bulkFocus) })));
-        setLogs(prev => [...prev, `Updated all rows to Focus: ${bulkFocus}`]);
+        setStagingData(prev => prev.map(item => ({
+            ...item,
+            complexity_stakeholder: 3,
+            complexity_tech: 3,
+            complexity_dependency: 3
+        })));
+        setLogs(prev => [...prev, `Updated all rows to median complexity (Focus will compute to 3)`]);
     };
 
     const isValid = useMemo(() => {
-        // "Import" button remains disabled until all rows have a valid focus_slots and strategic_pillar
         if (stagingData.length === 0) return false;
         return stagingData.every(row =>
             row.title &&
-            row.focus_slots !== null && row.focus_slots > 0 &&
+            row.complexity_stakeholder && row.complexity_tech && row.complexity_dependency &&
             row.strategic_pillar_id
         );
     }, [stagingData]);
@@ -156,19 +164,25 @@ export const StrategicIngestionPage: React.FC = () => {
             let imported = 0;
             let errors = 0;
 
+
             for (const item of stagingData) {
+                const score = (item.complexity_stakeholder || 0) + (item.complexity_tech || 0) + (item.complexity_dependency || 0);
+                const computedSlots = score <= 5 ? 1 : score <= 10 ? 3 : 5;
+
                 const { error } = await supabase.from('initiatives' as any).insert({
                     org_id: orgId,
                     owner_id: user.id,
                     title: item.title,
-                    focus_slots: item.focus_slots,
+                    focus_slots: computedSlots,
+                    complexity_stakeholder: item.complexity_stakeholder,
+                    complexity_tech: item.complexity_tech,
+                    complexity_dependency: item.complexity_dependency,
                     strategic_pillar_id: item.strategic_pillar_id,
                     capex_current_fy: item.capex_current_fy,
                     opex_current_fy: item.opex_current_fy,
                     total_initiative_cost: item.total_initiative_cost,
                     is_multi_year: item.is_multi_year,
                     future_annual_opex: item.future_annual_opex,
-                    novelty_score: item.novelty_score,
                     dependency_count: item.dependency_count,
                     value_drop: item.value_drop,
                     funding_status: item.funding_status,

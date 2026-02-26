@@ -16,7 +16,18 @@ export const InitiativeProposalPage: React.FC = () => {
     // Form State
     const [title, setTitle] = useState('');
     const [pillarId, setPillarId] = useState('');
-    const [focusSlots, setFocusSlots] = useState(3);
+    // Complexity Calculator
+    const [stakeholderFriction, setStakeholderFriction] = useState(1);
+    const [noveltyTech, setNoveltyTech] = useState(1);
+    const [dependencyDepth, setDependencyDepth] = useState(1);
+
+    const calculateFocusSlots = () => {
+        const totalScore = stakeholderFriction + noveltyTech + dependencyDepth;
+        if (totalScore <= 5) return 1;
+        if (totalScore <= 10) return 3;
+        return 5;
+    };
+    const focusSlots = calculateFocusSlots();
     const [capexCurrent, setCapexCurrent] = useState(0);
     const [opexCurrent, setOpexCurrent] = useState(0);
     const [totalCost, setTotalCost] = useState(0);
@@ -73,6 +84,9 @@ export const InitiativeProposalPage: React.FC = () => {
                     title,
                     strategic_pillar_id: pillarId || null,
                     focus_slots: focusSlots,
+                    complexity_stakeholder: stakeholderFriction,
+                    complexity_tech: noveltyTech,
+                    complexity_dependency: dependencyDepth,
                     capex_current_fy: capexCurrent,
                     opex_current_fy: opexCurrent,
                     total_initiative_cost: totalCost,
@@ -138,21 +152,57 @@ export const InitiativeProposalPage: React.FC = () => {
                         <p className="text-xs text-slate-500 mt-1">All initiatives must anchor to a strategic pillar.</p>
                     </div>
 
-                    {/* Focus Slots */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Focus Slots Required</label>
-                        <div className="flex items-center gap-4">
-                            <input
-                                type="range"
-                                min="1"
-                                max="10"
-                                value={focusSlots}
-                                onChange={e => setFocusSlots(Number(e.target.value))}
-                                className="flex-1"
-                            />
-                            <span className="font-mono text-xl font-bold text-white w-8 text-center">{focusSlots}</span>
+                    {/* Complexity Calculator */}
+                    <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700 space-y-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-200">Complexity Calculator</h3>
+                                <p className="text-xs text-slate-400">Anchor capacity to the physics of delivery.</p>
+                            </div>
+                            <div className="bg-action-blue/20 p-3 rounded-lg border border-action-blue/50 text-center flex flex-col items-center justify-center min-w-[100px]">
+                                <span className="font-mono text-3xl font-bold text-action-blue leading-none">{focusSlots}</span>
+                                <span className="text-[10px] uppercase font-bold text-action-blue tracking-wider mt-1">Focus Slots</span>
+                            </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Estimated cognitive load (1-10)</p>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Stakeholder Friction</label>
+                            <select
+                                value={stakeholderFriction}
+                                onChange={e => setStakeholderFriction(Number(e.target.value))}
+                                className="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value={1}>Internal / Single Team (1 pt)</option>
+                                <option value={3}>Multi-Dept Protocol (3 pts)</option>
+                                <option value={5}>Ministerial / Public Scrutiny (5 pts)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Novelty & Tech</label>
+                            <select
+                                value={noveltyTech}
+                                onChange={e => setNoveltyTech(Number(e.target.value))}
+                                className="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value={1}>Business As Usual / Known Process (1 pt)</option>
+                                <option value={3}>New Integration / Pattern Upgrade (3 pts)</option>
+                                <option value={5}>First-of-kind / R&D (5 pts)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Dependency Depth</label>
+                            <select
+                                value={dependencyDepth}
+                                onChange={e => setDependencyDepth(Number(e.target.value))}
+                                className="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value={1}>Standalone System (1 pt)</option>
+                                <option value={3}>1-2 Downstream Links (3 pts)</option>
+                                <option value={5}>Critical Path for 3+ Systems (5 pts)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

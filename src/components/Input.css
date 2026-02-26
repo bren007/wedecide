@@ -41,8 +41,8 @@
 
 .input:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-    /* matching primary color */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    /* action blue focus ring */
     background-color: var(--color-bg-secondary);
 }
 

@@ -6,14 +6,16 @@ export interface StagingInitiative {
     id: string; // temp unique id
     title: string;
     description?: string;
-    focus_slots: number | null;
+    focus_slots?: number | null; // Now computed
+    complexity_stakeholder: number | null;
+    complexity_tech: number | null; // Replaces novelty_score
+    complexity_dependency: number | null;
     strategic_pillar_id: string | null;
     capex_current_fy: number;
     opex_current_fy: number;
     total_initiative_cost: number;
     is_multi_year: boolean;
     future_annual_opex: number;
-    novelty_score: number | null;
     dependency_count: number;
     value_drop?: string;
     funding_status: 'funded' | 'partially_funded' | 'not_funded' | 'pending';
@@ -147,14 +149,23 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                             </div>
                         </th>
                         <th className="p-3 border-b border-navy-700 w-24">
-                            <div className="flex items-center gap-1" title="Organizational energy: Small (1), Medium (3), Large (5)">
-                                Focus <span className="text-red-400">*</span>
-                                <Info size={12} className="text-slate-500 cursor-help" />
+                            <div className="flex items-center gap-1" title="Internal (1), Multi-Dept (3), Ministerial (5)">
+                                Stakeholder <span className="text-red-400">*</span>
                             </div>
                         </th>
                         <th className="p-3 border-b border-navy-700 w-24">
-                            <div className="flex items-center gap-1" title="1 = Standard BAU; 5 = First of its kind">
-                                Novelty
+                            <div className="flex items-center gap-1" title="BAU (1), New (3), R&D (5)">
+                                Tech <span className="text-red-400">*</span>
+                            </div>
+                        </th>
+                        <th className="p-3 border-b border-navy-700 w-24">
+                            <div className="flex items-center gap-1" title="Standalone (1), 1-2 Links (3), Critical (5)">
+                                Dependency <span className="text-red-400">*</span>
+                            </div>
+                        </th>
+                        <th className="p-3 border-b border-navy-700 w-20">
+                            <div className="flex items-center gap-1" title="Calculated Focus Slots">
+                                Slots
                                 <Info size={12} className="text-slate-500 cursor-help" />
                             </div>
                         </th>
@@ -205,33 +216,60 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                                 />
                             </td>
 
-                            {/* Focus Slots */}
-                            <td className="p-0 border-r border-navy-700/50 bg-navy-900/10">
+                            {/* Stakeholder Friction */}
+                            <td className="p-0 border-r border-navy-700/50">
                                 <AiHighlight active={row.isAiSuggested}>
                                     <InputCell
                                         type="number"
-                                        value={row.focus_slots}
-                                        onChange={(v) => updateRow(index, 'focus_slots', v)}
+                                        value={row.complexity_stakeholder}
+                                        onChange={(v) => updateRow(index, 'complexity_stakeholder', v)}
                                         min={1}
-                                        max={10}
+                                        max={5}
                                         required
                                         className="text-center font-mono"
                                     />
                                 </AiHighlight>
                             </td>
 
-                            {/* Novelty Score */}
+                            {/* Tech / Novelty */}
                             <td className="p-0 border-r border-navy-700/50">
                                 <AiHighlight active={row.isAiSuggested}>
                                     <InputCell
                                         type="number"
-                                        value={row.novelty_score}
-                                        onChange={(v) => updateRow(index, 'novelty_score', v)}
+                                        value={row.complexity_tech}
+                                        onChange={(v) => updateRow(index, 'complexity_tech', v)}
                                         min={1}
                                         max={5}
+                                        required
                                         className="text-center font-mono"
                                     />
                                 </AiHighlight>
+                            </td>
+
+                            {/* Dependency Depth */}
+                            <td className="p-0 border-r border-navy-700/50">
+                                <AiHighlight active={row.isAiSuggested}>
+                                    <InputCell
+                                        type="number"
+                                        value={row.complexity_dependency}
+                                        onChange={(v) => updateRow(index, 'complexity_dependency', v)}
+                                        min={1}
+                                        max={5}
+                                        required
+                                        className="text-center font-mono"
+                                    />
+                                </AiHighlight>
+                            </td>
+
+                            {/* Calculated Focus Slots */}
+                            <td className="p-0 border-r border-navy-700/50 bg-navy-900/40 text-center font-mono text-action-blue font-bold">
+                                {(() => {
+                                    const score = (row.complexity_stakeholder || 0) + (row.complexity_tech || 0) + (row.complexity_dependency || 0);
+                                    if (score === 0) return '-';
+                                    if (score <= 5) return 1;
+                                    if (score <= 10) return 3;
+                                    return 5;
+                                })()}
                             </td>
 
                             {/* CAPEX FY */}

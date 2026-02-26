@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Layers } from 'lucide-react';
 import './Navbar.css';
 import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,7 @@ export const Navbar: React.FC = () => {
     <nav className="navbar">
       <div className="container navbar-container">
         <Link to="/" className="navbar-logo">
+          <Layers className="brand-icon text-action-blue inline-block mr-2" size={24} color="#3b82f6" />
           <span className="logo-text">AlturaGov</span>
         </Link>
 

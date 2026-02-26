@@ -39,6 +39,8 @@ interface CapacitySettings {
     total_capex_limit: number;
     total_opex_limit: number;
     value_drop_horizon_days: number;
+    calibration_large_steerable: number;
+    calibration_historical_avg: number;
 }
 
 interface StrategicPillar {
@@ -59,6 +61,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
     // Governance State
     const [capacitySettings, setCapacitySettings] = useState<CapacitySettings | null>(null);
+    const [currentLoad, setCurrentLoad] = useState<number>(0);
     const [pillars, setPillars] = useState<StrategicPillar[]>([]);
     const [newPillarTitle, setNewPillarTitle] = useState('');
     const [newPillarWeight, setNewPillarWeight] = useState(0);
@@ -162,7 +165,9 @@ export const OrganizationSettingsPage: React.FC = () => {
                         total_focus_slots: 20,
                         total_capex_limit: 0,
                         total_opex_limit: 0,
-                        value_drop_horizon_days: 30
+                        value_drop_horizon_days: 30,
+                        calibration_large_steerable: 2,
+                        calibration_historical_avg: 8
                     } as CapacitySettings);
                 }
 
@@ -175,6 +180,22 @@ export const OrganizationSettingsPage: React.FC = () => {
 
                 if (pillarsData) {
                     setPillars(pillarsData as unknown as StrategicPillar[]);
+                }
+
+                // 7. Governance: Current Load
+                const { data: initiatives } = await supabase
+                    .from('initiatives' as any)
+                    .select('focus_slots')
+                    .eq('org_id', orgId)
+                    .neq('status', 'completed')
+                    .neq('status', 'rejected')
+                    .neq('status', 'proposed'); // Actually we might only count active/approved ones, let's just count 'active' or 'approved'
+
+                // For simplicity assuming active load includes any that are not rejected/completed.
+                // Wait, proposals aren't active yet. So let's exclude 'proposed' and 'draft' too if they exist.
+                if (initiatives) {
+                    const totalTokens = (initiatives as any[]).reduce((sum, init) => sum + (Number(init.focus_slots) || 0), 0);
+                    setCurrentLoad(totalTokens);
                 }
             }
         } catch (error) {
@@ -338,27 +359,38 @@ export const OrganizationSettingsPage: React.FC = () => {
 
         try {
             // Check if settings exist (has ID?)
+            // We calculate total focus slots dynamically inside the form based on calibration.
+            // Or if it was modified, we trust capacitySettings.total_focus_slots
+            const calculatedSlots = (capacitySettings.calibration_large_steerable * 5) +
+                Math.max(0, capacitySettings.calibration_historical_avg - capacitySettings.calibration_large_steerable) * 3;
+
             if (capacitySettings.id) {
                 const { error } = await supabase
                     .from('capacity_settings' as any)
                     .update({
-                        total_focus_slots: capacitySettings.total_focus_slots,
+                        total_focus_slots: calculatedSlots, // Use calculated from wizard
                         total_capex_limit: capacitySettings.total_capex_limit,
                         total_opex_limit: capacitySettings.total_opex_limit,
-                        value_drop_horizon_days: capacitySettings.value_drop_horizon_days
+                        value_drop_horizon_days: capacitySettings.value_drop_horizon_days,
+                        calibration_large_steerable: capacitySettings.calibration_large_steerable,
+                        calibration_historical_avg: capacitySettings.calibration_historical_avg
                     })
                     .eq('id', capacitySettings.id);
                 if (error) throw error;
+                // Update local state with the newly calculated slots
+                setCapacitySettings(prev => prev ? { ...prev, total_focus_slots: calculatedSlots } : null);
             } else {
                 // Insert new
                 const { data, error } = await supabase
                     .from('capacity_settings' as any)
                     .insert({
                         org_id: org.id,
-                        total_focus_slots: capacitySettings.total_focus_slots,
+                        total_focus_slots: calculatedSlots,
                         total_capex_limit: capacitySettings.total_capex_limit,
                         total_opex_limit: capacitySettings.total_opex_limit,
-                        value_drop_horizon_days: capacitySettings.value_drop_horizon_days
+                        value_drop_horizon_days: capacitySettings.value_drop_horizon_days,
+                        calibration_large_steerable: capacitySettings.calibration_large_steerable,
+                        calibration_historical_avg: capacitySettings.calibration_historical_avg
                     })
                     .select()
                     .single();
@@ -523,18 +555,68 @@ export const OrganizationSettingsPage: React.FC = () => {
                                 </p>
 
                                 <form onSubmit={handleSaveCapacity}>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-400 mb-1">Total Focus Slots</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                value={capacitySettings?.total_focus_slots || 0}
-                                                onChange={e => setCapacitySettings(prev => prev ? { ...prev, total_focus_slots: parseInt(e.target.value) || 0 } : null)}
-                                            />
-                                            <p className="text-xs text-slate-500 mt-1">Cognitive load limit (e.g. 20)</p>
+                                    <div className="bg-slate-900 border border-slate-700/50 p-6 rounded-lg mb-6">
+                                        <h3 className="text-lg font-bold text-slate-200 mb-2">Capacity Calibration Wizard</h3>
+                                        <p className="text-sm text-slate-400 mb-6">Anchor your Focus Slots to historical delivery capability, rather than an arbitrary limit.</p>
+
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                                    1. How many <span className="text-action-blue font-bold">Large/Strategic</span> initiatives (Scale 5) can your Organization realistically steer with high rigor at once?
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="w-full max-w-xs px-3 py-2 bg-slate-950 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-action-blue"
+                                                    value={capacitySettings?.calibration_large_steerable || 0}
+                                                    onChange={e => setCapacitySettings(prev => prev ? { ...prev, calibration_large_steerable: parseInt(e.target.value) || 0 } : null)}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                                    2. Looking at your most successful delivery year, what was the <span className="text-emerald-400 font-bold">average number of active projects</span> overall?
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="w-full max-w-xs px-3 py-2 bg-slate-950 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-action-blue"
+                                                    value={capacitySettings?.calibration_historical_avg || 0}
+                                                    onChange={e => setCapacitySettings(prev => prev ? { ...prev, calibration_historical_avg: parseInt(e.target.value) || 0 } : null)}
+                                                />
+                                            </div>
                                         </div>
+
+                                        <div className="mt-8 p-4 bg-slate-950 border border-slate-800 rounded flex flex-col md:flex-row items-center justify-between">
+                                            <div>
+                                                <div className="text-slate-400 text-sm mb-1">Baseline Total Focus Slots</div>
+                                                <div className="text-3xl font-mono text-white font-bold">
+                                                    {capacitySettings
+                                                        ? (capacitySettings.calibration_large_steerable * 5) + Math.max(0, capacitySettings.calibration_historical_avg - capacitySettings.calibration_large_steerable) * 3
+                                                        : 0}
+                                                </div>
+                                            </div>
+                                            {(() => {
+                                                const baseline = capacitySettings
+                                                    ? (capacitySettings.calibration_large_steerable * 5) + Math.max(0, capacitySettings.calibration_historical_avg - capacitySettings.calibration_large_steerable) * 3
+                                                    : 0;
+                                                const over = currentLoad - baseline;
+                                                const percentOver = baseline > 0 ? (over / baseline) * 100 : 0;
+
+                                                if (currentLoad > baseline && baseline > 0) {
+                                                    return (
+                                                        <div className="mt-4 md:mt-0 px-4 py-2 bg-red-900/30 border border-red-500/50 rounded text-red-400 flex items-center gap-2">
+                                                            <TriangleAlert size={16} />
+                                                            <span className="text-sm font-medium">Current load exceeds historical success baseline by {percentOver.toFixed(0)}%.</span>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                         <div>
                                             <label className="block text-sm font-medium text-slate-400 mb-1">CAPEX Limit ($)</label>
                                             <input
@@ -559,7 +641,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex justify-end">
-                                        <Button type="submit" variant="primary" disabled={saving}>
+                                        <Button type="submit" variant="primary" isLoading={saving}>
                                             <Save size={16} className="mr-2" />
                                             Save Capacity
                                         </Button>

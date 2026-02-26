@@ -11,6 +11,9 @@ import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
+import { AuditFunnelPage } from './pages/AuditFunnelPage';
+import { SecureDropPage } from './pages/SecureDropPage';
+import { AuditReviewPage } from './pages/AuditReviewPage';
 
 import { CommandCenterPage } from './pages/CommandCenterPage';
 import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
@@ -49,6 +52,14 @@ function AppContent() {
               path="/"
               element={isAuthenticated ? <Navigate to="/command-center" replace /> : <LandingPage />}
             />
+            <Route
+              path="/audit"
+              element={<AuditFunnelPage />}
+            />
+            <Route
+              path="/secure-drop"
+              element={<SecureDropPage />}
+            />
           </Route>
 
           <Route
@@ -77,6 +88,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <CommandCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/audit-review"
+            element={
+              <ProtectedRoute>
+                <AuditReviewPage />
               </ProtectedRoute>
             }
           />
