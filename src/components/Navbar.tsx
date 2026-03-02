@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Layers } from 'lucide-react';
 import './Navbar.css';
 import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +18,8 @@ export const Navbar: React.FC = () => {
     <nav className="navbar">
       <div className="container navbar-container">
         <Link to="/" className="navbar-logo">
-          <span className="logo-text">WeDecide</span>
+          <Layers className="brand-icon text-action-blue inline-block mr-2" size={24} color="#3b82f6" />
+          <span className="logo-text">AlturaGov</span>
         </Link>
 
         <div className="navbar-links">
@@ -29,12 +31,9 @@ export const Navbar: React.FC = () => {
                   {isChair ? 'Chair' : (user?.roles?.[0] ? user.roles[0].charAt(0).toUpperCase() + user.roles[0].slice(1) : 'Member')}
                 </span>
               </div>
-              <Link to="/dashboard" className="nav-link">Dashboard</Link>
-              <Link to="/decisions" className="nav-link">Decisions</Link>
-              {isChair && (
-                <Link to="/decisions/triage" className="nav-link">Triage</Link>
-              )}
-              <Link to="/meetings" className="nav-link">Meetings</Link>
+              <Link to="/command-center" className="nav-link">Command Center</Link>
+              <Link to="/strategic-ledger" className="nav-link">Strategic Ledger</Link>
+              <Link to="/settings" className="nav-link">Settings</Link>
               <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
             </>
           ) : (

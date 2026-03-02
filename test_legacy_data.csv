@@ -1,0 +1,6 @@
+project_name,description,cost,opex,priority,innovation_level,strategic_alignment
+"Project Alpha - Cloud Migration","Migrate legacy on-prem servers to AWS to reduce maintenance overhead.","150000","20000","High","Low","Efficiency"
+"Project Beta - AI Customer Support","Implement a chatbot using GPT-4 to handle L1 support queries.","50000","5000","Medium","High","Growth"
+"Project Gamma - New HR Portal","Replace the old intranet with a modern employee experience platform.","80000","12000","Low","Medium","People"
+"Project Delta - Data Warehouse","Centralize all sales and marketing data into Snowflake.","120000","15000","High","Low","Data"
+"Legacy App Retiring","Decommission the old mainframe billing system.","10000","0","Low","Low","Efficiency"

@@ -9,6 +9,51 @@ export type Json =
 export interface Database {
     public: {
         Tables: {
+            leads: {
+                Row: {
+                    id: string
+                    created_at: string
+                    email: string
+                    organization_name: string | null
+                    portfolio_scale: string | null
+                    primary_pain_point: string | null
+                    data_minimisation_acknowledged: boolean | null
+                    nda_accepted: boolean | null
+                    payment_status: string | null
+                    audit_status: string | null
+                    file_url: string | null
+                    report_url: string | null
+                }
+                Insert: {
+                    id?: string
+                    created_at?: string
+                    email: string
+                    organization_name?: string | null
+                    portfolio_scale?: string | null
+                    primary_pain_point?: string | null
+                    data_minimisation_acknowledged?: boolean | null
+                    nda_accepted?: boolean | null
+                    payment_status?: string | null
+                    audit_status?: string | null
+                    file_url?: string | null
+                    report_url?: string | null
+                }
+                Update: {
+                    id?: string
+                    created_at?: string
+                    email?: string
+                    organization_name?: string | null
+                    portfolio_scale?: string | null
+                    primary_pain_point?: string | null
+                    data_minimisation_acknowledged?: boolean | null
+                    nda_accepted?: boolean | null
+                    payment_status?: string | null
+                    audit_status?: string | null
+                    file_url?: string | null
+                    report_url?: string | null
+                }
+                Relationships: []
+            }
             organizations: {
                 Row: {
                     id: string
@@ -361,6 +406,10 @@ export interface Database {
                     scheduled_at: string
                     location: string | null
                     status: "scheduled" | "in_progress" | "completed" | "cancelled"
+                    started_at: string | null
+                    ended_at: string | null
+                    snapshot_start: Json | null
+                    snapshot_end: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -369,9 +418,13 @@ export interface Database {
                     organization_id: string
                     title: string
                     description?: string | null
-                    scheduled_at: string
+                    scheduled_at?: string
                     location?: string | null
                     status?: "scheduled" | "in_progress" | "completed" | "cancelled"
+                    started_at?: string | null
+                    ended_at?: string | null
+                    snapshot_start?: Json | null
+                    snapshot_end?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -383,6 +436,10 @@ export interface Database {
                     scheduled_at?: string
                     location?: string | null
                     status?: "scheduled" | "in_progress" | "completed" | "cancelled"
+                    started_at?: string | null
+                    ended_at?: string | null
+                    snapshot_start?: Json | null
+                    snapshot_end?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -558,6 +615,196 @@ export interface Database {
                     }
                 ]
             }
+            capacity_settings: {
+                Row: {
+                    id: string
+                    org_id: string
+                    total_focus_slots: number
+                    total_capex_limit: number
+                    total_opex_limit: number
+                    value_drop_horizon_days: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    org_id: string
+                    total_focus_slots?: number
+                    total_capex_limit?: number
+                    total_opex_limit?: number
+                    value_drop_horizon_days?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    org_id?: string
+                    total_focus_slots?: number
+                    total_capex_limit?: number
+                    total_opex_limit?: number
+                    value_drop_horizon_days?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "capacity_settings_org_id_fkey"
+                        columns: ["org_id"]
+                        referencedRelation: "organizations"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            strategic_pillars: {
+                Row: {
+                    id: string
+                    org_id: string
+                    title: string
+                    target_weight: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    org_id: string
+                    title: string
+                    target_weight?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    org_id?: string
+                    title?: string
+                    target_weight?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "strategic_pillars_org_id_fkey"
+                        columns: ["org_id"]
+                        referencedRelation: "organizations"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            initiatives: {
+                Row: {
+                    id: string
+                    org_id: string
+                    owner_id: string | null
+                    title: string
+                    focus_slots_required: number
+                    capex_required: number
+                    opex_required: number
+                    short_term_win: boolean
+                    strategic_pillar_id: string | null
+                    status: string
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    org_id: string
+                    owner_id?: string | null
+                    title: string
+                    focus_slots_required?: number
+                    capex_required?: number
+                    opex_required?: number
+                    short_term_win?: boolean
+                    strategic_pillar_id?: string | null
+                    status?: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    org_id?: string
+                    owner_id?: string | null
+                    title?: string
+                    focus_slots_required?: number
+                    capex_required?: number
+                    opex_required?: number
+                    short_term_win?: boolean
+                    strategic_pillar_id?: string | null
+                    status?: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "initiatives_org_id_fkey"
+                        columns: ["org_id"]
+                        referencedRelation: "organizations"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "initiatives_owner_id_fkey"
+                        columns: ["owner_id"]
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "initiatives_strategic_pillar_id_fkey"
+                        columns: ["strategic_pillar_id"]
+                        referencedRelation: "strategic_pillars"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            strategic_ledger: {
+                Row: {
+                    id: string
+                    org_id: string
+                    initiative_id: string | null
+                    chair_id: string | null
+                    action_type: string
+                    rationale: string | null
+                    replaced_ids: Json | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    org_id: string
+                    initiative_id?: string | null
+                    chair_id?: string | null
+                    action_type: string
+                    rationale?: string | null
+                    replaced_ids?: Json | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    org_id?: string
+                    initiative_id?: string | null
+                    chair_id?: string | null
+                    action_type?: string
+                    rationale?: string | null
+                    replaced_ids?: Json | null
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "strategic_ledger_org_id_fkey"
+                        columns: ["org_id"]
+                        referencedRelation: "organizations"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "strategic_ledger_initiative_id_fkey"
+                        columns: ["initiative_id"]
+                        referencedRelation: "initiatives"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "strategic_ledger_chair_id_fkey"
+                        columns: ["chair_id"]
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
         }
         Views: {
             [_ in never]: never
@@ -578,6 +825,14 @@ export interface Database {
                     p_token: string
                 }
                 Returns: Json
+            }
+            update_lead_by_email: {
+                Args: {
+                    p_email: string
+                    p_status: string
+                    p_file_url?: string
+                }
+                Returns: undefined
             }
             create_signup_data: {
                 Args: {

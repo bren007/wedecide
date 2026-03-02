@@ -1,29 +1,42 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   /* Typography */
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Color Palette - Premium SaaS Dark Theme */
-  --color-bg-primary: #0a0e1a;
-  --color-bg-secondary: #131829;
-  --color-bg-tertiary: #1a2035;
+  /* Color Palette - AlturaGov Command Center Dark Theme */
+  --color-bg-primary: #020617;
+  /* slate-950 */
+  --color-bg-secondary: #0a0f1c;
+  /* Command center base */
+  --color-bg-tertiary: #0f172a;
+  /* slate-900 */
 
   /* Accent Colors */
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f46e5;
-  --color-primary-light: #818cf8;
-  --color-secondary: #06b6d4;
-  --color-accent: #f59e0b;
+  --color-primary: #3b82f6;
+  /* Action Blue */
+  --color-primary-hover: #2563eb;
+  --color-primary-light: #60a5fa;
+  --color-secondary: #0ea5e9;
+  /* Sky Blue */
+  --color-accent: #fbbf24;
+  /* Strategic Gold */
 
   /* Text Colors */
   --color-text-primary: #f8fafc;
-  --color-text-secondary: #cbd5e1;
+  --color-text-secondary: #94a3b8;
+  /* slate-400 */
   --color-text-muted: #64748b;
 
   /* Border & Divider */
-  --color-border: rgba(148, 163, 184, 0.1);
-  --color-border-hover: rgba(148, 163, 184, 0.2);
+  --color-border: #1e293b;
+  /* slate-800 */
+  --color-border-hover: #334155;
+  /* slate-700 */
 
   /* Glassmorphism */
   --glass-bg: rgba(26, 32, 53, 0.7);
@@ -58,9 +71,10 @@
 
   /* Surface & Semantic Colors */
   --color-surface: var(--color-bg-secondary);
-  --color-surface-card: #1e253c;
-  /* Slightly Lighter for depth */
-  --color-surface-hover: var(--color-bg-tertiary);
+  --color-surface-card: #0a0f1c;
+  /* Matches bento-card */
+  --color-surface-hover: rgba(30, 41, 59, 0.5);
+  /* subtle Slate hover */
   --color-error: #ef4444;
   --color-bg-error: rgba(239, 68, 68, 0.1);
   --color-success: #10b981;
@@ -200,20 +214,21 @@ a:hover {
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bg-tertiary);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: var(--radius-md);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
+  background: rgba(148, 163, 184, 0.7);
 }
 
 /* Global Modal System */

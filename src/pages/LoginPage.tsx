@@ -57,7 +57,7 @@ export const LoginPage: React.FC = () => {
         <div className="auth-container fade-in">
           <Card className="auth-card">
             <h1 className="auth-title">Welcome Back</h1>
-            <p className="auth-subtitle">Sign in to continue to WeDecide</p>
+            <p className="auth-subtitle">Sign in to continue to AlturaGov</p>
 
             <form onSubmit={handleSubmit} className="auth-form">
               <Input

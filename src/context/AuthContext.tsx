@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const userId = supabaseUser.id;
     // VERY STRICT retry policy during initial boot
     const maxRetries = 1;
-    const currentTimeoutMs = 2000; // Reduced to 2s - if profile doesn't load in 2s, we should fallback to cache
+    const currentTimeoutMs = 10000; // Increased to 10s for Staging latency
 
     if (retryCount === 0) {
       markPerformance(PerformanceMarkers.PROFILE_FETCH_START);
@@ -165,6 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(JSON.parse(cached));
             setIsLoading(false); // UI can render now!
             initialFetchDoneRef.current = true;
+            lastProcessedUserIdRef.current = session.user.id; // Fix: Mark as processed
           }
         }
       } catch (e) {
@@ -196,9 +197,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      // De-bounce: If we've already started processing this user AND we're not loading, skip
-      if (currentUserId === lastProcessedUserIdRef.current && user?.id === currentUserId && !isLoading) {
-        console.log('⏭️ Skipping: User already processed');
+      // De-bounce: If we've already processed this user (via cache or previous run), skip
+      // We rely on refs, not state, to avoid stale interactions in this closure
+      if (currentUserId === lastProcessedUserIdRef.current) {
+        console.log('⏭️ Skipping: User already processed (Ref check)');
         if (!initialFetchDoneRef.current) {
           initialFetchDoneRef.current = true;
           setIsLoading(false);
@@ -206,10 +208,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
+      // Also skip TOKEN_REFRESHED events once initial fetch is done
+      // (they fire on tab focus, navigation, etc. and don't need a profile re-fetch)
+      if (event === 'TOKEN_REFRESHED' && initialFetchDoneRef.current) {
+        console.log('⏭️ Skipping TOKEN_REFRESHED: initial fetch already done');
+        lastProcessedUserIdRef.current = currentUserId;
+        return;
+      }
+
       lastProcessedUserIdRef.current = currentUserId;
 
-      // Only set loading if we don't have a cached user for this ID
-      if (user?.id !== currentUserId) {
+      // Only show loading spinner if we DON'T already have a cached user
+      const cached = localStorage.getItem(`${PROFILE_CACHE_KEY}_${currentUserId}`);
+      if (!cached) {
         setIsLoading(true);
       }
 
@@ -253,14 +264,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    // Fallback: 2 seconds is enough for a "cold" getSession
+    // Fallback: 12 seconds is enough for a "cold" getSession and slow DB
     setTimeout(() => {
       if (mounted && !initialFetchDoneRef.current) {
         console.log('⏰ Fallback reached: Finalizing loading state');
         setIsLoading(false);
         initialFetchDoneRef.current = true;
       }
-    }, 2000);
+    }, 12000);
 
     return () => {
       mounted = false;

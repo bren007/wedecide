@@ -8,13 +8,14 @@ dotenv.config({ path: '.env.local' });
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const DB_CONNECTION_STRING = process.env.DIRECT_URL || process.env.DATABASE_URL;
+const DB_CONNECTION_STRING = process.env.DATABASE_URL || process.env.DIRECT_URL;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !DB_CONNECTION_STRING) {
     throw new Error('Missing environment variables. Check .env.local');
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Remove global instance
+// const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const pgClient = new Client({
     connectionString: DB_CONNECTION_STRING,
     ssl: { rejectUnauthorized: false }
@@ -31,19 +32,24 @@ describe('Meetings & Agenda Integration', () => {
     let meetingId: string;
     let agendaItemId: string;
     let decisionId: string;
+    let supabase: any;
 
     beforeAll(async () => {
+        // Create initial client for auth setup
+        const authClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!);
+        await authClient.auth.signOut();
+
         await pgClient.connect();
 
         // 1. Setup User & Org
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await authClient.auth.signUp({
             email: TEST_EMAIL,
             password: TEST_PASSWORD,
         });
         if (authError) throw authError;
         userId = authData.user!.id;
 
-        const { data: rpcData, error: rpcError } = await supabase.rpc('create_signup_data', {
+        const { data: rpcData, error: rpcError } = await authClient.rpc('create_signup_data', {
             p_user_id: userId,
             p_email: TEST_EMAIL,
             p_name: 'Meeting Chair',
@@ -55,9 +61,23 @@ describe('Meetings & Agenda Integration', () => {
         organizationId = rpcData.organization_id;
 
         // Sign in to get session for RLS tests
-        await supabase.auth.signInWithPassword({
+        const { data: loginData, error: loginError } = await authClient.auth.signInWithPassword({
             email: TEST_EMAIL,
             password: TEST_PASSWORD,
+        });
+        if (loginError) throw loginError;
+        const infoToken = loginData.session!.access_token;
+
+        // Create isolated client for tests
+        supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+            global: {
+                headers: {
+                    Authorization: `Bearer ${infoToken}`
+                }
+            },
+            auth: {
+                persistSession: false
+            }
         });
     });
 

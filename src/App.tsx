@@ -11,7 +11,14 @@ import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
-import { Dashboard } from './pages/Dashboard';
+import { AuditFunnelPage } from './pages/AuditFunnelPage';
+import { SecureDropPage } from './pages/SecureDropPage';
+import { AuditReviewPage } from './pages/AuditReviewPage';
+
+import { CommandCenterPage } from './pages/CommandCenterPage';
+import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
+import { StrategicIngestionPage } from './pages/StrategicIngestionPage';
+import { StrategicLedgerPage } from './pages/StrategicLedgerPage';
 import { DecisionLayout } from './components/layouts/DecisionLayout';
 import { DecisionListPage } from './pages/decisions/DecisionListPage';
 import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
@@ -19,6 +26,7 @@ import { DecisionDetailPage } from './pages/decisions/DecisionDetailPage';
 import { DecisionEditPage } from './pages/decisions/DecisionEditPage';
 import { DecisionTriagePage } from './pages/decisions/DecisionTriagePage';
 import { MeetingLayout } from './components/layouts/MeetingLayout';
+import { PublicLayout } from './components/layouts/PublicLayout';
 import { MeetingListPage } from './pages/meetings/MeetingListPage';
 import { MeetingDetailPage } from './pages/meetings/MeetingDetailPage';
 import './App.css';
@@ -39,10 +47,20 @@ function AppContent() {
       <ErrorBoundary>
 
         <Routes>
-          <Route
-            path="/"
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />}
-          />
+          <Route element={<PublicLayout />}>
+            <Route
+              path="/"
+              element={isAuthenticated ? <Navigate to="/command-center" replace /> : <LandingPage />}
+            />
+            <Route
+              path="/audit"
+              element={<AuditFunnelPage />}
+            />
+            <Route
+              path="/secure-drop"
+              element={<SecureDropPage />}
+            />
+          </Route>
 
           <Route
             path="/login"
@@ -63,9 +81,45 @@ function AppContent() {
           {/* Protected Routes */}
           <Route
             path="/dashboard"
+            element={<Navigate to="/command-center" replace />}
+          />
+          <Route
+            path="/command-center"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <CommandCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/audit-review"
+            element={
+              <ProtectedRoute>
+                <AuditReviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/propose-initiative"
+            element={
+              <ProtectedRoute>
+                <InitiativeProposalPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/strategic-ingestion"
+            element={
+              <ProtectedRoute>
+                <StrategicIngestionPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/strategic-ledger"
+            element={
+              <ProtectedRoute>
+                <StrategicLedgerPage />
               </ProtectedRoute>
             }
           />

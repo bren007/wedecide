@@ -11,4 +11,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 import type { Database } from '../types/supabase';
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+declare global {
+    var _supabaseInstance: ReturnType<typeof createClient<Database>> | undefined;
+}
+
+export const supabase = globalThis._supabaseInstance || createClient<Database>(supabaseUrl, supabaseAnonKey);
+if (process.env.NODE_ENV !== 'production') {
+    globalThis._supabaseInstance = supabase;
+}
