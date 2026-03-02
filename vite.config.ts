@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
@@ -10,11 +11,5 @@ export default defineConfig({
     testTimeout: 15000,
     hookTimeout: 20000,
     include: ['src/tests/**/*.test.ts'],
-    // Separate test pools for unit vs integration
-    poolOptions: {
-      forks: {
-        singleFork: true, // Avoid parallel DB connections clashing
-      },
-    },
   },
 })
