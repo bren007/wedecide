@@ -8,7 +8,7 @@ dotenv.config({ path: '.env.local' });
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const DB_CONNECTION_STRING = process.env.DIRECT_URL || process.env.DATABASE_URL;
+const DB_CONNECTION_STRING = process.env.DATABASE_URL || process.env.DIRECT_URL;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !DB_CONNECTION_STRING) {
     throw new Error('Missing environment variables. Check .env.local');

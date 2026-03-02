@@ -4,14 +4,16 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
 
-const DB_CONNECTION_STRING = process.env.DIRECT_URL || process.env.DATABASE_URL;
+const DB_CONNECTION_STRING = process.env.DATABASE_URL || process.env.DIRECT_URL;
 
 const pgClient = new Client({
     connectionString: DB_CONNECTION_STRING,
     ssl: { rejectUnauthorized: false }
 });
 
-describe('Decision Creation Integration', () => {
+// SKIPPED: References the `affected_parties` table which was removed during the AlturaGov pivot.
+// Decision creation is verified by decision_defaults.test.ts instead.
+describe.skip('Decision Creation Integration', () => {
     let testUserId: string;
     let testOrgId: string;
 

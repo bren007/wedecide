@@ -8,7 +8,7 @@ dotenv.config({ path: '.env.local' });
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const DB_CONNECTION_STRING = process.env.DIRECT_URL || process.env.DATABASE_URL;
+const DB_CONNECTION_STRING = process.env.DATABASE_URL || process.env.DIRECT_URL;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !DB_CONNECTION_STRING) {
     throw new Error('Missing environment variables. Check .env.local');
@@ -111,19 +111,47 @@ describe('Auth & Signup Integration Flow', () => {
     });
 
     it('should have created the correct database records', async () => {
-        const userRes = await pgClient.query("SELECT * FROM users WHERE email = $1", [TEST_EMAIL]);
-        expect(userRes.rows.length).toBe(1);
-        const user = userRes.rows[0];
-        expect(user.name).toBe('Test User');
+        // Use Supabase client (not pgClient) to verify, since pgbouncer
+        // transaction mode can have cross-connection visibility issues
+        const { data: loginData } = await supabase.auth.signInWithPassword({
+            email: TEST_EMAIL,
+            password: TEST_PASSWORD,
+        });
 
-        const orgRes = await pgClient.query("SELECT * FROM organizations WHERE id = $1", [user.organization_id]);
-        expect(orgRes.rows.length).toBe(1);
-        expect(orgRes.rows[0].name).toBe(TEST_ORG_NAME);
+        // Create authenticated client for the verification
+        const verifyClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+            global: { headers: { Authorization: `Bearer ${loginData.session!.access_token}` } },
+            auth: { persistSession: false },
+        });
 
-        const roleRes = await pgClient.query("SELECT * FROM user_roles WHERE user_id = $1", [user.id]);
-        expect(roleRes.rows.length).toBe(1);
-        expect(roleRes.rows[0].role).toBe('admin');
+        const { data: userData, error: userError } = await verifyClient
+            .from('users')
+            .select('*')
+            .eq('email', TEST_EMAIL)
+            .single();
 
-        console.log('✅ Database Records Verified.');
+        expect(userError).toBeNull();
+        expect(userData).toBeDefined();
+        expect(userData!.name).toBe('Test User');
+
+        const { data: orgData, error: orgError } = await verifyClient
+            .from('organizations')
+            .select('*')
+            .eq('id', userData!.organization_id)
+            .single();
+
+        expect(orgError).toBeNull();
+        expect(orgData!.name).toBe(TEST_ORG_NAME);
+
+        const { data: roleData, error: roleError } = await verifyClient
+            .from('user_roles')
+            .select('*')
+            .eq('user_id', userData!.id);
+
+        expect(roleError).toBeNull();
+        expect(roleData!.length).toBe(1);
+        expect(roleData![0].role).toBe('admin');
+
+        console.log('✅ Database Records Verified via Supabase client.');
     });
 });
