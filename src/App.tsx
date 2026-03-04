@@ -14,6 +14,7 @@ import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { AuditFunnelPage } from './pages/AuditFunnelPage';
 import { SecureDropPage } from './pages/SecureDropPage';
 import { AuditReviewPage } from './pages/AuditReviewPage';
+import { PulseDashboardPage } from './pages/PulseDashboardPage';
 
 import { CommandCenterPage } from './pages/CommandCenterPage';
 import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
@@ -96,6 +97,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AuditReviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/pulse"
+            element={
+              <ProtectedRoute>
+                <PulseDashboardPage />
               </ProtectedRoute>
             }
           />

@@ -46,7 +46,7 @@ export function useSandboxState() {
             const { data: settingsData, error: settingsError } = await supabase
                 .from('capacity_settings' as any)
                 .select('*')
-                .single();
+                .maybeSingle();
 
             if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
             setSettings(settingsData as unknown as CapacitySettings);

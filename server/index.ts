@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 3001;
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY!;
 const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY!;
+const ANTHROPIC_API_KEY = process.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || GEMINI_API_KEY; // fallback so it doesn't crash if not provided during testing
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -177,7 +178,7 @@ app.post('/api/generate-draft', async (req: Request, res: Response): Promise<any
         const { payload } = await parseAndStructurePortfolio(email, token);
 
         console.log(`[DRAFT GENERATOR] Running LLM inference`);
-        const analysisTokens = await generateAnalysis(GEMINI_API_KEY, payload);
+        const analysisTokens = await generateAnalysis(GEMINI_API_KEY, ANTHROPIC_API_KEY, payload);
 
         res.status(200).json({
             success: true,
@@ -242,7 +243,7 @@ app.post('/api/publish-report', async (req: Request, res: Response): Promise<any
         await supabaseClient
             .from('leads')
             .update({
-                audit_status: 'report_generated',
+                audit_status: 'report_delivered',
                 report_url: reportFileName
             })
             .eq('id', lead.id);

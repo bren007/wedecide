@@ -15,7 +15,7 @@ export const AuditReviewPage: React.FC = () => {
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [loading, setLoading] = useState(false);
     const [draftData, setDraftData] = useState<any>(null);
-    const [draftAnalysis, setDraftAnalysis] = useState<{ section3: string, scenarioA: string, scenarioB: string } | null>(null);
+    const [draftAnalysis, setDraftAnalysis] = useState<{ section3: string, section4: string, internal_critique?: string } | null>(null);
     const [publishing, setPublishing] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
 
@@ -27,7 +27,7 @@ export const AuditReviewPage: React.FC = () => {
         const { data, error } = await supabase
             .from('leads')
             .select('*')
-            .in('audit_status', ['data_received', 'report_generated'])
+            .in('audit_status', ['data_uploaded', 'draft_generated', 'report_delivered', 'data_received', 'report_generated'])
             .order('created_at', { ascending: false });
 
         if (!error) {
@@ -103,8 +103,8 @@ export const AuditReviewPage: React.FC = () => {
             fetchLeads(); // Refresh status list
 
             // Optionally update local list manually so the user sees it visually immediately
-            setLeads(prev => prev.map(l => l.id === selectedLead.id ? { ...l, audit_status: 'report_generated', report_url: json.reportUrl } : l));
-            setSelectedLead(prev => prev ? { ...prev, audit_status: 'report_generated', report_url: json.reportUrl } : null);
+            setLeads(prev => prev.map(l => l.id === selectedLead.id ? { ...l, audit_status: 'report_delivered', report_url: json.reportUrl } : l));
+            setSelectedLead(prev => prev ? { ...prev, audit_status: 'report_delivered', report_url: json.reportUrl } : null);
             showToast('Report generated successfully!', 'success');
         } catch (e: any) {
             console.error('Publish error:', e);
@@ -146,8 +146,8 @@ export const AuditReviewPage: React.FC = () => {
                             >
                                 <h3 className="font-bold text-slate-800">{lead.organization_name || 'Unknown Org'}</h3>
                                 <p className="text-xs text-slate-500 mb-2 truncate">{lead.email}</p>
-                                <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${lead.audit_status === 'data_received' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-                                    {lead.audit_status === 'data_received' ? 'Needs Review' : 'Published'}
+                                <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${lead.audit_status === 'data_uploaded' || lead.audit_status === 'data_received' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                    {lead.audit_status === 'data_uploaded' || lead.audit_status === 'data_received' ? 'Needs Review' : 'Published'}
                                 </span>
                             </div>
                         ))}
@@ -200,36 +200,32 @@ export const AuditReviewPage: React.FC = () => {
                                     </div>
                                 </div>
 
+                                {draftAnalysis.internal_critique && (
+                                    <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg text-purple-800 text-sm">
+                                        <p className="font-bold flex items-center gap-2 mb-1">
+                                            <ShieldCheck size={16} /> Lead Editor Critique (Claude 4.6)
+                                        </p>
+                                        <p>{draftAnalysis.internal_critique}</p>
+                                    </div>
+                                )}
+
                                 <div className="space-y-2">
-                                    <label className="font-bold text-slate-700 block">Section 3: Where Your Strategy is Exposed</label>
+                                    <label className="font-bold text-slate-700 block text-lg">Section 3: Where Your Strategy is Exposed</label>
                                     <textarea
-                                        className="w-full h-48 p-4 border border-slate-300 rounded-lg text-slate-800 font-sans focus:ring-2 focus:ring-action-blue outline-none"
+                                        className="w-full h-64 p-4 border border-slate-300 rounded-lg text-slate-800 font-sans focus:ring-2 focus:ring-action-blue outline-none"
                                         value={draftAnalysis.section3}
                                         onChange={e => setDraftAnalysis({ ...draftAnalysis, section3: e.target.value })}
                                     />
-                                    <p className="text-xs text-slate-500">Edit LLM draft to ensure accuracy. Plain text rendering.</p>
+                                    <p className="text-xs text-slate-500">Edit LLM draft to ensure accuracy. Markdown supported.</p>
                                 </div>
 
                                 <div className="space-y-4 border-t border-slate-200 pt-6 mt-6">
                                     <label className="font-bold text-slate-700 block text-lg">Section 4: Trade-Off Scenarios</label>
-
-                                    <div className="space-y-2">
-                                        <label className="font-bold text-slate-600 block text-sm">Scenario A (Status Quo)</label>
-                                        <textarea
-                                            className="w-full h-32 p-4 border border-slate-300 rounded-lg text-slate-800 font-sans focus:ring-2 focus:ring-action-blue outline-none"
-                                            value={draftAnalysis.scenarioA}
-                                            onChange={e => setDraftAnalysis({ ...draftAnalysis, scenarioA: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="font-bold text-slate-600 block text-sm">Scenario B ({draftData.total_current_load > draftData.calculated_capacity_baseline ? 'Rationalisation' : 'Acceleration'})</label>
-                                        <textarea
-                                            className="w-full h-40 p-4 border border-slate-300 rounded-lg text-slate-800 font-sans focus:ring-2 focus:ring-action-blue outline-none"
-                                            value={draftAnalysis.scenarioB}
-                                            onChange={e => setDraftAnalysis({ ...draftAnalysis, scenarioB: e.target.value })}
-                                        />
-                                    </div>
+                                    <textarea
+                                        className="w-full h-80 p-4 border border-slate-300 rounded-lg text-slate-800 font-sans focus:ring-2 focus:ring-action-blue outline-none"
+                                        value={draftAnalysis.section4}
+                                        onChange={e => setDraftAnalysis({ ...draftAnalysis, section4: e.target.value })}
+                                    />
                                 </div>
 
                                 <div className="space-y-2 pt-6 border-t border-slate-200">

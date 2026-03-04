@@ -17,7 +17,7 @@ const CalendlyMock = ({ bookingEmail, organizationName }: { bookingEmail: string
         try {
             await supabase.rpc('update_lead_by_email', {
                 p_email: bookingEmail,
-                p_status: 'session_booked'
+                p_status: 'payment_secured'
             });
 
             // Trigger Edge Function to send email
@@ -153,7 +153,7 @@ export const AuditFunnelPage: React.FC = () => {
                 primary_pain_point: formData.painPoints,
                 data_minimisation_acknowledged: formData.dataMinimisationAcknowledged,
                 nda_accepted: formData.ndaAccepted,
-                payment_status: 'pending'
+                audit_status: 'checkout_started'
             });
             if (error) throw error;
             handleNext(); // Move to Payment

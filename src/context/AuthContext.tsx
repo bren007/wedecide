@@ -59,7 +59,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const userId = supabaseUser.id;
     // VERY STRICT retry policy during initial boot
     const maxRetries = 1;
-    const currentTimeoutMs = 10000; // Increased to 10s for Staging latency
 
     if (retryCount === 0) {
       markPerformance(PerformanceMarkers.PROFILE_FETCH_START);
@@ -72,23 +71,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return profileFetchRef.current;
     }
 
+    // Wrap a promise with a timeout to prevent hanging
+    const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+      return Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Timeout: ${label} took longer than ${ms}ms`)), ms)
+        ),
+      ]);
+    };
+
+    const QUERY_TIMEOUT = 5000; // 5 seconds per query attempt
+
     const fetchPromise = (async () => {
-      const timeoutPromise = new Promise<null>((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), currentTimeoutMs)
-      );
-
       try {
-        console.log(`📡 [fetchUserProfile] Querying DB (${retryCount + 1}/${maxRetries + 1}) for: ${userId} (Timeout: ${currentTimeoutMs}ms)`);
-        const dbQuery = supabase
-          .from('users')
-          .select('id, email, name, organization_id')
-          .eq('id', userId)
-          .single();
-
-        const { data: profile, error: profileError } = await Promise.race([
-          dbQuery,
-          timeoutPromise as any
-        ]);
+        console.log(`📡 [fetchUserProfile] Querying DB (${retryCount + 1}/${maxRetries + 1}) for: ${userId}`);
+        const { data: profile, error: profileError } = await withTimeout(
+          Promise.resolve(
+            supabase
+              .from('users')
+              .select('id, email, name, organization_id')
+              .eq('id', userId)
+              .single()
+          ),
+          QUERY_TIMEOUT,
+          'users query'
+        );
 
         if (profileError) {
           if (profileError.code === 'PGRST116') return null;
@@ -96,21 +104,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         // Fetch roles
-        const { data: roles, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .eq('organization_id', profile.organization_id);
+        const { data: roles, error: rolesError } = await withTimeout(
+          Promise.resolve(
+            supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', userId)
+              .eq('organization_id', profile.organization_id)
+          ),
+          QUERY_TIMEOUT,
+          'user_roles query'
+        );
 
         if (rolesError) throw rolesError;
 
-        console.log(`✅ [fetchUserProfile] Success: ${userId} (Roles: ${roles.length})`);
+        console.log(`✅ [fetchUserProfile] Success: ${userId} (Roles: ${roles!.length})`);
         markPerformance(PerformanceMarkers.PROFILE_FETCH_SUCCESS);
         measurePerformance('Profile Fetch Duration', PerformanceMarkers.PROFILE_FETCH_START, PerformanceMarkers.PROFILE_FETCH_SUCCESS);
 
         const profileData: User = {
           ...profile,
-          roles: roles.map(r => r.role)
+          roles: roles!.map((r: { role: string }) => r.role)
         };
 
         // Cache the successful profile
@@ -119,15 +133,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return profileData;
 
       } catch (error: any) {
+        console.warn(`⚠️ [fetchUserProfile] Error (attempt ${retryCount + 1}):`, error.message);
+
         if (retryCount < maxRetries) {
-          const delay = 300; // Even shorter retry delay
+          const delay = 300; // Short retry delay
           await new Promise(resolve => setTimeout(resolve, delay));
           return fetchUserProfile(supabaseUser, retryCount + 1);
         }
 
         // Return a special error/marker to distinguish between "not found" and "network error"
-        if (error.message?.includes('timeout') || error.message?.includes('fetch') || error.message?.includes('Network')) {
-          console.warn('📡 [fetchUserProfile] Soft failure due to network/timeout (Expected during flaky network)');
+        if (
+          error.message?.includes('fetch') ||
+          error.message?.includes('Network') ||
+          error.message?.includes('Failed to fetch') ||
+          error.message?.includes('Timeout')
+        ) {
+          console.warn('📡 [fetchUserProfile] Soft failure due to network/timeout issue');
           return 'NETWORK_ERROR' as any;
         }
 
@@ -154,7 +175,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let mounted = true;
     markPerformance(PerformanceMarkers.AUTH_INIT_START);
 
-    // 1. Instant Boot: Try to load from cache immediately
+    // 1. Instant Boot: Try to load from cache immediately, and definitively determine no-auth state
     const initFromCache = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -167,9 +188,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             initialFetchDoneRef.current = true;
             lastProcessedUserIdRef.current = session.user.id; // Fix: Mark as processed
           }
+        } else if (mounted && !initialFetchDoneRef.current) {
+          // If definitively NO session from async storage:
+          console.log('⚡ Instant Boot: No session found, finalizing loading state');
+          setIsLoading(false);
+          initialFetchDoneRef.current = true;
         }
       } catch (e) {
         console.warn('⚠️ Cache init failed', e);
+        if (mounted && !initialFetchDoneRef.current) {
+          setIsLoading(false);
+          initialFetchDoneRef.current = true;
+        }
       }
     };
     initFromCache();
@@ -183,7 +213,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUserId = session?.user?.id || null;
 
       // Handle SIGNED_OUT immediately
-      if (event === 'SIGNED_OUT' || !session?.user) {
+      // Do NOT forcefully quit on INITIAL_SESSION with no user, let getSession handle it!
+      if (event === 'SIGNED_OUT' || (event !== 'INITIAL_SESSION' && !session?.user)) {
         lastProcessedUserIdRef.current = null;
         setUser(null);
         setIsLoading(false);
@@ -195,6 +226,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (key.startsWith(PROFILE_CACHE_KEY)) localStorage.removeItem(key);
         });
         return;
+      }
+
+      if (event === 'INITIAL_SESSION' && !session?.user) {
+        return; // wait for getSession (initFromCache) to definitively tell us
       }
 
       // De-bounce: If we've already processed this user (via cache or previous run), skip
@@ -225,6 +260,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       try {
+        if (!session?.user) return; // Type guard for TS
         console.log('⏳ Processing profile for:', currentUserId);
         const result = await fetchUserProfile(session.user);
 
@@ -264,14 +300,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    // Fallback: 12 seconds is enough for a "cold" getSession and slow DB
+    // Fallback: 6 seconds is enough now that RLS recursion is fixed
     setTimeout(() => {
       if (mounted && !initialFetchDoneRef.current) {
         console.log('⏰ Fallback reached: Finalizing loading state');
         setIsLoading(false);
         initialFetchDoneRef.current = true;
       }
-    }, 12000);
+    }, 6000);
 
     return () => {
       mounted = false;

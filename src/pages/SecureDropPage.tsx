@@ -105,7 +105,7 @@ export const SecureDropPage: React.FC = () => {
 
             const { error: dbError } = await supabase.rpc('update_lead_by_email', {
                 p_email: bookingEmail,
-                p_status: 'data_received',
+                p_status: 'data_uploaded',
                 p_file_url: uploadData.path
             });
 

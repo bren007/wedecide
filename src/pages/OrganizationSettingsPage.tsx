@@ -154,7 +154,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .from('capacity_settings' as any)
                     .select('*')
                     .eq('org_id', orgId)
-                    .single();
+                    .maybeSingle();
 
                 if (capData) {
                     setCapacitySettings(capData as unknown as CapacitySettings);
