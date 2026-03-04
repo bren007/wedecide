@@ -25,5 +25,7 @@ dist-ssr
 
 /src/generated/prisma
 .env
+.env.*
+!.env.example
 test-db-connection*.js
 *.bak
