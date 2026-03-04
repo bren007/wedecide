@@ -32,7 +32,12 @@ export const Navbar: React.FC = () => {
                 </span>
               </div>
               <Link to="/command-center" className="nav-link">Command Center</Link>
-              {isAdmin && <Link to="/admin/audit-review" className="nav-link">Audit Review Admin</Link>}
+              {isAdmin && (
+                <>
+                  <Link to="/admin/pulse" className="nav-link">Pulse Dashboard</Link>
+                  <Link to="/admin/audit-review" className="nav-link">Audit Review Admin</Link>
+                </>
+              )}
               <Link to="/strategic-ledger" className="nav-link">Strategic Ledger</Link>
               <Link to="/settings" className="nav-link">Settings</Link>
               <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
