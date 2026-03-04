@@ -5,7 +5,8 @@ import { ShieldCheck, FileText, Loader2, Send, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToasts } from '../context/ToastContext';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
@@ -51,11 +52,12 @@ export const AuditReviewPage: React.FC = () => {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
 
-            const res = await fetch(`${API_BASE}/api/generate-draft`, {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/generate-draft`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    'Authorization': `Bearer ${token || SUPABASE_ANON_KEY}`,
+                    'apikey': SUPABASE_ANON_KEY,
                 },
                 body: JSON.stringify({ email: lead.email })
             });
@@ -85,11 +87,12 @@ export const AuditReviewPage: React.FC = () => {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
 
-            const res = await fetch(`${API_BASE}/api/publish-report`, {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/publish-report`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    'Authorization': `Bearer ${token || SUPABASE_ANON_KEY}`,
+                    'apikey': SUPABASE_ANON_KEY,
                 },
                 body: JSON.stringify({
                     email: selectedLead.email,
