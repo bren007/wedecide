@@ -1,6 +1,7 @@
+// @ts-nocheck — This file runs in Supabase's Deno runtime, not Node.js
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { parse } from "https://deno.land/std@0.177.0/csv/mod.ts";
+import Papa from "https://esm.sh/papaparse@5.4.1";
 // @deno-types="https://esm.sh/jspdf@2.5.2"
 import { jsPDF } from "https://esm.sh/jspdf@2.5.2";
 
@@ -293,7 +294,8 @@ function generatePdf(data: any): Uint8Array {
 // ── Portfolio Parser (same as generate-draft) ─────────────────────────
 
 function parsePortfolio(csvString: string, lead: any) {
-    const rows = parse(csvString, { skipFirstRow: true });
+    const parsed = Papa.parse(csvString, { header: true, skipEmptyLines: true });
+    const rows = parsed.data;
 
     let fiscalDrag = 0;
     const initiatives = rows.map((row: any, index: number) => {

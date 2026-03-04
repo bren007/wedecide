@@ -1,6 +1,7 @@
+// @ts-nocheck — This file runs in Supabase's Deno runtime, not Node.js
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { parse } from "https://deno.land/std@0.177.0/csv/mod.ts";
+import Papa from "https://esm.sh/papaparse@5.4.1";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -174,8 +175,9 @@ ${rawDraft}
 // ── Portfolio Parser ──────────────────────────────────────────────────
 
 function parsePortfolio(csvString: string, lead: any) {
-    // Parse CSV using Deno std
-    const rows = parse(csvString, { skipFirstRow: true });
+    // Parse CSV using PapaParse
+    const parsed = Papa.parse(csvString, { header: true, skipEmptyLines: true });
+    const rows = parsed.data;
 
     let fiscalDrag = 0;
     const initiativeMap = new Map<string, any>();
