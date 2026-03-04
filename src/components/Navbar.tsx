@@ -35,7 +35,7 @@ export const Navbar: React.FC = () => {
               {isAdmin && (
                 <>
                   <Link to="/admin/pulse" className="nav-link">Pulse Dashboard</Link>
-                  <Link to="/admin/audit-review" className="nav-link">Audit Review Admin</Link>
+                  <Link to="/admin/audit-review" className="nav-link">Audit Review</Link>
                 </>
               )}
               <Link to="/strategic-ledger" className="nav-link">Strategic Ledger</Link>

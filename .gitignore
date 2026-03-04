@@ -28,4 +28,10 @@ dist-ssr
 .env.*
 !.env.example
 test-db-connection*.js
+test-staging-connection*.js
+deploy_staging.js
+deploy_staging_manual.js
 *.bak
+*.mjs
+drift_report.json
+compare_schemas.mjs

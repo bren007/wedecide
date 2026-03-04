@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/supabase';
-import { ShieldCheck, FileText, Loader2, Send } from 'lucide-react';
+import { ShieldCheck, FileText, Loader2, Send, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToasts } from '../context/ToastContext';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
@@ -49,7 +51,7 @@ export const AuditReviewPage: React.FC = () => {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
 
-            const res = await fetch('http://localhost:3001/api/generate-draft', {
+            const res = await fetch(`${API_BASE}/api/generate-draft`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,7 +85,7 @@ export const AuditReviewPage: React.FC = () => {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
 
-            const res = await fetch('http://localhost:3001/api/publish-report', {
+            const res = await fetch(`${API_BASE}/api/publish-report`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -137,7 +139,7 @@ export const AuditReviewPage: React.FC = () => {
                                 className={`p-4 border rounded-xl cursor-pointer transition-colors ${selectedLead?.id === lead.id ? 'border-action-blue bg-blue-50' : 'border-slate-200 hover:border-slate-400'}`}
                                 onClick={() => {
                                     if (selectedLead?.id !== lead.id) {
-                                        setSelectedLead(null);
+                                        setSelectedLead(lead);
                                         setDraftData(null);
                                         setDraftAnalysis(null);
                                         handleGenerateDraft(lead);
@@ -146,9 +148,24 @@ export const AuditReviewPage: React.FC = () => {
                             >
                                 <h3 className="font-bold text-slate-800">{lead.organization_name || 'Unknown Org'}</h3>
                                 <p className="text-xs text-slate-500 mb-2 truncate">{lead.email}</p>
-                                <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${lead.audit_status === 'data_uploaded' || lead.audit_status === 'data_received' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-                                    {lead.audit_status === 'data_uploaded' || lead.audit_status === 'data_received' ? 'Needs Review' : 'Published'}
-                                </span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${lead.audit_status === 'data_uploaded' || lead.audit_status === 'data_received' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                        {lead.audit_status === 'data_uploaded' || lead.audit_status === 'data_received' ? 'Needs Review' : 'Published'}
+                                    </span>
+                                    {lead.file_url && (
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                const { data } = await supabase.storage.from('audit_uploads').createSignedUrl(lead.file_url!, 3600);
+                                                if (data) window.open(data.signedUrl, '_blank');
+                                            }}
+                                            className="text-xs px-2 py-1 rounded font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors flex items-center gap-1"
+                                            title="Download the client's uploaded CSV file"
+                                        >
+                                            <Download size={12} /> View Input CSV
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
