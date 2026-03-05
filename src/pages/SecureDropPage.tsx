@@ -26,6 +26,9 @@ export const SecureDropPage: React.FC = () => {
             return;
         }
 
+        const VALID_APPROVAL_MANDATES = ['Cabinet Approved', 'Ministerial Approved', 'Board/Delegated', 'Pre-Approval'];
+        const VALID_RELATIVE_PRIORITIES = ['Tier 1', 'Tier 2', 'Tier 3'];
+
         // Run CSV Structure Validation
         Papa.parse(selectedFile, {
             header: true,
@@ -33,10 +36,11 @@ export const SecureDropPage: React.FC = () => {
             complete: (results) => {
                 const headers = results.meta.fields || [];
                 const required = [
-                    'initiative_name', 'strategic_pillar', 'priority_tier',
-                    'complexity_stakeholders_1_to_3', 'complexity_novelty_1_to_3',
-                    'complexity_dependency_1_to_3', 'current_fy_budget',
-                    'lifecycle_stage', 'next_milestone_date', 'dependency_blockers'
+                    'initiative_name', 'strategic_pillar', 'approval_mandate',
+                    'relative_priority', 'complexity_stakeholders_1_to_3',
+                    'complexity_novelty_1_to_3', 'complexity_dependency_1_to_3',
+                    'current_fy_budget', 'lifecycle_stage', 'target_delivery_quarter',
+                    'next_milestone_date', 'dependency_blockers'
                 ];
 
                 const missing = required.filter(h => !headers.includes(h));
@@ -49,18 +53,32 @@ export const SecureDropPage: React.FC = () => {
                 const errors: string[] = [];
                 for (let i = 0; i < results.data.length; i++) {
                     const row: any = results.data[i];
+                    const initName = row.initiative_name || `(Row ${i + 1})`;
 
-                    if (!row.initiative_name) errors.push(`Row ${i + 1}: Missing required field [initiative_name].`);
-                    if (!row.priority_tier) {
-                        errors.push(`Row ${i + 1}: Missing required field [priority_tier].`);
-                    } else if (!['Ministerial (New)', 'High', 'Medium', 'Low'].includes(row.priority_tier)) {
-                        errors.push(`Row ${i + 1}: Invalid priority_tier [${row.priority_tier}]. Must be Ministerial (New), High, Medium, or Low.`);
+                    if (!row.initiative_name) {
+                        errors.push(`Row ${i + 1}: Missing required field [initiative_name].`);
+                    }
+
+                    if (!row.approval_mandate) {
+                        errors.push(`Row ${i + 1} [${initName}]: Missing required field [approval_mandate].`);
+                    } else if (!VALID_APPROVAL_MANDATES.includes(row.approval_mandate)) {
+                        errors.push(`Row ${i + 1} [${initName}]: Invalid approval_mandate [${row.approval_mandate}]. Must be one of: ${VALID_APPROVAL_MANDATES.join(', ')}.`);
+                    }
+
+                    if (!row.relative_priority) {
+                        errors.push(`Row ${i + 1} [${initName}]: Missing required field [relative_priority].`);
+                    } else if (!VALID_RELATIVE_PRIORITIES.includes(row.relative_priority)) {
+                        errors.push(`Row ${i + 1} [${initName}]: Invalid relative_priority [${row.relative_priority}]. Must be one of: ${VALID_RELATIVE_PRIORITIES.join(', ')}.`);
+                    }
+
+                    if (!row.target_delivery_quarter) {
+                        errors.push(`Row ${i + 1} [${initName}]: Missing required field [target_delivery_quarter].`);
                     }
 
                     const validateScore = (val: string, field: string) => {
-                        if (!val) { errors.push(`Row ${i + 1}: Missing required field [${field}].`); return; }
+                        if (!val) { errors.push(`Row ${i + 1} [${initName}]: Missing required field [${field}].`); return; }
                         const num = parseInt(val, 10);
-                        if (isNaN(num) || num < 1 || num > 3) errors.push(`Row ${i + 1}: Invalid ${field} (must be 1-3)`);
+                        if (isNaN(num) || num < 1 || num > 3) errors.push(`Row ${i + 1} [${initName}]: Invalid ${field} (must be 1-3).`);
                     };
 
                     validateScore(row.complexity_stakeholders_1_to_3, 'complexity_stakeholders_1_to_3');
@@ -69,7 +87,10 @@ export const SecureDropPage: React.FC = () => {
                 }
 
                 if (errors.length > 0) {
-                    setError(errors[0] + " Please correct and re-upload.");
+                    const summary = errors.length === 1
+                        ? errors[0]
+                        : `${errors.length} validation errors found:\n• ${errors.join('\n• ')}`;
+                    setError(summary + '\n\nPlease correct the flagged rows and re-upload.');
                     setFile(null);
                 } else {
                     setFile(selectedFile);

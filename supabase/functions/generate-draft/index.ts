@@ -9,7 +9,7 @@ const corsHeaders = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// ── AI Analysis Pipeline ──────────────────────────────────────────────
+// ── AI API Calls ──────────────────────────────────────────────────────
 
 async function callGemini(apiKey: string, prompt: string): Promise<string> {
     const res = await fetch(
@@ -37,8 +37,8 @@ async function callClaude(apiKey: string, systemPrompt: string, userPrompt: stri
         },
         body: JSON.stringify({
             model: "claude-sonnet-4-6",
-            max_tokens: 2500,
-            temperature: 0.0,
+            max_tokens: 4000,
+            temperature: 0.2,
             system: systemPrompt,
             messages: [{ role: "user", content: userPrompt }],
         }),
@@ -47,127 +47,137 @@ async function callClaude(apiKey: string, systemPrompt: string, userPrompt: stri
     return json.content?.[0]?.text || "";
 }
 
-async function generateAnalysis(geminiApiKey: string, anthropicApiKey: string, payload: any) {
-    const isOverCapacity = payload.total_current_load > payload.calculated_capacity_baseline;
+// ── Agent 1: Gemini — Structured Analytical Brief ─────────────────────
 
-    const crisisPrompt = `
-# SECTION 3 INSTRUCTIONS: Where Your Strategy is Exposed
-Analyze <portfolio_data> against the calculated_capacity_baseline. 
-- Identify 2 to 3 high-priority/high-scrutiny programmes mathematically at risk of failure. ENSURE Ministerial initiatives are explicitly prioritized over High.
-- Explicitly name the lower-value initiatives consuming this capacity.
-- Use Fiscal Tail data to expose the shadow budget tied up in low-value initiatives.
-
-# SECTION 4 INSTRUCTIONS: Trade-Off Scenarios
-- Scenario A (Status Quo): State the inevitable delivery failure of Ministerial/High priorities if the current capacity load is maintained.
-- Scenario B (Rationalisation): Identify exactly 2 or 3 named, low-alignment initiatives to "Park". Calculate the Focus Slots recovered and state how this secures the Ministerial/High priority programmes. 
-`;
-
-    const optimizationPrompt = `
-# SECTION 3 INSTRUCTIONS: Efficiency Gap (Where Your Strategy is Exposed)
-Analyze <portfolio_data> against the calculated_capacity_baseline.
-- Acknowledge the portfolio is within capacity limits mathematically, but identify where capacity is being "wasted" on Low Priority/Low Complexity work instead of accelerating Ministerial priorities.
-- Explicitly name the lower-value initiatives consuming this capacity.
-- Use Fiscal Tail data to expose the shadow budget tied up in low-value initiatives.
-
-# SECTION 4 INSTRUCTIONS: Trade-Off Scenarios
-- Scenario A (Status Quo): State the risk of drift and inefficient resource allocation if the current capacity load is artificially maintained on low-value tasks.
-- Scenario B (Acceleration): Instead of "Rationalisation," propose "Acceleration." Identify exactly 2 or 3 named, low-priority initiatives to "Stop". State how much faster Ministerial projects could be delivered with these reassigned Focus Slots.
-`;
-
+async function runAgent1(geminiApiKey: string, payload: any): Promise<any> {
     const jsonString = JSON.stringify(payload, null, 2);
 
-    const promptText = `
-You are a Lead Governance Strategist at AlturaGov, writing a formal Strategic Capacity Assessment for a public sector Chief Executive. Your task is to write Section 3 ("Where Your Strategy is Exposed") and Section 4 ("Trade-Off Scenarios") based strictly on the provided portfolio data. Output plain text or markdown only.
+    const prompt = `You are a quantitative portfolio analyst. Your task is to analyse the provided portfolio data and produce a structured analytical brief for Section 3 and Section 4 of a Strategic Capacity Assessment. You do not write the final report — you produce the factual and mathematical foundation that the report editor will work from.
 
-# TONE AND STYLE GOVERNING RULES
-1. Tone: Authoritative, objective, and plain-speaking. You are advising a peer. 
-2. Voice: Active voice only. 
-3. Specificity: Every analytical statement MUST directly reference a specifically named initiative from the data payload and its calculated Focus Slot constraint.
+Your analysis must be derived entirely from the data provided. Do not infer values, assume context, or generalise from sector knowledge. Every finding must be traceable to a specific field value in the input data.
 
-${isOverCapacity ? crisisPrompt : optimizationPrompt}
+Perform the following analyses in sequence and return them as a single JSON object. Return ONLY valid JSON with no markdown formatting, no code fences, and no explanatory text outside the JSON.
 
-# INPUT DATA
+**1. Portfolio Shape Analysis**
+- Count total initiatives by relative_priority tier (Tier 1, Tier 2, Tier 3)
+- Count total initiatives by approval_mandate category
+- Calculate total Focus Slots by tier
+- Calculate total Focus Slots by target_delivery_quarter — identify any quarter where clustered load exceeds 30% of the capacity baseline
+- Calculate Fiscal Drag: sum current_fy_budget for all Tier 2 and Tier 3 initiatives
+- Identify the approval mandate / priority tension: list every initiative where approval_mandate is Cabinet Approved or Ministerial Approved but relative_priority is Tier 2 or Tier 3
+
+**2. Overcommitment Calculation**
+- State total portfolio Focus Slots vs capacity baseline
+- Express overcommitment as a percentage
+- Calculate the absolute slot deficit (total load minus baseline)
+- Identify the minimum number of initiatives that would need to be re-sequenced or suspended to reach the baseline
+
+**3. At-Risk Programme Identification**
+- List every Tier 1 and Cabinet/Ministerially mandated initiative
+- For each, state its Focus Slot cost, target_delivery_quarter, and whether any of its dependency_blockers are Tier 2 or Tier 3 initiatives
+- Assess whether the delivery quarter cluster it sits in exceeds the capacity baseline — if yes, flag as structurally at risk
+
+**4. Scenario Construction Data**
+For each of three scenarios, calculate the following and return as structured data — do not write narrative:
+
+Scenario A (Inaction): Project the delivery outlook for each Tier 1 and mandated initiative if no changes are made. For each at-risk programme, state which delivery quarter cluster it fails in and what the fiscal tail exposure is over 24 months.
+
+Scenario B (De-escalation): Identify all Pre-Approval and Tier 3 initiatives. Calculate total slots recovered if all are suspended. State the resulting load as a percentage of baseline. State explicitly whether this closes the deficit or only partially addresses it, expressed as a percentage of the total gap closed.
+
+Scenario C (Baseline Reset): Calculate the additional slot recovery required beyond Scenario B to reach the baseline. Identify the specific Tier 2 or mandated initiatives that must be re-sequenced to achieve this. For each, propose a revised target_delivery_quarter that distributes load below the baseline threshold. State the resulting load as a percentage of baseline after all re-sequencing. Express total gap closure as a percentage.
+
+Return all findings as a single JSON object with keys: portfolio_shape, overcommitment, at_risk_programmes, scenario_a, scenario_b, scenario_c.
+
 <portfolio_data>
 ${jsonString}
-</portfolio_data>
-`;
+</portfolio_data>`;
 
-    // Step 1: Gemini Raw Draft
-    console.log("[AI PIPELINE] Calling Gemini...");
-    const rawDraft = await callGemini(geminiApiKey, promptText);
-    console.log("[AI PIPELINE] Gemini Raw Draft generated.");
+    console.log("[AGENT 1] Calling Gemini for structured analytical brief...");
+    const rawText = await callGemini(geminiApiKey, prompt);
+    console.log("[AGENT 1] Gemini response received.");
 
-    // Step 2: Context Filtering
-    const mentionedInitiatives = payload.portfolio.filter((init: any) =>
-        rawDraft.includes(init.initiative_name)
-    );
+    // Parse the JSON response, stripping any markdown fences
+    let cleanedJson = rawText.trim();
+    if (cleanedJson.includes("```json")) {
+        cleanedJson = cleanedJson.split("```json")[1].split("```")[0].trim();
+    } else if (cleanedJson.includes("```")) {
+        cleanedJson = cleanedJson.split("```")[1].split("```")[0].trim();
+    }
 
-    const minimizedJson = {
-        calculated_capacity_baseline: payload.calculated_capacity_baseline,
-        total_current_load: payload.total_current_load,
-        fiscal_drag: payload.fiscal_drag,
-        referenced_initiatives: mentionedInitiatives,
-    };
+    try {
+        return JSON.parse(cleanedJson);
+    } catch (e) {
+        console.error("[AGENT 1] Failed to parse Gemini JSON:", e);
+        console.error("[AGENT 1] Raw response:", rawText.substring(0, 1000));
+        // Return the raw text as a fallback so Agent 2 can still work with it
+        return { raw_text: rawText, parse_error: true };
+    }
+}
 
-    console.log("[AI PIPELINE] Context filtered to", mentionedInitiatives.length, "initiatives.");
+// ── Agent 2: Claude — Editor-in-Chief ─────────────────────────────────
 
-    // Step 3: Claude Editor-in-Chief
-    const claudeSystem = "You are an expert Lead Editor. Format your response strictly as valid JSON.";
+async function runAgent2(anthropicApiKey: string, agent1Analysis: any, payload: any): Promise<any> {
+    const systemPrompt = `You are an expert Lead Editor at AlturaGov. You translate structured analytical findings into authoritative executive prose. Format your response strictly as valid JSON.`;
 
-    const claudePrompt = `
-**Role:**
-You are the Lead Editor at AlturaGov. Your job is to take a raw draft written by a junior analyst and rewrite it into a final, devastatingly effective Strategic Capacity Assessment for a Chief Executive.
+    const userPrompt = `**Role:**
+You are the Lead Editor at AlturaGov. Your task is to rewrite the structured analytical brief in <raw_analysis> into two sections of a formal Strategic Capacity Assessment for a public sector Chief Executive. You are translating mathematical findings into executive prose — you are not performing analysis, and you must not introduce findings, initiatives, or figures that are not present in the raw analysis.
 
-**Objective:**
-Review the <raw_draft> against the <minimized_data> and the Strict Style Guide. You must output a final, polished version of the text that is mathematically accurate, exceptionally heavy in tone, and completely free of consultant fluff.
+**Narrative Core:**
+The central theme is Ambition vs. Reality. A strategic portfolio contains politically sanctioned, organisationally important work. Cabinet mandates do not suspend the physics of delivery capacity. The report's value lies in stating this plainly, with evidence, in terms that a Chief Executive can act on and defend under scrutiny.
 
-**The Strict Style Guide:**
-1. The "Weight" Rule: The text must clearly articulate severe consequences. Do not use soft language ("may be delayed", "faces challenges"). Use structural realities ("structurally undeliverable," "exposing $X of forward budget").
-2. The Specificity Rule: Every analytical claim must be grounded in the specific initiatives and Focus Slot math provided in the data. Do not hallucinate or guess.
-3. The Tone Rule: Use active voice. Sentences must be short and direct.
-4. Forbidden Words: leverage, holistic, synergy, solution, seamless, paradigm, ecosystem, stakeholder, value-add, robust, best-in-class. 
-5. The Pitch Rule: Do not sell software or propose consulting next steps.
+**Strict Style Guide:**
+1. Audit Lexicon: Use precise governance terms — Suspend, Halt, De-prioritise, Re-sequence. Never use informal terms.
+2. Mandate vs. Priority: Maintain the distinction between approval_mandate (political sanction) and relative_priority (sequencing intent) throughout. Never conflate the two.
+3. Re-sequencing framing: When recommending re-sequencing in Scenario C, always name the specific initiative, its current target_delivery_quarter, and the proposed revised quarter from the raw analysis. Never describe re-sequencing in the abstract.
+4. Gap-closure discipline: Each scenario must state explicitly what percentage of the total slot deficit it closes. A scenario that closes less than 25% of the deficit must include a sentence acknowledging this limitation plainly.
+5. Voice: Senior analyst advising a peer. Precise, direct, without diplomatic softening. Active voice throughout. Short paragraphs. No sentence longer than 25 words.
+6. Forbidden words: leverage, holistic, synergy, solution, seamless, paradigm, ecosystem, stakeholder, value-add, robust, best-in-class, park, put on ice, going forward, it should be noted, it is recommended.
 
-**Output Format:**
-You must return ONLY a raw JSON object with no markdown formatting outside the JSON structure.
+**Required JSON Output Structure:**
+Return ONLY a raw JSON object with no markdown formatting outside the JSON structure.
 {
-  "internal_critique": "A 1-sentence note on what was wrong with the raw draft.",
-  "final_section_3": "The complete, rewritten text for Section 3, formatted with Markdown paragraphs.",
-  "final_section_4": "The complete, rewritten text for Section 4, formatted with Markdown headers and paragraphs."
+  "internal_critique": "One sentence identifying the primary weakness in the raw draft that required the most significant editorial intervention.",
+  "final_section_3": "Section 3: Where Ambition Exceeds Capacity. Four paragraphs: (1) Portfolio shape — describe the distribution of initiatives across tiers, approval mandates, and delivery quarters. (2) The mathematical finding — state the overcommitment percentage and absolute slot deficit as facts. (3) Mandated programmes at risk — identify specific Tier 1 and Cabinet/Ministerially mandated initiatives that are structurally undeliverable, naming each and its delivery quarter cluster. (4) The structural diagnosis — one sentence, written as an auditor's finding.",
+  "final_section_4": "Section 4: Courses of Action. Three scenarios under exact headers as follows: Scenario A — The Trajectory of Inaction. Scenario B — Pragmatic De-escalation. Scenario C — The Baseline Reset. Each scenario must state its gap-closure percentage. Scenario C must name specific initiatives with specific revised delivery quarters. End with a single closing paragraph stating that the choice between these courses of action is a governance decision, that this report provides the objective basis for that decision, and that all findings are available as a formal baseline for any subsequent review or audit. No commercial references. No next steps."
 }
 
 **Input Data:**
-<minimized_data>
-${JSON.stringify(minimizedJson)}
-</minimized_data>
+<raw_analysis>
+${JSON.stringify(agent1Analysis, null, 2)}
+</raw_analysis>
 
-<raw_draft>
-${rawDraft}
-</raw_draft>`;
+<portfolio_summary>
+Organisation: ${payload.organisation_name}
+Capacity Baseline: ${payload.calculated_capacity_baseline} Focus Slots
+Total Current Load: ${payload.total_current_load} Focus Slots
+Fiscal Drag: $${payload.fiscal_drag.toLocaleString()}
+Total Initiatives: ${payload.portfolio.length}
+</portfolio_summary>`;
+
+    console.log("[AGENT 2] Calling Claude for editorial rewrite...");
+    const claudeRespText = await callClaude(anthropicApiKey, systemPrompt, userPrompt);
+    console.log("[AGENT 2] Claude response received.");
+
+    let cleanedJsonStr = claudeRespText.trim();
+    if (cleanedJsonStr.includes("```json")) {
+        cleanedJsonStr = cleanedJsonStr.split("```json")[1].split("```")[0].trim();
+    } else if (cleanedJsonStr.includes("```")) {
+        cleanedJsonStr = cleanedJsonStr.split("```")[1].split("```")[0].trim();
+    }
 
     try {
-        console.log("[AI PIPELINE] Calling Claude...");
-        const claudeRespText = await callClaude(anthropicApiKey, claudeSystem, claudePrompt);
-
-        let cleanedJsonStr = claudeRespText;
-        if (claudeRespText.includes("```json")) {
-            cleanedJsonStr = claudeRespText.split("```json")[1].split("```")[0].trim();
-        } else if (claudeRespText.includes("```")) {
-            cleanedJsonStr = claudeRespText.split("```")[1].split("```")[0].trim();
-        }
-
         const parsed = JSON.parse(cleanedJsonStr);
         return {
-            internal_critique: parsed.internal_critique,
-            section3: parsed.final_section_3 || "Error parsing section 3",
-            section4: parsed.final_section_4 || "Error parsing section 4",
+            internal_critique: parsed.internal_critique || "No critique provided.",
+            section3: parsed.final_section_3 || "Error: Section 3 not generated.",
+            section4: parsed.final_section_4 || "Error: Section 4 not generated.",
         };
     } catch (e) {
-        console.error("Claude API Error:", e);
+        console.error("[AGENT 2] Claude JSON parse error:", e);
         return {
-            internal_critique: "Claude API failed. Using raw draft as fallback.",
-            section3: rawDraft.split("# SECTION 4")[0] || rawDraft,
-            section4: rawDraft.split("# SECTION 4")[1] || "Error",
+            internal_critique: "Claude output was not valid JSON. Using raw text as fallback.",
+            section3: claudeRespText.substring(0, Math.floor(claudeRespText.length / 2)),
+            section4: claudeRespText.substring(Math.floor(claudeRespText.length / 2)),
         };
     }
 }
@@ -175,7 +185,6 @@ ${rawDraft}
 // ── Portfolio Parser ──────────────────────────────────────────────────
 
 function parsePortfolio(csvString: string, lead: any) {
-    // Parse CSV using PapaParse
     const parsed = Papa.parse(csvString, { header: true, skipEmptyLines: true });
     const rows = parsed.data;
 
@@ -183,7 +192,7 @@ function parsePortfolio(csvString: string, lead: any) {
     const initiativeMap = new Map<string, any>();
 
     const initiatives = rows.map((row: any, index: number) => {
-        const name = row["initiative_name"] || row["Name"] || row["Project"] || `Initiative ${index + 1}`;
+        const name = row["initiative_name"] || `Initiative ${index + 1}`;
         const stake = parseInt(row["complexity_stakeholders_1_to_3"] || "1", 10);
         const tech = parseInt(row["complexity_novelty_1_to_3"] || "1", 10);
         const dep = parseInt(row["complexity_dependency_1_to_3"] || "1", 10);
@@ -197,8 +206,14 @@ function parsePortfolio(csvString: string, lead: any) {
         const parsedBudget = parseInt(String(rawBudget).replace(/[^0-9]/g, ""), 10);
         if (!isNaN(parsedBudget)) budget = parsedBudget;
 
-        const priority = row["priority_tier"] || "Standard";
-        if (priority === "Low" || priority === "Medium") fiscalDrag += budget;
+        const approvalMandate = row["approval_mandate"] || "Unknown";
+        const relativePriority = row["relative_priority"] || "Unknown";
+        const targetQuarter = row["target_delivery_quarter"] || "";
+
+        // Fiscal Drag = budget committed to Tier 2 + Tier 3
+        if (relativePriority === "Tier 2" || relativePriority === "Tier 3") {
+            fiscalDrag += budget;
+        }
 
         const blockersStr = row["dependency_blockers"] || "";
         const blockers = blockersStr.split(",").map((b: string) => b.trim()).filter(Boolean);
@@ -206,9 +221,11 @@ function parsePortfolio(csvString: string, lead: any) {
         const initObj = {
             initiative_name: name,
             alignment_pillar: row["strategic_pillar"] || "Uncategorised",
+            approval_mandate: approvalMandate,
+            relative_priority: relativePriority,
             calculated_focus_slots: cost,
             fiscal_tail_impact: budget,
-            priority_tier: priority,
+            target_delivery_quarter: targetQuarter,
             blockers,
             lifecycle_stage: row["lifecycle_stage"] || "",
             start_date: row["start_date"],
@@ -217,37 +234,20 @@ function parsePortfolio(csvString: string, lead: any) {
         return initObj;
     });
 
-    // Dependency risks and zombies
+    // Dependency risks
     const dependencyRiskList: any[] = [];
-    const zombieProjects: string[] = [];
-    const now = new Date();
-
     initiatives.forEach((init: any) => {
-        if (init.priority_tier.includes("Ministerial") || init.priority_tier === "High") {
+        if (init.approval_mandate === "Cabinet Approved" || init.approval_mandate === "Ministerial Approved" || init.relative_priority === "Tier 1") {
             init.blockers.forEach((b: string) => {
                 const blockerInit = initiativeMap.get(b);
-                if (blockerInit && (blockerInit.priority_tier === "Low" || blockerInit.priority_tier === "Medium")) {
+                if (blockerInit && (blockerInit.relative_priority === "Tier 2" || blockerInit.relative_priority === "Tier 3")) {
                     dependencyRiskList.push({
                         high_priority_initiative: init.initiative_name,
                         blocked_by: blockerInit.initiative_name,
-                        blocker_priority: blockerInit.priority_tier,
+                        blocker_priority: blockerInit.relative_priority,
                     });
                 }
             });
-        }
-
-        if (
-            init.lifecycle_stage.toLowerCase().includes("active") ||
-            init.lifecycle_stage.toLowerCase().includes("progress") ||
-            init.lifecycle_stage.toLowerCase().includes("flight")
-        ) {
-            if (init.calculated_focus_slots <= 2 && init.start_date) {
-                const sDate = new Date(init.start_date);
-                if (!isNaN(sDate.getTime())) {
-                    const diffDays = (now.getTime() - sDate.getTime()) / (1000 * 3600 * 24);
-                    if (diffDays > 365) zombieProjects.push(init.initiative_name);
-                }
-            }
         }
     });
 
@@ -267,7 +267,6 @@ function parsePortfolio(csvString: string, lead: any) {
         total_current_load: totalLoad,
         fiscal_drag: fiscalDrag,
         dependency_risk_list: dependencyRiskList,
-        zombie_projects: zombieProjects,
         portfolio: initiatives,
     };
 }
@@ -275,7 +274,6 @@ function parsePortfolio(csvString: string, lead: any) {
 // ── Main Handler ──────────────────────────────────────────────────────
 
 serve(async (req: Request) => {
-    // CORS preflight
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
@@ -289,18 +287,15 @@ serve(async (req: Request) => {
             });
         }
 
-        const authHeader = req.headers.get("Authorization") || "";
-
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const geminiKey = Deno.env.get("GEMINI_API_KEY")!;
         const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY")!;
 
-        // Use service role for backend operations
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         // 1. Fetch lead
-        console.log(`[DRAFT GENERATOR] Fetching lead for ${email}`);
+        console.log(`[DRAFT] Fetching lead for ${email}`);
         const { data: leads, error: leadError } = await supabase
             .from("leads")
             .select("*")
@@ -315,8 +310,8 @@ serve(async (req: Request) => {
             throw new Error("No dataset uploaded for this lead.");
         }
 
-        // 2. Download CSV from storage
-        console.log(`[DRAFT GENERATOR] Downloading CSV: ${lead.file_url}`);
+        // 2. Download CSV
+        console.log(`[DRAFT] Downloading CSV: ${lead.file_url}`);
         const { data: fileData, error: downloadError } = await supabase.storage
             .from("audit_uploads")
             .download(lead.file_url);
@@ -329,10 +324,13 @@ serve(async (req: Request) => {
 
         // 3. Parse portfolio
         const payload = parsePortfolio(csvString, lead);
+        console.log(`[DRAFT] Parsed ${payload.portfolio.length} initiatives, ${payload.total_current_load} total slots`);
 
-        // 4. Run AI pipeline
-        console.log("[DRAFT GENERATOR] Running AI inference...");
-        const analysis = await generateAnalysis(geminiKey, anthropicKey, payload);
+        // 4. Agent 1: Gemini structured analysis
+        const agent1Analysis = await runAgent1(geminiKey, payload);
+
+        // 5. Agent 2: Claude editorial rewrite
+        const analysis = await runAgent2(anthropicKey, agent1Analysis, payload);
 
         return new Response(
             JSON.stringify({ success: true, data: payload, analysis }),
@@ -342,7 +340,7 @@ serve(async (req: Request) => {
             }
         );
     } catch (error: any) {
-        console.error("[DRAFT GENERATOR ERROR]", error.message);
+        console.error("[DRAFT ERROR]", error.message);
         return new Response(
             JSON.stringify({ error: error.message }),
             {

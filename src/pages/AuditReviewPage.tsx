@@ -71,7 +71,7 @@ export const AuditReviewPage: React.FC = () => {
             setDraftAnalysis(json.analysis);
         } catch (e: any) {
             console.error('Draft generation error:', e);
-            showToast(e.message === 'Failed to fetch' ? 'Failed to connect to backend server. Make sure it is running on port 3001.' : e.message, 'error');
+            showToast(e.message || 'Failed to generate draft. Check Edge Function logs.', 'error');
             setSelectedLead(null);
         } finally {
             setLoading(false);
@@ -113,7 +113,7 @@ export const AuditReviewPage: React.FC = () => {
             showToast('Report generated successfully!', 'success');
         } catch (e: any) {
             console.error('Publish error:', e);
-            showToast(e.message === 'Failed to fetch' ? 'Failed to connect to backend server. Make sure it is running on port 3001.' : e.message, 'error');
+            showToast(e.message || 'Failed to publish report. Check Edge Function logs.', 'error');
         } finally {
             setPublishing(false);
         }
@@ -184,8 +184,8 @@ export const AuditReviewPage: React.FC = () => {
                     ) : loading ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-8 text-center">
                             <Loader2 className="animate-spin mb-4" size={48} />
-                            <p className="font-bold text-lg mb-2">Ingesting Database & Running LLM Inference...</p>
-                            <p className="text-sm">Gemini 2.5 Pro is assessing the portfolio capacity constraint.</p>
+                            <p className="font-bold text-lg mb-2">Running AI Analysis Pipeline...</p>
+                            <p className="text-sm">Agent 1 (Gemini 2.5 Pro) is building the structured analytical brief. Agent 2 (Claude) will rewrite it into executive prose.</p>
                         </div>
                     ) : draftData && draftAnalysis ? (
                         <div className="flex flex-col h-full overflow-hidden">
@@ -230,7 +230,7 @@ export const AuditReviewPage: React.FC = () => {
                                 )}
 
                                 <div className="space-y-2">
-                                    <label className="font-bold text-slate-700 block text-lg">Section 3: Where Your Strategy is Exposed</label>
+                                    <label className="font-bold text-slate-700 block text-lg">Section 3: Where Ambition Exceeds Capacity</label>
                                     <textarea
                                         className="w-full h-64 p-4 border border-slate-300 rounded-lg text-slate-800 font-sans focus:ring-2 focus:ring-action-blue outline-none"
                                         value={draftAnalysis.section3}
@@ -240,7 +240,7 @@ export const AuditReviewPage: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-4 border-t border-slate-200 pt-6 mt-6">
-                                    <label className="font-bold text-slate-700 block text-lg">Section 4: Trade-Off Scenarios</label>
+                                    <label className="font-bold text-slate-700 block text-lg">Section 4: Courses of Action</label>
                                     <textarea
                                         className="w-full h-80 p-4 border border-slate-300 rounded-lg text-slate-800 font-sans focus:ring-2 focus:ring-action-blue outline-none"
                                         value={draftAnalysis.section4}
