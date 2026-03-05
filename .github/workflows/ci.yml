@@ -24,10 +24,11 @@ jobs:
         run: npm ci
 
       - name: TypeScript check
-        run: npx tsc -b --noEmit
+        run: npx tsc --noEmit
 
       - name: Unit tests
         run: npm run test:unit
 
       - name: Build
         run: npx vite build
+
