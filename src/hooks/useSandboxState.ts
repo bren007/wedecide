@@ -6,6 +6,7 @@ export interface CapacitySettings {
     total_focus_slots: number;
     total_capex_limit: number;
     total_opex_limit: number;
+    fiscal_drag_threshold?: number | null;
 }
 
 export interface Initiative {
@@ -20,6 +21,10 @@ export interface Initiative {
     status: 'proposed' | 'approved' | 'active' | 'paused' | 'archived' | 'completed';
     strategic_pillar_id?: string;
     short_term_win?: boolean;
+    approval_mandate?: 'Cabinet Approved' | 'Ministerial Approved' | 'Board/Delegated' | 'Pre-Approval';
+    relative_priority?: 'Tier 1' | 'Tier 2' | 'Tier 3';
+    target_delivery_quarter?: string;
+    current_fy_budget?: number;
 }
 
 // SandboxState removed as it is unused
@@ -178,6 +183,9 @@ export function useSandboxState() {
             isOverFocus: false,
             isOverCapex: false,
             isOverOpex: false,
+            fiscalDrag: 0,
+            fiscalDragThreshold: null as number | null,
+            isOverFiscalDrag: false,
         };
 
         // Only count 'active' or 'approved' items towards load. 
@@ -185,10 +193,32 @@ export function useSandboxState() {
         // The User said: "The 'Proposed' Gate: ... They consume zero capacity"
         const activeItems = localInitiatives.filter(i => ['active', 'approved'].includes(i.status));
 
-        const currentFocusLoad = activeItems.reduce((sum, init) => sum + (init.focus_slots || 0), 0);
+        // Group Focus Load by Quarter
+        const defaultQuarters = ['Q1 FY26', 'Q2 FY26', 'Q3 FY26', 'Q4 FY26'];
+        const quarterlyFocusLoad: Record<string, number> = {};
+        let peakFocusLoad = 0;
+
+        defaultQuarters.forEach(q => {
+            const load = activeItems
+                .filter(i => (i.target_delivery_quarter || 'Q1 FY26') === q)
+                .reduce((sum, init) => sum + (init.focus_slots || 0), 0);
+
+            quarterlyFocusLoad[q] = load;
+            if (load > peakFocusLoad) peakFocusLoad = load;
+        });
+
+        const currentFocusLoad = peakFocusLoad; // Header Gauge measures the Peak Quarter
+
         const currentCapexLoad = activeItems.reduce((sum, init) => sum + (Number(init.capex_current_fy) || 0), 0);
         const currentOpexLoad = activeItems.reduce((sum, init) => sum + (Number(init.opex_current_fy) || 0), 0);
         const currentFutureOpexLoad = activeItems.reduce((sum, init) => sum + (Number(init.future_annual_opex) || 0), 0);
+
+        // Fiscal Drag: sum of current_fy_budget for Tier 2/3 active initiatives
+        const fiscalDrag = activeItems
+            .filter(i => i.relative_priority === 'Tier 2' || i.relative_priority === 'Tier 3')
+            .reduce((sum, i) => sum + (Number(i.current_fy_budget) || 0), 0);
+        const fiscalDragThreshold = settings.fiscal_drag_threshold != null ? Number(settings.fiscal_drag_threshold) : null;
+        const isOverFiscalDrag = fiscalDragThreshold != null && fiscalDrag > fiscalDragThreshold;
 
         return {
             currentFocusLoad,
@@ -201,7 +231,18 @@ export function useSandboxState() {
             isOverFocus: currentFocusLoad > settings.total_focus_slots,
             isOverCapex: currentCapexLoad > settings.total_capex_limit,
             isOverOpex: currentOpexLoad > settings.total_opex_limit,
+            fiscalDrag,
+            fiscalDragThreshold,
+            isOverFiscalDrag,
+            quarterlyFocusLoad,
         };
+    };
+
+    // Quarter mutation for drag-and-drop sequencing
+    const updateInitiativeQuarter = (id: string, newQuarter: string) => {
+        setLocalInitiatives(prev => prev.map(init =>
+            init.id === id ? { ...init, target_delivery_quarter: newQuarter } : init
+        ));
     };
 
     return {
@@ -213,6 +254,7 @@ export function useSandboxState() {
         saving,
         hasChanges,
         moveInitiative,
+        updateInitiativeQuarter,
         commitChanges,
         refresh: fetchData,
         isAdmin: true // Mocking admin capability for now

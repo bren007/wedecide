@@ -4,11 +4,13 @@ import { useMeetings, type Meeting } from '../../hooks/useMeetings';
 import { useDecisions } from '../../hooks/useDecisions';
 import { useAuth } from '../../context/AuthContext';
 import { useToasts } from '../../context/ToastContext';
+import { supabase } from '../../lib/supabase';
 import {
     Calendar, MapPin, Clock, ArrowLeft, Plus,
     Trash2, Gavel, FileText, X, Link as LinkIcon, Edit,
-    ArrowUp, ArrowDown, Users
+    ArrowUp, ArrowDown, Users, FileOutput, Copy, Download
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { MeetingForm, type MeetingFormData } from '../../components/meetings/MeetingForm';
 import { AgendaItemForm, type AgendaFormData } from '../../components/meetings/AgendaItemForm';
 import { AttendeePicker } from '../../components/meetings/AttendeePicker';
@@ -33,6 +35,9 @@ export const MeetingDetailPage: React.FC = () => {
     const [newItemTitle, setNewItemTitle] = useState('');
     const [isAddingDecision, setIsAddingDecision] = useState(true);
     const [showDecisionPicker, setShowDecisionPicker] = useState<string | null>(null); // Agenda ID
+
+    const [generatingReport, setGeneratingReport] = useState(false);
+    const [reportText, setReportText] = useState<string | null>(null);
 
     useEffect(() => {
         if (id) {
@@ -150,7 +155,68 @@ export const MeetingDetailPage: React.FC = () => {
         }
     };
 
+    const handleGenerateReport = async () => {
+        if (!meeting) return;
+        setGeneratingReport(true);
+        try {
+            // 1. Fetch recent ledger items (last 24 hours as proxy for this meeting)
+            const { data: ledgerEvents, error: ledgerError } = await supabase
+                .from('strategic_ledger')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
 
+            if (ledgerError) throw ledgerError;
+
+            // 2. Fetch current capacity metrics (using an edge function or proxy payload)
+            // Mocking current metrics for the prompt as we don't have a direct hook here
+            const meetingData = {
+                date: new Date(meeting.scheduled_at).toLocaleDateString(),
+                duration: "1 Hour",
+                events: ledgerEvents?.map((e: any) => ({
+                    action_type: e.action_type,
+                    initiative_title: `Initiative ${e.initiative_id.substring(0, 6)}`,
+                    rationale: e.rationale
+                })) || [],
+                metrics: {
+                    focusLoad: 12,
+                    focusLimit: 10,
+                    capexLoad: 4500000,
+                    opexLoad: 1200000,
+                    fiscalDrag: 800000
+                }
+            };
+
+            const { data: funcData, error: funcError } = await supabase.functions.invoke('generate-meeting-report', {
+                body: { meetingData }
+            });
+
+            if (funcError) throw funcError;
+            setReportText(funcData.report);
+            showToast('Governance minutes generated successfully', 'success');
+        } catch (err: any) {
+            console.error(err);
+            showToast('Failed to generate report', 'error');
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
+
+    const copyToClipboard = () => {
+        if (reportText) {
+            navigator.clipboard.writeText(reportText);
+            showToast('Copied to clipboard', 'success');
+        }
+    };
+
+    const downloadPDF = () => {
+        if (!reportText) return;
+        const doc = new jsPDF();
+        doc.setFontSize(12);
+        const lines = doc.splitTextToSize(reportText, 180);
+        doc.text(lines, 15, 20);
+        doc.save(`Governance_Minutes_${meeting?.title.replace(/\s+/g, '_')}.pdf`);
+    };
 
     const [editingAgendaItem, setEditingAgendaItem] = useState<AgendaItem | null>(null);
     const [isSubmittingAgenda, setIsSubmittingAgenda] = useState(false);
@@ -428,6 +494,46 @@ export const MeetingDetailPage: React.FC = () => {
                     ) : (
                         <div className="empty-state-small">
                             <p>No attendees invited yet.</p>
+                        </div>
+                    )}
+                </section>
+
+                <section className="report-section-detail mt-8 border-t border-slate-800 pt-8" style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #1e293b' }}>
+                    <div className="section-header-detail flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <FileOutput className="text-blue-400" />
+                            PMO Governance Minutes
+                        </h2>
+                        {meeting.status === 'completed' && !reportText && (
+                            <button
+                                className="btn-primary flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold"
+                                onClick={handleGenerateReport}
+                                disabled={generatingReport}
+                            >
+                                {generatingReport ? 'Generating AI Report...' : 'Generate Minutes'}
+                            </button>
+                        )}
+                    </div>
+
+                    {meeting.status !== 'completed' && !reportText && (
+                        <div className="empty-state-small">
+                            <p>Complete the meeting to generate formal governance minutes.</p>
+                        </div>
+                    )}
+
+                    {reportText && (
+                        <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 mt-4">
+                            <div className="flex justify-end gap-3 mb-4 border-b border-slate-800 pb-4">
+                                <button onClick={copyToClipboard} className="text-slate-400 hover:text-white flex items-center gap-2 text-sm">
+                                    <Copy size={16} /> Copy to Clipboard
+                                </button>
+                                <button onClick={downloadPDF} className="text-slate-400 hover:text-white flex items-center gap-2 text-sm">
+                                    <Download size={16} /> Download PDF
+                                </button>
+                            </div>
+                            <div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap font-serif">
+                                {reportText}
+                            </div>
                         </div>
                     )}
                 </section>

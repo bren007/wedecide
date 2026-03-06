@@ -10,12 +10,12 @@ const corsHeaders = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// ── PDF Generator ─────────────────────────────────────────────────────
-
 function generatePdf(data: any): Uint8Array {
+    // ── PDF Generator ─────────────────────────────────────────────────────
+
     const {
         organizationName, dateStr, baselineSlots, totalLoad,
-        fiscalDrag, initiatives, analysis
+        fiscalDrag, initiatives, analysis, auditToken
     } = data;
 
     const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -83,6 +83,12 @@ function generatePdf(data: any): Uint8Array {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
     doc.text("ALTURAGOV", margin, 265);
+
+    if (auditToken) {
+        doc.setFontSize(10);
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Audit Reference: ${auditToken}`, margin, 275);
+    }
 
     // ── Executive Summary ──
     doc.addPage();
@@ -299,6 +305,22 @@ function generatePdf(data: any): Uint8Array {
         y = addWrappedText(step, margin + 5, y + 4, contentW - 10, 5.5, 11);
     }
 
+    if (auditToken) {
+        y += 10;
+        doc.setFontSize(12);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Command Centre Import", margin, y);
+        y += 6;
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        y = addWrappedText(`Your portfolio data has been secured. You can import this directly into your AlturaGov Command Centre using your unique Audit Reference:`, margin, y, contentW, 5.5, 11);
+        y += 4;
+        doc.setFontSize(16);
+        doc.setTextColor(15, 23, 42);
+        doc.text(auditToken, margin, y);
+        y += 15;
+    }
+
     // Appendix
     y += 10;
     if (y > 230) { doc.addPage(); addFooter(); y = 25; }
@@ -350,8 +372,8 @@ serve(async (req: Request) => {
         // 2. Map initiatives for PDF
         const mappedInitiatives = data.portfolio.map((i: any, idx: number) => ({
             id: idx,
-            name: i.initiative_name,
-            cost: i.calculated_focus_slots,
+            name: i.initiative_name || i.title || "Untitled",
+            cost: i.calculated_focus_slots || 0,
             priority: i.relative_priority || i.priority_tier || "Unknown",
         }));
 
@@ -360,6 +382,8 @@ serve(async (req: Request) => {
         });
 
         console.log(`[PUBLISHER] Generating PDF for ${data.organisation_name}...`);
+
+        const auditToken = `ALTA-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
 
         // 3. Generate PDF
         const pdfBytes = generatePdf({
@@ -370,6 +394,7 @@ serve(async (req: Request) => {
             fiscalDrag: data.fiscal_drag || 0,
             initiatives: mappedInitiatives,
             analysis,
+            auditToken
         });
 
         console.log(`[PUBLISHER] PDF generated (${pdfBytes.length} bytes). Uploading...`);
@@ -390,10 +415,17 @@ serve(async (req: Request) => {
         // 5. Update lead status
         await supabase
             .from("leads")
-            .update({ audit_status: "report_delivered", report_url: reportFileName })
+            .update({
+                audit_status: "report_delivered",
+                report_url: reportFileName,
+                audit_token: auditToken,
+                audit_token_status: "active",
+                audit_parsed_json: data.portfolio,
+                audit_completed_at: new Date().toISOString()
+            })
             .eq("id", lead.id);
 
-        console.log(`[PUBLISHER] Report published: ${reportFileName}`);
+        console.log(`[PUBLISHER] Report published: ${reportFileName} with token ${auditToken}`);
 
         return new Response(
             JSON.stringify({ success: true, message: "Report published", reportUrl: reportFileName }),

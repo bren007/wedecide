@@ -22,6 +22,10 @@ export interface StagingInitiative {
     sponsor?: string;
     isAiSuggested?: boolean;
     strategic_tradeoff?: string;
+    approval_mandate?: string | null;
+    relative_priority?: string | null;
+    target_delivery_quarter?: string | null;
+    current_fy_budget?: number;
 }
 
 const AiHighlight: React.FC<{ active?: boolean, children: React.ReactNode }> = ({ active, children }) => (
@@ -186,6 +190,21 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                                 <Info size={12} className="text-slate-500 cursor-help" />
                             </div>
                         </th>
+                        <th className="p-3 border-b border-navy-700 w-36">
+                            <div className="flex items-center gap-1" title="Cabinet Approved, Ministerial Approved, Board/Delegated, Pre-Approval">
+                                Mandate <span className="text-red-400">*</span>
+                            </div>
+                        </th>
+                        <th className="p-3 border-b border-navy-700 w-28">
+                            <div className="flex items-center gap-1" title="Tier 1, Tier 2, Tier 3">
+                                Priority <span className="text-red-400">*</span>
+                            </div>
+                        </th>
+                        <th className="p-3 border-b border-navy-700 w-28">
+                            <div className="flex items-center gap-1" title="e.g. Q1 FY27">
+                                Quarter <span className="text-red-400">*</span>
+                            </div>
+                        </th>
                         <th className="p-3 border-b border-navy-700 w-10"></th>
                     </tr>
                 </thead>
@@ -348,6 +367,46 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                                 />
                             </td>
 
+                            {/* Approval Mandate */}
+                            <td className="p-0 border-r border-navy-700/50">
+                                <SelectCell
+                                    value={row.approval_mandate || null}
+                                    onChange={(v) => updateRow(index, 'approval_mandate', v)}
+                                    options={[
+                                        { value: 'Cabinet Approved', label: 'Cabinet Approved' },
+                                        { value: 'Ministerial Approved', label: 'Ministerial Approved' },
+                                        { value: 'Board/Delegated', label: 'Board/Delegated' },
+                                        { value: 'Pre-Approval', label: 'Pre-Approval' },
+                                    ]}
+                                    required
+                                />
+                            </td>
+
+                            {/* Relative Priority */}
+                            <td className="p-0 border-r border-navy-700/50">
+                                <SelectCell
+                                    value={row.relative_priority || null}
+                                    onChange={(v) => updateRow(index, 'relative_priority', v)}
+                                    options={[
+                                        { value: 'Tier 1', label: 'Tier 1' },
+                                        { value: 'Tier 2', label: 'Tier 2' },
+                                        { value: 'Tier 3', label: 'Tier 3' },
+                                    ]}
+                                    required
+                                />
+                            </td>
+
+                            {/* Target Delivery Quarter */}
+                            <td className="p-0 border-r border-navy-700/50">
+                                <InputCell
+                                    value={row.target_delivery_quarter || ''}
+                                    onChange={(v) => updateRow(index, 'target_delivery_quarter', v)}
+                                    placeholder="e.g. Q1 FY27"
+                                    required
+                                    className="text-center font-mono text-cyan-300"
+                                />
+                            </td>
+
                             <td className="p-2 text-center">
                                 <button
                                     onClick={() => deleteRow(index)}
@@ -361,7 +420,7 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                     ))}
                     {data.length === 0 && (
                         <tr>
-                            <td colSpan={10} className="p-8 text-center text-slate-500 italic">
+                            <td colSpan={17} className="p-8 text-center text-slate-500 italic">
                                 No data loaded. Upload a CSV to begin.
                             </td>
                         </tr>

@@ -95,7 +95,7 @@ const ENV_CONFIG = {
     dev: {
         label: 'Development',
         emoji: '🔧',
-        envVars: ['DEV_DATABASE_URL', 'DIRECT_URL', 'DATABASE_URL'], // Fallback chain
+        envVars: ['DEV_DATABASE_URL', 'DATABASE_URL', 'DIRECT_URL'], // Fallback chain
         requireConfirm: false,
     },
     staging: {

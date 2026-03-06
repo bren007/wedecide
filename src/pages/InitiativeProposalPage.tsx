@@ -34,6 +34,9 @@ export const InitiativeProposalPage: React.FC = () => {
     const [isMultiYear, setIsMultiYear] = useState(false);
     const [futureOpex, setFutureOpex] = useState(0);
     const [shortTermWin, setShortTermWin] = useState(false);
+    const [approvalMandate, setApprovalMandate] = useState('');
+    const [relativePriority, setRelativePriority] = useState('');
+    const [targetQuarter, setTargetQuarter] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     // Fetch pillars on mount
@@ -93,6 +96,10 @@ export const InitiativeProposalPage: React.FC = () => {
                     is_multi_year: isMultiYear,
                     future_annual_opex: isMultiYear ? futureOpex : 0,
                     short_term_win: shortTermWin,
+                    approval_mandate: approvalMandate || null,
+                    relative_priority: relativePriority || null,
+                    target_delivery_quarter: targetQuarter || null,
+                    current_fy_budget: capexCurrent + opexCurrent,
                     status: 'proposed'
                 });
 
@@ -150,6 +157,58 @@ export const InitiativeProposalPage: React.FC = () => {
                             ))}
                         </select>
                         <p className="text-xs text-slate-500 mt-1">All initiatives must anchor to a strategic pillar.</p>
+                    </div>
+
+                    {/* Governance Classification */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Approval Mandate <span className="text-red-400">*</span></label>
+                            <select
+                                required
+                                value={approvalMandate}
+                                onChange={e => setApprovalMandate(e.target.value)}
+                                className="w-full bg-navy-900 border border-navy-700 rounded px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value="">-- Select --</option>
+                                <option value="Cabinet Approved">Cabinet Approved</option>
+                                <option value="Ministerial Approved">Ministerial Approved</option>
+                                <option value="Board/Delegated">Board/Delegated</option>
+                                <option value="Pre-Approval">Pre-Approval</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Relative Priority <span className="text-red-400">*</span></label>
+                            <select
+                                required
+                                value={relativePriority}
+                                onChange={e => setRelativePriority(e.target.value)}
+                                className="w-full bg-navy-900 border border-navy-700 rounded px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value="">-- Select --</option>
+                                <option value="Tier 1">Tier 1</option>
+                                <option value="Tier 2">Tier 2</option>
+                                <option value="Tier 3">Tier 3</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Target Delivery Quarter <span className="text-red-400">*</span></label>
+                            <select
+                                required
+                                value={targetQuarter}
+                                onChange={e => setTargetQuarter(e.target.value)}
+                                className="w-full bg-navy-900 border border-navy-700 rounded px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value="">-- Select --</option>
+                                <option value="Q1 FY26">Q1 FY26</option>
+                                <option value="Q2 FY26">Q2 FY26</option>
+                                <option value="Q3 FY26">Q3 FY26</option>
+                                <option value="Q4 FY26">Q4 FY26</option>
+                                <option value="Q1 FY27">Q1 FY27</option>
+                                <option value="Q2 FY27">Q2 FY27</option>
+                                <option value="Q3 FY27">Q3 FY27</option>
+                                <option value="Q4 FY27">Q4 FY27</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Complexity Calculator */}

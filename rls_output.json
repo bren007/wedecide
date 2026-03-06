@@ -1,0 +1,137 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "Users can see their own org",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(id = get_my_org_id())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "orgs_read_own",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "select_own_org",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "signup_insert_org",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "Users can update their own profile",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "signup_insert_user",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "users_read_org_members",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(organization_id = get_auth_user_org_id_safe())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "users_read_own",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "Users can see their own roles",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(user_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "admins_delete_org_roles",
+    "roles": "{authenticated}",
+    "cmd": "DELETE",
+    "qual": "((organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = auth.uid()))) AND is_admin_or_chair())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "admins_select_org_roles",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = auth.uid()))) AND is_admin_or_chair())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "admins_update_org_roles",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "((organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = auth.uid()))) AND is_admin_or_chair())",
+    "with_check": "(organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = auth.uid())))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "roles_read_own",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(user_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "select_own_roles",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(user_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "signup_insert_role",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  }
+]

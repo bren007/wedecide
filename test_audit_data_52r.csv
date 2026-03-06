@@ -1,0 +1,53 @@
+initiative_name,strategic_pillar,priority_tier,complexity_stakeholders_1_to_3,complexity_novelty_1_to_3,complexity_dependency_1_to_3,current_fy_budget,lifecycle_stage,next_milestone_date,dependency_blockers
+National Broadband Extension,Infrastructure,Ministerial (New),3,2,3,4500000,Active,2026-08-15,None
+Health Data Integration,Health,High,3,3,3,2100000,Planning,2026-11-01,None
+Green Energy Subsidies,Economy,Medium,2,2,1,850000,Active,2026-05-30,None
+School Digital Transition,Education,High,3,1,2,1200000,Planning,2026-09-01,None
+Border Security Modernization,Security,Ministerial (New),2,3,3,3400000,Active,2026-07-20,None
+Public Transit Subsidies,Infrastructure,Medium,3,1,1,950000,On Hold,2026-12-10,None
+Tax System Upgrade,Economy,High,3,3,2,5500000,Planning,2026-08-01,None
+Cyber Defense Initiative,Security,Ministerial (New),2,3,1,3000000,Active,2026-04-15,None
+Rural Hospital Upgrades,Health,Medium,3,1,2,1800000,Planning,2026-10-31,None
+Teacher Training Program,Education,Low,2,1,1,450000,Active,2026-06-15,None
+AI Governance Framework,Technology,High,3,3,2,650000,Planning,2026-09-15,None
+Smart City Pilots,Infrastructure,High,3,3,3,2200000,Planning,2026-11-20,AI Governance Framework
+Vaccine Distribution Tech,Health,High,2,2,2,1100000,Active,2026-05-01,None
+SME Grant Portal,Economy,Medium,2,2,1,750000,Active,2026-07-01,None
+Early Childhood Subsidies,Education,High,3,1,1,1900000,Planning,2026-08-30,None
+Emergency Response DB,Security,High,3,2,3,1400000,Active,2026-06-10,None
+Renewable Grants,Economy,Low,2,2,1,600000,On Hold,2026-12-05,None
+Space Tech Regulation,Technology,Medium,2,3,1,400000,Planning,2026-10-10,None
+Aged Care Audits,Health,High,3,1,1,900000,Active,2026-05-20,None
+University Research Fund,Education,Medium,2,1,1,1500000,Planning,2026-07-15,None
+Coastal Protection Plan,Infrastructure,High,3,2,2,2800000,Active,2026-09-30,None
+Digital Identity Rollout,Technology,Ministerial (New),3,3,3,4200000,Planning,2026-11-01,Cyber Defense Initiative
+Mental Health Hotline,Health,High,2,1,1,850000,Active,2026-04-30,None
+Police Body Cam Upgrade,Security,Medium,2,2,1,1300000,Planning,2026-08-20,None
+Export Promotion Campaign,Economy,Low,1,1,1,350000,Active,2026-06-25,None
+STEM Education Grants,Education,Medium,2,1,1,750000,Planning,2026-10-05,None
+High Speed Rail Study,Infrastructure,Medium,3,2,1,2000000,Active,2026-12-15,None
+Agricultural Subsidies,Economy,Low,3,1,1,1600000,On Hold,2026-11-30,None
+Telehealth Expansion,Health,High,2,2,2,1450000,Active,2026-07-10,None
+Disaster Relief Fund,Security,Ministerial (New),3,1,1,5000000,Active,2026-05-15,None
+Blockchain Land Registry,Technology,High,2,3,2,1900000,Planning,2026-09-25,None
+Vocational Training Promo,Education,Medium,2,1,1,800000,Active,2026-08-05,None
+Water Treatment Upgrades,Infrastructure,High,3,1,2,2600000,Planning,2026-10-20,None
+Critical Minerals Mining,Economy,High,3,2,3,3100000,Active,2026-12-01,None
+Youth Crime Prevention,Security,Medium,3,1,1,950000,Planning,2026-07-05,None
+Gov Cloud Consolidation,Technology,High,3,2,3,2750000,Active,2026-06-30,None
+Pandemic Preparedness,Health,Ministerial (New),3,2,2,3800000,Planning,2026-08-10,None
+Trade Agreement Negotiations,Economy,High,3,1,2,1250000,Active,2026-05-05,None
+Public Housing Maintenance,Infrastructure,Medium,3,1,1,2100000,On Hold,2026-10-15,None
+Quantum Computing Research,Technology,Medium,1,3,1,900000,Planning,2026-11-25,None
+Prison Rehabilitation Prog,Security,Low,2,1,1,550000,Active,2026-06-20,None
+Foreign Aid Allocation,Economy,Medium,3,1,1,4000000,Planning,2026-07-30,None
+Child Protection UI Update,Health,High,2,2,2,1150000,Active,2026-09-05,None
+Special Education Funding,Education,High,3,1,1,1950000,Planning,2026-08-25,None
+National Parks Facilities,Infrastructure,Low,2,1,1,650000,Active,2026-12-20,None
+5G Spectrum Auction,Technology,High,3,2,1,1200000,Planning,2026-06-10,None
+Organ Donation App,Health,Medium,2,2,1,450000,Active,2026-05-15,None
+Firefighter Equipment,Security,Medium,2,1,1,1400000,Planning,2026-07-25,None
+Tourism Ad Campaign,Economy,Low,1,1,1,850000,Active,2026-09-10,None
+National Library Archives,Education,Low,2,1,1,500000,On Hold,2026-11-10,None
+Drone Delivery Regs,Technology,Medium,3,3,2,750000,Planning,2026-08-15,None
+Veterans Support System,Security,High,3,1,2,1650000,Active,2026-10-01,None

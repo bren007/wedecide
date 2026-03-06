@@ -86,9 +86,13 @@ export const StrategicIngestionPage: React.FC = () => {
                     const totalCostVal = getValue('total_initiative_cost', ['total cost', 'total_initiative_cost']);
                     const isMultiYearVal = getValue('is_multi_year', ['is_multi_year', 'multi year', 'multi-year']);
                     const futureOpexVal = getValue('future_annual_opex', ['future_annual_opex', 'future opex', 'tail']);
-                    const stakeholderVal = getValue('complexity_stakeholder', ['stakeholder', 'stakeholder friction', 'internal']);
-                    const techVal = getValue('complexity_tech', ['tech', 'novelty', 'integration', 'innovation']);
-                    const dependencyVal = getValue('complexity_dependency', ['dependency', 'dependency depth', 'links', 'downstream']);
+                    const stakeholderVal = getValue('complexity_stakeholder', ['stakeholder', 'stakeholder friction', 'internal', 'complexity_stakeholders_1_to_3']);
+                    const techVal = getValue('complexity_tech', ['tech', 'novelty', 'integration', 'innovation', 'complexity_novelty_1_to_3']);
+                    const dependencyVal = getValue('complexity_dependency', ['dependency', 'dependency depth', 'links', 'downstream', 'complexity_dependency_1_to_3']);
+                    const mandateVal = getValue('approval_mandate', ['approval_mandate', 'mandate', 'approval', 'approval mandate']);
+                    const priorityVal = getValue('relative_priority', ['relative_priority', 'priority', 'priority tier', 'relative priority']);
+                    const quarterVal = getValue('target_delivery_quarter', ['target_delivery_quarter', 'delivery quarter', 'quarter', 'target quarter']);
+                    const budgetVal = getValue('current_fy_budget', ['current_fy_budget', 'budget', 'fy budget', 'annual budget']);
 
                     return {
                         id: `row-${index}-${Date.now()}`,
@@ -104,9 +108,13 @@ export const StrategicIngestionPage: React.FC = () => {
                         complexity_stakeholder: parseInt(stakeholderVal || '0') || null,
                         complexity_tech: parseInt(techVal || '0') || null,
                         complexity_dependency: parseInt(dependencyVal || '0') || null,
-                        dependency_count: parseInt(getValue('dependency_count', ['dependencies', 'deps']) || '0') || 0,
+                        dependency_count: parseInt(getValue('dependency_count', ['dependencies', 'deps', 'dependency_blockers']) || '0') || 0,
                         value_drop: getValue('value_drop', ['value drop', 'value']) || '',
-                        funding_status: 'pending' // Default
+                        funding_status: 'pending' as const,
+                        approval_mandate: mandateVal || null,
+                        relative_priority: priorityVal || null,
+                        target_delivery_quarter: quarterVal || null,
+                        current_fy_budget: parseFloat(budgetVal || '0') || 0,
                     };
                 });
                 setStagingData(parsed);
@@ -140,7 +148,10 @@ export const StrategicIngestionPage: React.FC = () => {
         return stagingData.every(row =>
             row.title &&
             row.complexity_stakeholder && row.complexity_tech && row.complexity_dependency &&
-            row.strategic_pillar_id
+            row.strategic_pillar_id &&
+            row.approval_mandate &&
+            row.relative_priority &&
+            row.target_delivery_quarter
         );
     }, [stagingData]);
 
@@ -186,6 +197,10 @@ export const StrategicIngestionPage: React.FC = () => {
                     dependency_count: item.dependency_count,
                     value_drop: item.value_drop,
                     funding_status: item.funding_status,
+                    approval_mandate: item.approval_mandate,
+                    relative_priority: item.relative_priority,
+                    target_delivery_quarter: item.target_delivery_quarter,
+                    current_fy_budget: item.current_fy_budget || 0,
                     status: 'proposed'
                 });
 
