@@ -497,7 +497,7 @@ export const OrganizationSettingsPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 pt-24 font-sans">
+        <div className="min-h-screen bg-slate-950 text-slate-200  font-sans">
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-2xl mx-auto">
                     <h1 className="text-2xl font-bold text-white mb-6">Organization Settings</h1>

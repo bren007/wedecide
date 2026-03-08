@@ -9,7 +9,6 @@ import { useAIMapping } from '../hooks/useAIMapping';
 
 export const StrategicIngestionPage: React.FC = () => {
     const navigate = useNavigate();
-    const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [stagingData, setStagingData] = useState<StagingInitiative[]>([]);
     const [pillars, setPillars] = useState<{ id: string; title: string }[]>([]);
@@ -33,7 +32,6 @@ export const StrategicIngestionPage: React.FC = () => {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const selectedFile = e.target.files[0];
-            setFile(selectedFile);
             parseFile(selectedFile);
         }
     };
@@ -143,6 +141,16 @@ export const StrategicIngestionPage: React.FC = () => {
         setLogs(prev => [...prev, `Updated all rows to median complexity (Focus will compute to 3)`]);
     };
 
+    const handleBulkApplyQuarter = (q: string) => {
+        setStagingData(prev => prev.map(item => ({ ...item, target_delivery_quarter: q })));
+        setLogs(prev => [...prev, `Updated all rows quarter to: ${q}`]);
+    };
+
+    const handleBulkApplyPriority = (p: string) => {
+        setStagingData(prev => prev.map(item => ({ ...item, relative_priority: p })));
+        setLogs(prev => [...prev, `Updated all rows priority to: ${p}`]);
+    };
+
     const isValid = useMemo(() => {
         if (stagingData.length === 0) return false;
         return stagingData.every(row =>
@@ -237,7 +245,7 @@ export const StrategicIngestionPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-navy-900 text-slate-300 p-8 font-sans flex flex-col items-center">
+        <div className="min-h-screen bg-navy-900 text-slate-300 p-8  font-sans flex flex-col items-center">
             <div className="w-full max-w-6xl">
                 <header className="mb-6 flex justify-between items-center bg-navy-800 p-6 rounded-lg border border-navy-700 shadow-lg">
                     <div>
@@ -247,45 +255,79 @@ export const StrategicIngestionPage: React.FC = () => {
                         </h1>
                         <p className="text-slate-400 text-sm">Review, Cleanse, and Import Legacy Data.</p>
                     </div>
-                    <div className="flex gap-4">
-                        <Button variant="ghost" onClick={() => navigate('/command-center')}>Cancel</Button>
+                    <div className="flex gap-4 items-center">
+                        <select
+                            onChange={(e) => handleBulkApplyQuarter(e.target.value)}
+                            className="bg-navy-900 border border-navy-600 rounded-lg px-3 py-2 text-sm text-slate-300"
+                        >
+                            <option value="">Bulk Set Quarter...</option>
+                            <option value="Q1 FY26">Q1 FY26</option>
+                            <option value="Q2 FY26">Q2 FY26</option>
+                            <option value="Q3 FY26">Q3 FY26</option>
+                            <option value="Q4 FY26">Q4 FY26</option>
+                        </select>
+                        <select
+                            onChange={(e) => handleBulkApplyPriority(e.target.value)}
+                            className="bg-navy-900 border border-navy-600 rounded-lg px-3 py-2 text-sm text-slate-300"
+                        >
+                            <option value="">Bulk Set Priority...</option>
+                            <option value="Tier 1">Tier 1</option>
+                            <option value="Tier 2">Tier 2</option>
+                            <option value="Tier 3">Tier 3</option>
+                        </select>
+                        <label className="cursor-pointer bg-navy-700 hover:bg-navy-600 border border-navy-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <FileUp size={16} /> Select CSV
+                            <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+                        </label>
                         <Button
-                            variant="primary"
                             onClick={handleImport}
-                            disabled={!isValid || uploading}
+                            disabled={!isValid || uploading || stagingData.length === 0}
                             isLoading={uploading}
-                            className={isValid ? 'bg-green-600 hover:bg-green-500' : 'opacity-50 cursor-not-allowed'}
+                            className="shadow-lg shadow-blue-500/20"
                         >
                             <CheckCircle size={16} className="mr-2" />
-                            Import {stagingData.length} Records
+                            Import to Ledger ({stagingData.length})
                         </Button>
                     </div>
                 </header>
 
+                {stagingData.length > 0 && (
+                    <div className="mb-6 flex justify-between items-center bg-navy-800/50 p-4 rounded-lg border border-navy-700">
+                        <div className="flex gap-4 text-sm text-slate-300">
+                            {!isValid && (
+                                <div className="flex items-center gap-2 text-amber-400 bg-amber-400/10 px-3 py-1.5 rounded-md border border-amber-400/20">
+                                    <AlertTriangle size={16} /> Please fill all required fields before importing.
+                                </div>
+                            )}
+                            {isValid && (
+                                <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-md border border-emerald-400/20">
+                                    <CheckCircle size={16} /> All rows valid. Ready to import.
+                                </div>
+                            )}
+                        </div>
+                        <Button
+                            variant="secondary"
+                            onClick={runAiInference}
+                            disabled={isAiProcessing}
+                            className={isAiProcessing ? "animate-pulse border-yellow-500/50 text-yellow-400 bg-yellow-500/10" : "border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"}
+                        >
+                            <Wand2 size={16} className={isAiProcessing ? "mr-2 animate-spin" : "mr-2"} />
+                            {isAiProcessing ? 'AI Analyzing Rows...' : 'AI Fill Missing Data'}
+                        </Button>
+                    </div>
+                )}
                 {/* Staging Area */}
                 <div className="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden">
 
                     {/* Toolbar */}
                     <div className="p-4 bg-navy-900/50 border-b border-navy-700 flex flex-wrap gap-4 items-center justify-between">
                         <div className="flex items-center gap-4">
-                            {/* File Upload */}
-                            <label className="flex items-center gap-2 cursor-pointer bg-navy-700 hover:bg-navy-600 px-3 py-1.5 rounded text-sm text-white transition-colors border border-navy-600">
-                                <FileUp size={16} />
-                                <span>{file ? 'Change CSV' : 'Upload CSV'}</span>
-                                <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-                            </label>
-
-                            {/* AI Magic */}
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={runAiInference}
-                                isLoading={isAiProcessing}
-                                className="border-purple-500/50 text-purple-300 hover:bg-purple-900/20"
-                            >
-                                <Wand2 size={14} className="mr-2" />
-                                AI Fill Missing Data
-                            </Button>
+                            {/* Logs */}
+                            {logs.length > 0 && (
+                                <div className="bg-black rounded border border-navy-800 p-2 font-mono text-xs text-slate-500 max-h-24 overflow-y-auto w-96">
+                                    {logs.map((L, i) => <div key={i}>{L}</div>)}
+                                </div>
+                            )}
                         </div>
 
                         {/* Bulk Actions */}

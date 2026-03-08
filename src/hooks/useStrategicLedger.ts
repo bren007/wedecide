@@ -9,7 +9,12 @@ export interface LedgerEntry {
     created_at: string;
     initiative_id: string;
     chair_id: string;
-    initiatives?: { title: string };
+    committed_outside_meeting?: boolean;
+    initiatives?: {
+        title: string;
+        approval_mandate?: string;
+        relative_priority?: string;
+    };
     users?: { email: string }; // We only have email in simple schema usually
 }
 
@@ -25,7 +30,7 @@ export const useStrategicLedger = () => {
                 .from('strategic_ledger')
                 .select(`
                     *,
-                    initiatives (title),
+                    initiatives (title, approval_mandate, relative_priority),
                     users (email)
                 `)
                 .order('created_at', { ascending: false });

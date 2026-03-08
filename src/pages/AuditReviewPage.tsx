@@ -120,7 +120,7 @@ export const AuditReviewPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8 pt-24">
+        <div className="min-h-screen bg-slate-50 p-8 ">
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 {/* Left side: Queue */}

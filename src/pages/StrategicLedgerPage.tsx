@@ -9,7 +9,7 @@ export const StrategicLedgerPage: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="h-screen bg-slate-950 text-slate-200 font-sans flex flex-col overflow-hidden pt-24">
+        <div className="h-screen bg-slate-950 text-slate-200 font-sans flex flex-col overflow-hidden ">
             {/* Header - Hidden on Print */}
             <div className="flex-none px-6 py-4 bg-slate-900 border-b border-slate-800 flex items-center gap-4 print:hidden">
                 <Button onClick={() => navigate(-1)} variant="secondary" className="mr-4">

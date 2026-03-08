@@ -20,12 +20,6 @@ import { CommandCenterPage } from './pages/CommandCenterPage';
 import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
 import { StrategicIngestionPage } from './pages/StrategicIngestionPage';
 import { StrategicLedgerPage } from './pages/StrategicLedgerPage';
-import { DecisionLayout } from './components/layouts/DecisionLayout';
-import { DecisionListPage } from './pages/decisions/DecisionListPage';
-import { DecisionCreatePage } from './pages/decisions/DecisionCreatePage';
-import { DecisionDetailPage } from './pages/decisions/DecisionDetailPage';
-import { DecisionEditPage } from './pages/decisions/DecisionEditPage';
-import { DecisionTriagePage } from './pages/decisions/DecisionTriagePage';
 import { MeetingLayout } from './components/layouts/MeetingLayout';
 import { PublicLayout } from './components/layouts/PublicLayout';
 import { MeetingListPage } from './pages/meetings/MeetingListPage';
@@ -42,139 +36,125 @@ function AppContent() {
   }
 
   return (
-    <div className="app">
+    <div className="flex min-h-screen bg-slate-950 text-slate-200">
       <Navbar />
       <ToastContainer />
-      <ErrorBoundary>
+      <div className={`flex-1 flex flex-col min-w-0 ${isAuthenticated && location.pathname !== '/' ? 'lg:ml-64' : ''}`}>
+        <ErrorBoundary>
+          <Routes>
+            <Route element={<PublicLayout />}>
+              <Route
+                path="/"
+                element={isAuthenticated ? <Navigate to="/command-center" replace /> : <LandingPage />}
+              />
+              <Route
+                path="/audit"
+                element={<AuditFunnelPage />}
+              />
+              <Route
+                path="/secure-drop"
+                element={<SecureDropPage />}
+              />
+            </Route>
 
-        <Routes>
-          <Route element={<PublicLayout />}>
             <Route
-              path="/"
-              element={isAuthenticated ? <Navigate to="/command-center" replace /> : <LandingPage />}
+              path="/login"
+              element={<LoginPage />}
+            />
+
+            <Route
+              path="/signup"
+              element={<SignupPage />}
+            />
+
+            <Route
+              path="/forgot-password"
+              element={<ForgotPasswordPage />}
+            />
+
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={<Navigate to="/command-center" replace />}
             />
             <Route
-              path="/audit"
-              element={<AuditFunnelPage />}
+              path="/command-center"
+              element={
+                <ProtectedRoute>
+                  <CommandCenterPage />
+                </ProtectedRoute>
+              }
             />
             <Route
-              path="/secure-drop"
-              element={<SecureDropPage />}
+              path="/admin/audit-review"
+              element={
+                <ProtectedRoute>
+                  <AuditReviewPage />
+                </ProtectedRoute>
+              }
             />
-          </Route>
-
-          <Route
-            path="/login"
-            element={<LoginPage />}
-          />
-
-          <Route
-            path="/signup"
-            element={<SignupPage />}
-          />
-
-          <Route
-            path="/forgot-password"
-            element={<ForgotPasswordPage />}
-          />
-
-
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={<Navigate to="/command-center" replace />}
-          />
-          <Route
-            path="/command-center"
-            element={
-              <ProtectedRoute>
-                <CommandCenterPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/audit-review"
-            element={
-              <ProtectedRoute>
-                <AuditReviewPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/pulse"
-            element={
-              <ProtectedRoute>
-                <PulseDashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/propose-initiative"
-            element={
-              <ProtectedRoute>
-                <InitiativeProposalPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/strategic-ingestion"
-            element={
-              <ProtectedRoute>
-                <StrategicIngestionPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/strategic-ledger"
-            element={
-              <ProtectedRoute>
-                <StrategicLedgerPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reset-password"
-            element={
-              <ProtectedRoute>
-                <ResetPasswordPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <OrganizationSettingsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/decisions"
-            element={
-              <ProtectedRoute>
-                <DecisionLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<DecisionListPage />} />
-            <Route path="new" element={<DecisionCreatePage />} />
-            <Route path="triage" element={<DecisionTriagePage />} />
-            <Route path=":id" element={<DecisionDetailPage />} />
-            <Route path=":id/edit" element={<DecisionEditPage />} />
-          </Route>
-          <Route
-            path="/meetings"
-            element={
-              <ProtectedRoute>
-                <MeetingLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<MeetingListPage />} />
-            <Route path=":id" element={<MeetingDetailPage />} />
-          </Route>
-        </Routes>
-      </ErrorBoundary>
+            <Route
+              path="/admin/pulse"
+              element={
+                <ProtectedRoute>
+                  <PulseDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/propose-initiative"
+              element={
+                <ProtectedRoute>
+                  <InitiativeProposalPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/strategic-ingestion"
+              element={
+                <ProtectedRoute>
+                  <StrategicIngestionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/strategic-ledger"
+              element={
+                <ProtectedRoute>
+                  <StrategicLedgerPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <ProtectedRoute>
+                  <ResetPasswordPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <OrganizationSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/meetings"
+              element={
+                <ProtectedRoute>
+                  <MeetingLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<MeetingListPage />} />
+              <Route path=":id" element={<MeetingDetailPage />} />
+            </Route>
+          </Routes>
+        </ErrorBoundary>
+      </div>
     </div>
   );
 }

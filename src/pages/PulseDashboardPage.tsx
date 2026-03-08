@@ -29,7 +29,7 @@ export const PulseDashboardPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-24">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center ">
                 <p className="text-slate-500 flex items-center gap-2"><Activity className="animate-pulse" /> Loading Telemetry...</p>
             </div>
         );
@@ -37,7 +37,7 @@ export const PulseDashboardPage: React.FC = () => {
 
     if (!isAdmin) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-24 text-red-500 font-bold">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center  text-red-500 font-bold">
                 Access Denied: Admin Only Route
             </div>
         );
@@ -101,7 +101,7 @@ export const PulseDashboardPage: React.FC = () => {
     });
 
     return (
-        <div className="min-h-screen bg-slate-900 p-8 pt-24 text-slate-200">
+        <div className="min-h-screen bg-slate-900 p-8  text-slate-200">
             <div className="max-w-7xl mx-auto space-y-8">
 
                 <header className="flex justify-between items-end border-b border-slate-700 pb-4">

@@ -1,0 +1,16 @@
+title,description,strategic_pillar,capex_current_fy,opex_current_fy,future_annual_opex,focus_slots,short_term_win,is_multi_year,status,approval_mandate,relative_priority,target_delivery_quarter
+National Identity Core Upgrade,Overhaul of legacy identity platforms to modern biometric standards,Digital Foundations,1500000,500000,1200000,8,false,true,proposed,Cabinet Approved,Tier 1,Q1 FY26
+Border Processing Cloud Migration,Migrating legacy border processing APIs to public cloud,Resilient Infrastructure,2500000,750000,800000,9,false,true,proposed,Cabinet Approved,Tier 1,Q2 FY26
+Cyber Defense Automation,Automating threat intelligence response across all endpoints,Secure Operations,950000,200000,350000,6,true,false,proposed,Ministerial Approved,Tier 1,Q1 FY26
+Citizen Portal Refresh,Modernizing the citizen-facing web portals for better accessibility,Digital Services,300000,600000,250000,5,true,false,proposed,Board/Delegated,Tier 2,Q1 FY26
+Legacy Database Decommissioning,Retiring Oracle 11g databases and migrating to PostgreSQL,Resilient Infrastructure,1200000,100000,400000,7,false,true,proposed,Pre-Approval,Tier 2,Q3 FY26
+AI Document Classifier,Implementing LLMs to pre-sort incoming agency correspondence,Digital Services,450000,550000,200000,4,true,false,proposed,Board/Delegated,Tier 2,Q2 FY26
+Staff Equipment Refresh,Rolling out new laptops and mobile devices for all staff,Workplace Tech,1800000,0,0,3,false,false,proposed,Board/Delegated,Tier 3,Q1 FY26
+Finance System Patching,Applying mandatory vendor patches to the ERP system,Resilient Infrastructure,0,850000,100000,6,false,false,proposed,Ministerial Approved,Tier 1,Q2 FY26
+Data Lake Implementation,Establishing a central data lake for agency-wide analytics,Data & Insights,1100000,400000,600000,8,false,true,proposed,Board/Delegated,Tier 2,Q4 FY26
+Helpdesk Chatbot,Deploying an internal AI chatbot for IT support queries,Workplace Tech,150000,250000,150000,2,true,false,proposed,Board/Delegated,Tier 3,Q3 FY26
+Regulatory Reporting Automation,Automating the quarterly reports to external regulators,Data & Insights,200000,100000,50000,4,true,false,proposed,Pre-Approval,Tier 3,Q2 FY26
+Zero Trust Network Expansion,Expanding Zero Trust networking to regional offices,Secure Operations,800000,300000,400000,7,false,true,proposed,Ministerial Approved,Tier 1,Q4 FY26
+Virtual Desktop Infrastructure (VDI),Upgrading VDI environment for remote workers,Workplace Tech,500000,600000,800000,6,false,true,proposed,Board/Delegated,Tier 2,Q1 FY26
+Supplier Portal Upgrade,Enhancing the procurement portal interface for better usability,Digital Services,250000,150000,100000,3,true,false,proposed,Pre-Approval,Tier 3,Q3 FY26
+API Gateway Consolidation,Consolidating three legacy API gateways into a single enterprise solution,Resilient Infrastructure,900000,500000,450000,8,false,true,proposed,Cabinet Approved,Tier 2,Q4 FY26

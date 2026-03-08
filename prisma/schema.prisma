@@ -174,7 +174,11 @@ model Meeting {
   organization_id String
   title           String
   description     String?
-  scheduled_at    DateTime
+  scheduled_at    DateTime @default(now())
+  started_at      DateTime?
+  ended_at        DateTime?
+  snapshot_start  Json?
+  snapshot_end    Json?
   location        String?
   status          String   @default("scheduled") // scheduled, in_progress, completed, cancelled
   created_at      DateTime @default(now())

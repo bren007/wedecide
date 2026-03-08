@@ -25,6 +25,10 @@ export interface Initiative {
     relative_priority?: 'Tier 1' | 'Tier 2' | 'Tier 3';
     target_delivery_quarter?: string;
     current_fy_budget?: number;
+    complexity_stakeholder?: number;
+    complexity_tech?: number;
+    complexity_dependency?: number;
+    dependency_count?: number;
 }
 
 // SandboxState removed as it is unused
@@ -111,32 +115,51 @@ export function useSandboxState() {
             const changes = localInitiatives
                 .map(local => {
                     const original = dbInitiatives.find(db => db.id === local.id);
-                    if (!original || original.status === local.status) return null;
-                    return { local, original };
+                    if (!original) return null;
+                    const statusChanged = original.status !== local.status;
+                    const quarterChanged = original.target_delivery_quarter !== local.target_delivery_quarter;
+                    if (!statusChanged && !quarterChanged) return null;
+                    return { local, original, statusChanged, quarterChanged };
                 })
-                .filter(Boolean) as { local: Initiative, original: Initiative }[];
+                .filter(Boolean) as { local: Initiative, original: Initiative, statusChanged: boolean, quarterChanged: boolean }[];
 
             if (changes.length === 0) return;
 
             // Process updates and ledger entries
-            for (const { local, original } of changes) {
-                // 1. Update Initiative Status
+            for (const { local, original, statusChanged, quarterChanged } of changes) {
+                // 1. Update Initiative Status and Quarter
                 const { error: updateError } = await supabase
                     .from('initiatives' as any)
-                    .update({ status: local.status })
+                    .update({
+                        status: local.status,
+                        target_delivery_quarter: local.target_delivery_quarter
+                    })
                     .eq('id', local.id);
 
                 if (updateError) throw updateError;
 
                 // 2. Determine Action Type
                 let actionType = 'update';
-                if (original.status === 'proposed' && local.status === 'active') actionType = 'approve';
-                else if (original.status === 'active' && local.status === 'paused') actionType = 'pause';
-                else if (original.status === 'paused' && local.status === 'active') actionType = 'resume';
+                if (statusChanged) {
+                    if (original.status === 'proposed' && local.status === 'active') actionType = 'approve';
+                    else if (original.status === 'active' && local.status === 'paused') actionType = 'pause';
+                    else if (original.status === 'paused' && local.status === 'active') actionType = 'resume';
+                } else if (quarterChanged) {
+                    actionType = 'resequence';
+                }
 
                 // 3. Log to Strategic Ledger
                 if (user) {
-                    let finalRationale = rationale || `Changed status from ${original.status} to ${local.status}`;
+                    let finalRationale = rationale || '';
+                    if (!finalRationale) {
+                        if (statusChanged && quarterChanged) {
+                            finalRationale = `Changed status from ${original.status} to ${local.status} and sequenced to ${local.target_delivery_quarter}`;
+                        } else if (statusChanged) {
+                            finalRationale = `Changed status from ${original.status} to ${local.status}`;
+                        } else if (quarterChanged) {
+                            finalRationale = `Sequenced to ${local.target_delivery_quarter}`;
+                        }
+                    }
 
                     // Automated Audit Note if activated with Future OPEX
                     if (actionType === 'approve' || actionType === 'resume') {
@@ -245,6 +268,68 @@ export function useSandboxState() {
         ));
     };
 
+    // Direct detail updates (no commit required)
+    const updateInitiativeDetails = async (id: string, updates: Partial<Initiative>) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const original = dbInitiatives.find(init => init.id === id);
+
+            if (original) {
+                // Determine if complexity changed and recalculate focus_slots
+                const newStakeholder = updates.complexity_stakeholder ?? (original as any).complexity_stakeholder ?? 0;
+                const newTech = updates.complexity_tech ?? (original as any).complexity_tech ?? 0;
+                const newDependency = updates.complexity_dependency ?? (original as any).complexity_dependency ?? 0;
+
+                const score = newStakeholder + newTech + newDependency;
+                const computedSlots = score <= 5 ? 1 : score <= 10 ? 3 : 5;
+
+                if (computedSlots !== original.focus_slots) {
+                    updates.focus_slots = computedSlots;
+                }
+            }
+
+            const { error: updateError } = await supabase
+                .from('initiatives' as any)
+                .update(updates)
+                .eq('id', id);
+
+            if (updateError) throw updateError;
+
+            // Log to Strategic Ledger if there are meaningful changes
+            if (user && original) {
+                const { data: userData } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
+                const orgId = userData?.organization_id;
+
+                const changes = [];
+                if (updates.title && updates.title !== original.title) changes.push(`Title changed`);
+                if (updates.strategic_pillar_id !== undefined && updates.strategic_pillar_id !== original.strategic_pillar_id) changes.push(`Pillar reassigned`);
+                if (updates.focus_slots && updates.focus_slots !== original.focus_slots) changes.push(`Capacity footprint recalculated to ${updates.focus_slots} Focus Slots due to complexity update`);
+                if (updates.capex_current_fy !== undefined && updates.capex_current_fy !== original.capex_current_fy) changes.push(`CAPEX updated`);
+                if (updates.opex_current_fy !== undefined && updates.opex_current_fy !== original.opex_current_fy) changes.push(`OPEX updated`);
+                if (updates.target_delivery_quarter !== undefined && updates.target_delivery_quarter !== original.target_delivery_quarter) changes.push(`Sequenced to ${updates.target_delivery_quarter}`);
+
+                if (changes.length > 0) {
+                    const { error: ledgerError } = await supabase.from('strategic_ledger' as any).insert({
+                        org_id: orgId,
+                        initiative_id: id,
+                        chair_id: user.id,
+                        action_type: 'update',
+                        rationale: `Metadata updated: ${changes.join(', ')}`,
+                        replaced_ids: []
+                    });
+                    if (ledgerError) console.error("Failed to write to ledger:", ledgerError);
+                }
+            }
+
+            // Update both states so it doesn't trigger 'hasChanges'
+            setDbInitiatives(prev => prev.map(init => init.id === id ? { ...init, ...updates } : init));
+            setLocalInitiatives(prev => prev.map(init => init.id === id ? { ...init, ...updates } : init));
+        } catch (err: any) {
+            console.error('Failed to update initiative details:', err);
+            throw err;
+        }
+    };
+
     return {
         ...calculateLoad(),
         initiatives: localInitiatives, // Return the SIMULATED list
@@ -255,6 +340,7 @@ export function useSandboxState() {
         hasChanges,
         moveInitiative,
         updateInitiativeQuarter,
+        updateInitiativeDetails,
         commitChanges,
         refresh: fetchData,
         isAdmin: true // Mocking admin capability for now

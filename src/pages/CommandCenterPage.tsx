@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSandboxState } from '../hooks/useSandboxState';
 import { ArrowRight, Save, CirclePause, TriangleAlert, Zap, Clock, LayoutDashboard, ListFilter, Check, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/Button';
@@ -12,6 +12,56 @@ import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { EditInitiativeModal } from '../components/EditInitiativeModal';
+import { Settings, X } from 'lucide-react';
+
+const MandateTensionModal = ({ isOpen, item, from, to, onConfirm, onCancel }: any) => {
+    const [rationale, setRationale] = useState('');
+
+    /* eslint-disable react-hooks/exhaustive-deps */
+    useEffect(() => {
+        if (isOpen) setRationale('');
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <div className="w-full max-w-lg bg-slate-900 border border-orange-500/50 rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.15)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center px-6 py-4 border-b border-orange-900/50 bg-orange-950/30">
+                    <h3 className="text-lg font-bold text-orange-400">Mandate Tension Rationale Required</h3>
+                    <button onClick={onCancel} className="text-slate-400 hover:text-white transition-colors">
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="p-6">
+                    <p className="text-sm text-slate-300 mb-4 font-medium">
+                        You have re-sequenced <strong className="text-white">{item?.title}</strong> from [{from}] to [{to}]. This initiative carries a [{item?.approval_mandate}] mandate. This decision will be recorded in the Strategic Ledger and requires a documented rationale.
+                    </p>
+                    <textarea
+                        value={rationale}
+                        onChange={(e) => setRationale(e.target.value)}
+                        placeholder="e.g., Delaying due to emergent dependency conflict..."
+                        className="w-full h-32 px-4 py-3 bg-slate-950 border border-orange-900/50 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                        autoFocus
+                    />
+                </div>
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-800 bg-slate-900/50">
+                    <Button variant="secondary" onClick={onCancel}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => onConfirm(rationale)}
+                        disabled={!rationale.trim() || rationale.length < 5}
+                        className="bg-orange-600 hover:bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+                    >
+                        Confirm Re-sequence
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // --- VISUAL HELPERS ---
 
@@ -44,6 +94,7 @@ export const CommandCenterPage = () => {
         hasChanges,
         moveInitiative,
         updateInitiativeQuarter,
+        updateInitiativeDetails,
         commitChanges,
         currentFocusLoad,
         focusLimit,
@@ -72,6 +123,9 @@ export const CommandCenterPage = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [hasSkippedImport, setHasSkippedImport] = useState(false);
     const [activeDragItem, setActiveDragItem] = useState<any>(null);
+    const [editingInitiative, setEditingInitiative] = useState<any>(null);
+    const [prePopulatedRationale, setPrePopulatedRationale] = useState('');
+    const [tensionModal, setTensionModal] = useState<{ isOpen: boolean; item: any; from: string; to: string; wasStatusChange: boolean } | null>(null);
 
     const handleCommit = () => {
         if (!hasChanges) return;
@@ -81,6 +135,7 @@ export const CommandCenterPage = () => {
     const executeCommit = async (rationale: string) => {
         await commitChanges(rationale);
         setIsCommitOpen(false);
+        setPrePopulatedRationale(''); // Clear pre-populated rationale
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
     };
@@ -129,21 +184,62 @@ export const CommandCenterPage = () => {
         const item = initiatives.find(i => i.id === sourceId);
         if (!item) return;
 
+        const fromContainer = ['proposed', 'paused'].includes(item.status) ? 'backlog' : (item.target_delivery_quarter || 'Q1 FY26');
+        if (fromContainer === targetContainer) return;
+
+        let wasStatusChange = false;
+
+        const hasMandateTension = (
+            (item.approval_mandate === 'Cabinet Approved' || item.approval_mandate === 'Ministerial Approved') &&
+            (item.relative_priority === 'Tier 2' || item.relative_priority === 'Tier 3')
+        );
+
         if (targetContainer === 'backlog') {
             if (['active', 'approved'].includes(item.status)) {
                 moveInitiative(sourceId, 'paused');
+                wasStatusChange = true;
             }
         } else if (quarters.includes(targetContainer)) {
             if (['proposed', 'paused'].includes(item.status)) {
                 moveInitiative(sourceId, 'active');
+                wasStatusChange = true;
             }
             // Always update quarter if dropped in a quarter lane
             updateInitiativeQuarter(sourceId, targetContainer);
         }
+
+        if (hasMandateTension) {
+            setTimeout(() => {
+                setTensionModal({
+                    isOpen: true,
+                    item,
+                    from: fromContainer,
+                    to: targetContainer,
+                    wasStatusChange
+                });
+            }, 50); // Small delay to let drop animation finish
+        } else {
+            setPrePopulatedRationale(prev => prev + `Re-sequenced [${item.title}] from [${fromContainer}] to [${targetContainer}].\n`);
+        }
+    };
+
+    const handleTensionConfirm = (rationale: string) => {
+        if (!tensionModal) return;
+        setPrePopulatedRationale(prev => prev + `Re-sequenced [${tensionModal.item.title}] from [${tensionModal.from}] to [${tensionModal.to}]: ${rationale}\n`);
+        setTensionModal(null);
+    };
+
+    const handleTensionCancel = () => {
+        if (!tensionModal) return;
+        if (tensionModal.wasStatusChange) {
+            moveInitiative(tensionModal.item.id, tensionModal.item.status); // revert status
+        }
+        updateInitiativeQuarter(tensionModal.item.id, tensionModal.item.target_delivery_quarter); // revert quarter
+        setTensionModal(null);
     };
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-300 pt-24">
+        <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-300 ">
             <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                 <div className="text-lg font-medium animate-pulse">Initializing Command Center...</div>
@@ -152,7 +248,7 @@ export const CommandCenterPage = () => {
     );
 
     if (error) return (
-        <div className="flex items-center justify-center min-h-screen bg-slate-950 text-red-400 pt-24">
+        <div className="flex items-center justify-center min-h-screen bg-slate-950 text-red-400 ">
             <div className="p-8 bg-slate-900 rounded-xl border border-red-900/50 shadow-2xl flex flex-col items-center gap-4">
                 <TriangleAlert size={48} />
                 <div className="text-xl font-bold">System Error</div>
@@ -163,10 +259,10 @@ export const CommandCenterPage = () => {
     );
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-slate-950">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-950 pt-16 lg:pt-0">
 
             {/* --- TOP HEADER --- */}
-            <header className="shrink-0 bg-slate-900/80 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 z-40 backdrop-blur-md shadow-lg">...
+            <header className="shrink-0 bg-slate-900/80 border-b border-slate-800 px-6 py-4 flex flex-col xl:flex-row justify-between items-center gap-4 z-40 backdrop-blur-md shadow-lg">...
 
                 {/* METRICS GAUGES */}
                 <div className="flex items-center bg-slate-950/50 rounded-xl border border-slate-800/80 p-2 shadow-inner">
@@ -175,7 +271,8 @@ export const CommandCenterPage = () => {
                         value={currentFocusLoad}
                         limit={focusLimit}
                         isOver={isOverFocus}
-                        tooltip="The maximum Focus Slot demand across any single upcoming quarter. The Capacity Baseline represents the limits of governance capacity before structural delivery failure occurs."
+                        tooltip="Focus Slots: A calculated measure of the senior leadership attention required to govern an initiative through to delivery. Derived from stakeholder breadth, novelty, and dependency depth."
+                        limitTooltip="Capacity Baseline: The maximum Focus Slots your organisation can sustain simultaneously before structural delivery failure becomes inevitable."
                     />
                     <div className="w-px h-10 bg-slate-800 mx-2"></div>
                     <Gauge
@@ -185,7 +282,7 @@ export const CommandCenterPage = () => {
                         isOver={isOverFiscalDrag}
                         format={formatK}
                         noLimit={fiscalDragThreshold == null}
-                        tooltip="The quantum of current-year budget currently committed to Tier 2 and Tier 3 initiatives — budget structurally unavailable to Tier 1 priorities."
+                        tooltip="Current-year budget committed to Tier 2 and Tier 3 initiatives — the budget unavailable to your Tier 1 priorities."
                     />
                     <div className="w-px h-10 bg-slate-800 mx-2"></div>
                     <Gauge
@@ -215,13 +312,16 @@ export const CommandCenterPage = () => {
                         onEnd={() => endMeeting()}
                     />
                     <Button
-                        variant={hasChanges ? 'primary' : 'secondary'}
+                        variant={hasChanges ? (currentMeeting ? 'primary' : 'danger') : 'secondary'}
                         onClick={handleCommit}
                         disabled={!hasChanges || saving}
-                        isLoading={saving}
-                        className={hasChanges ? 'animate-pulse bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]' : ''}
+                        className={hasChanges ? (currentMeeting ? 'animate-pulse bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]' : 'bg-red-600 hover:bg-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] text-white font-bold') : ''}
                     >
-                        <Save size={16} className="mr-2" />
+                        {saving ? (
+                            <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                        ) : (
+                            <Save size={16} className="mr-2" />
+                        )}
                         {saving ? 'Committing...' : hasChanges ? 'Commit Changes' : 'No Changes'}
                     </Button>
                 </div>
@@ -232,11 +332,41 @@ export const CommandCenterPage = () => {
                 )}
             </header>
 
+            {/* SANDBOX BANNER */}
+            {hasChanges && (
+                <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-200/90 text-xs font-bold uppercase tracking-widest text-center py-2 shrink-0 animate-in fade-in slide-in-from-top-2 duration-300 flex flex-wrap items-center justify-center gap-4">
+                    <span className="flex items-center gap-2">
+                        <AlertTriangle size={16} className="text-amber-400" />
+                        Sandbox Mode — Changes not yet committed
+                    </span>
+                    <Button
+                        size="sm"
+                        variant={currentMeeting ? 'primary' : 'danger'}
+                        onClick={handleCommit}
+                        disabled={saving}
+                        className={currentMeeting ? 'bg-blue-600 hover:bg-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.4)] px-3 py-1 h-auto text-[10px]' : 'bg-red-600 hover:bg-red-500 shadow-[0_0_10px_rgba(220,38,38,0.4)] text-white font-bold px-3 py-1 h-auto text-[10px]'}
+                    >
+                        {saving ? 'Committing...' : 'Commit Now'}
+                    </Button>
+                </div>
+            )}
+
             <CommitModal
                 isOpen={isCommitOpen}
                 onClose={() => setIsCommitOpen(false)}
                 onCommit={executeCommit}
                 saving={saving}
+                isSevere={!currentMeeting}
+                initialRationale={prePopulatedRationale}
+            />
+
+            <MandateTensionModal
+                isOpen={tensionModal?.isOpen || false}
+                item={tensionModal?.item}
+                from={tensionModal?.from}
+                to={tensionModal?.to}
+                onConfirm={handleTensionConfirm}
+                onCancel={handleTensionCancel}
             />
 
             {/* --- MAIN BOARD --- */}
@@ -265,10 +395,10 @@ export const CommandCenterPage = () => {
                                     color="blue"
                                     headerAction={
                                         <div className="flex gap-2">
-                                            <a href="/strategic-ingestion" className="text-xs font-bold text-slate-400 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-2 border border-slate-700/50 hover:border-slate-600 bg-slate-900 shadow-sm">
+                                            <a href="/strategic-ingestion" className="text-xs font-bold text-indigo-300 hover:text-white px-3 py-1.5 rounded bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border border-indigo-500/20 hover:border-indigo-500/40 shadow-sm flex items-center gap-1.5" title="Import from CSV">
                                                 <ListFilter size={14} /> Import
                                             </a>
-                                            <a href="/propose-initiative" className="text-xs font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 px-3 py-2 rounded-lg hover:bg-blue-500/20 transition-all border border-blue-500/20 hover:border-blue-500/30">
+                                            <a href="/propose-initiative" className="text-xs font-bold text-emerald-300 hover:text-white bg-emerald-500/10 px-3 py-1.5 rounded hover:bg-emerald-500/20 transition-all border border-emerald-500/20 hover:border-emerald-500/40 flex items-center shadow-sm" title="Create New Initiative">
                                                 + New
                                             </a>
                                         </div>
@@ -280,6 +410,7 @@ export const CommandCenterPage = () => {
                                             data={init}
                                             pillarName={pillarsMap[init.strategic_pillar_id || ''] || 'Unassigned'}
                                             onMove={() => moveInitiative(init.id, 'active')}
+                                            onEdit={() => setEditingInitiative(init)}
                                             variant="proposed"
                                             actionIcon={ArrowRight}
                                             actionLabel="Activate"
@@ -312,6 +443,7 @@ export const CommandCenterPage = () => {
                                                 <div className={`px-2 py-1 rounded border text-xs font-mono font-bold flex gap-1 items-center
                                                     ${isOver ? 'bg-red-950 border-red-500/50 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.3)] animate-pulse'
                                                         : 'bg-slate-950 border-slate-700 text-slate-300'}`}
+                                                    title={isOver ? "This delivery quarter is over capacity. Initiatives in this quarter are competing for the same governance bandwidth." : undefined}
                                                 >
                                                     <Zap size={10} />
                                                     {qLoad} / {focusLimit}
@@ -324,6 +456,7 @@ export const CommandCenterPage = () => {
                                                     data={init}
                                                     pillarName={pillarsMap[init.strategic_pillar_id || ''] || 'Unassigned'}
                                                     onMove={() => moveInitiative(init.id, 'paused')}
+                                                    onEdit={() => setEditingInitiative(init)}
                                                     variant="active"
                                                     actionIcon={CirclePause}
                                                     actionLabel="Park"
@@ -356,13 +489,22 @@ export const CommandCenterPage = () => {
                     </DndContext>
                 </div>
             )}
+
+            <EditInitiativeModal
+                isOpen={!!editingInitiative}
+                onClose={() => setEditingInitiative(null)}
+                initiative={editingInitiative}
+                pillarsMap={pillarsMap}
+                onSave={updateInitiativeDetails}
+            />
+
         </div >
     );
 };
 
 // --- SUB-COMPONENTS ---
 
-const Gauge = ({ label, value, limit, isOver, format, ghostValue, tooltip, noLimit }: any) => {
+const Gauge = ({ label, value, limit, isOver, format, ghostValue, tooltip, limitTooltip, noLimit }: any) => {
     const percent = limit ? Math.min((value / limit) * 100, 100) : 0;
     const colorClass = isOver ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]' : percent > 90 ? 'text-yellow-400' : 'text-slate-100';
 
@@ -375,10 +517,13 @@ const Gauge = ({ label, value, limit, isOver, format, ghostValue, tooltip, noLim
                     <span title={`+ ${format ? format(ghostValue) : ghostValue} Future Recurring`} className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_5px_rgba(168,85,247,0.8)]"></span>
                 )}
             </span>
-            <div className={`font-mono text-xl font-bold leading-none flex items-baseline gap-1 ${colorClass}`}>
-                {format ? format(value) : value}
+            <div className={`font-mono text-xl font-bold leading-none flex items-center gap-1 ${colorClass}`}>
+                <span>{format ? format(value) : value}</span>
                 {!noLimit && limit != null && (
-                    <span className="text-slate-600 text-xs font-medium ml-0.5">/ {format ? format(limit) : limit}</span>
+                    <div className="flex items-center gap-1">
+                        <span className="text-slate-600 text-xs font-medium">/ {format ? format(limit) : limit}</span>
+                        {limitTooltip && <InfoTooltip content={limitTooltip} />}
+                    </div>
                 )}
             </div>
             {ghostValue > 0 && (
@@ -434,7 +579,7 @@ const DraggableInitiativeCard = (props: any) => {
     );
 };
 
-const InitiativeCard = ({ data, pillarName, onMove, actionIcon: Icon, actionLabel, variant, isOverlay }: any) => {
+const InitiativeCard = ({ data, pillarName, onMove, onEdit, actionIcon: Icon, actionLabel, variant, isOverlay }: any) => {
     const isProposed = variant === 'proposed';
 
     const hasMandateTension = (
@@ -459,9 +604,12 @@ const InitiativeCard = ({ data, pillarName, onMove, actionIcon: Icon, actionLabe
                     <h3 className="font-bold text-slate-100 text-base leading-snug pr-4 tracking-tight">{data.title}</h3>
                     <div className="flex gap-2 shrink-0">
                         {hasMandateTension && (
-                            <div className="relative group/tension pointer-events-auto">
+                            <div className="relative group/tension pointer-events-auto flex items-center">
                                 <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold bg-red-500/15 text-red-400 border border-red-500/30">
                                     <AlertTriangle size={12} /> Mandate Tension
+                                </div>
+                                <div className="ml-1">
+                                    <InfoTooltip content={`This initiative carries a ${data.approval_mandate} mandate but is currently classified as ${data.relative_priority} priority. This misalignment carries governance and reporting risk.`} />
                                 </div>
                             </div>
                         )}
@@ -471,9 +619,14 @@ const InitiativeCard = ({ data, pillarName, onMove, actionIcon: Icon, actionLabe
                             </div>
                         )}
                         {data.short_term_win && (
-                            <div className="shrink-0 text-green-400 bg-green-500/10 p-1.5 rounded-md border border-green-500/20">
+                            <div className="shrink-0 text-green-400 bg-green-500/10 p-1.5 rounded-md border border-green-500/20" title="Short Term Win">
                                 <Clock size={14} />
                             </div>
+                        )}
+                        {onEdit && (
+                            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="shrink-0 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 p-1.5 rounded-md border border-transparent hover:border-slate-600 transition-colors cursor-pointer pointer-events-auto shadow-sm" title="Edit Initiative Stats">
+                                <Settings size={14} />
+                            </button>
                         )}
                     </div>
                 </div>

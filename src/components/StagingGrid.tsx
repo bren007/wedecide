@@ -74,6 +74,7 @@ const InputCell = ({
                 onChange={(e) => onChange(type === 'number' ? (e.target.value === '' ? null : Number(e.target.value)) : e.target.value)}
                 className={clsx(
                     "w-full h-full bg-transparent border-none px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none",
+                    type === 'number' && "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                     className
                 )}
                 max={max}
@@ -153,18 +154,21 @@ export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], on
                             </div>
                         </th>
                         <th className="p-3 border-b border-navy-700 w-24">
-                            <div className="flex items-center gap-1" title="Internal (1), Multi-Dept (3), Ministerial (5)">
+                            <div className="flex items-center gap-1" title="Rate 1-5. Internal only (1), Multi-dept (3), High Public/Ministerial visibility (5). Impacts time to deliver.">
                                 Stakeholder <span className="text-red-400">*</span>
+                                <Info size={12} className="text-slate-500 cursor-help" />
                             </div>
                         </th>
                         <th className="p-3 border-b border-navy-700 w-24">
-                            <div className="flex items-center gap-1" title="BAU (1), New (3), R&D (5)">
+                            <div className="flex items-center gap-1" title="Rate 1-5. Proven/BAU (1), New capabilities (3), Bleeding edge/R&D (5). Risk of failure.">
                                 Tech <span className="text-red-400">*</span>
+                                <Info size={12} className="text-slate-500 cursor-help" />
                             </div>
                         </th>
                         <th className="p-3 border-b border-navy-700 w-24">
-                            <div className="flex items-center gap-1" title="Standalone (1), 1-2 Links (3), Critical (5)">
+                            <div className="flex items-center gap-1" title="Rate 1-5. Standalone (1), 1-2 core systems (3), Highly integrated/Critical path (5). Blocker risk.">
                                 Dependency <span className="text-red-400">*</span>
+                                <Info size={12} className="text-slate-500 cursor-help" />
                             </div>
                         </th>
                         <th className="p-3 border-b border-navy-700 w-20">
