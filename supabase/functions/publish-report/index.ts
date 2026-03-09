@@ -46,9 +46,17 @@ function generatePdf(data: any): Uint8Array {
         let y = startY;
         for (const line of lines) {
             if (y > 270) {
+                // Determine color to restore
+                const r = doc.getTextColor() ? doc.getTextColor() : "#334155";
+
                 doc.addPage();
                 addFooter();
                 y = 25;
+
+                // Restore font size and color
+                doc.setFontSize(fontSize);
+                // Safe default restoration for the body text we use globally in reports
+                doc.setTextColor(51, 65, 85);
             }
             doc.text(line, x, y);
             y += lineHeight;
@@ -307,18 +315,78 @@ function generatePdf(data: any): Uint8Array {
 
     if (auditToken) {
         y += 10;
-        doc.setFontSize(12);
-        doc.setTextColor(15, 23, 42);
-        doc.text("Command Centre Import", margin, y);
+
+        // --- Page Break Prevention for Token Block ---
+        // Estimate height: Heading (15) + P1 (20) + P2 (20) + Box (25) + Footer (15) = ~95
+        if (y + 95 > 270) {
+            doc.addPage();
+            addFooter();
+            y = 25;
+        }
+
+        // Top Divider
+        doc.setDrawColor(229, 231, 235); // #E5E7EB
+        doc.setLineWidth(0.35); // Approx 1pt
+        doc.line(margin, y, pageW - margin, y);
+        y += 12;
+
+        // Heading
+        doc.setFontSize(16);
+        doc.setTextColor(15, 23, 42); // #0F172A
+        doc.setFont("helvetica", "bold");
+        doc.text("Command Centre Import: Transitioning to Active Governance", margin, y);
+        doc.setFont("helvetica", "normal");
+        y += 8;
+
+        // Body paragraphs
+        doc.setFontSize(11);
+        doc.setTextColor(55, 65, 81); // #374151
+        y = addWrappedText(
+            `This Strategic Capacity Assessment provides a static, point-in-time diagnosis of your portfolio. To execute the recommended trade-offs and manage your Capacity Baseline in real time, your portfolio data has been securely staged for immediate transition into the AlturaGov Command Centre.`,
+            margin, y, contentW, 5.5, 11
+        );
+        y += 4;
+        y = addWrappedText(
+            `Your classifications, Focus Slot calculations, and Mandate Tension flags have been preserved. You do not need to manually rebuild this baseline. When activating your Command Centre license, provide the following secure reference to instantly populate your live governance board:`,
+            margin, y, contentW, 5.5, 11
+        );
         y += 6;
+
+        // Token Box
+        const boxHeight = 18;
+        doc.setFillColor(249, 250, 251); // #F9FAFB
+        doc.setDrawColor(209, 213, 219); // #D1D5DB
+        doc.setLineWidth(0.35);
+        // roundedRect supported in newer jsPDF, applying 2x2 radius
+        doc.roundedRect(margin, y, contentW, boxHeight, 2, 2, "FD");
+
+        doc.setFont("courier", "bold");
+        doc.setTextColor(15, 23, 42); // #0F172A
+        doc.setFontSize(14);
+        doc.text(`SECURE AUDIT REFERENCE: ${auditToken}`, margin + 5, y + 12);
+        doc.setFont("helvetica", "normal");
+        y += boxHeight + 8;
+
+        // Footer Note
+        doc.setFontSize(9);
+        doc.setTextColor(107, 114, 128); // #6B7280
+        doc.setFont("helvetica", "italic");
+        y = addWrappedText(
+            `Note: This reference expires 60 days from audit completion or upon first use, whichever occurs earlier, in accordance with AlturaGov data retention policies.`,
+            margin, y, contentW, 4.5, 9
+        );
+        doc.setFont("helvetica", "normal");
+        y += 6;
+
+        // Bottom Divider
+        doc.setDrawColor(229, 231, 235); // #E5E7EB
+        doc.setLineWidth(0.35);
+        doc.line(margin, y, pageW - margin, y);
+        y += 10;
+
+        // Restore standard font settings
         doc.setFontSize(11);
         doc.setTextColor(51, 65, 85);
-        y = addWrappedText(`Your portfolio data has been secured. You can import this directly into your AlturaGov Command Centre using your unique Audit Reference:`, margin, y, contentW, 5.5, 11);
-        y += 4;
-        doc.setFontSize(16);
-        doc.setTextColor(15, 23, 42);
-        doc.text(auditToken, margin, y);
-        y += 15;
     }
 
     // Appendix
