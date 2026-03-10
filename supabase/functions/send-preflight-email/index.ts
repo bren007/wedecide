@@ -1,3 +1,4 @@
+// @ts-nocheck — This file runs in Supabase's Deno runtime, not Node.js
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const resendApiKey = Deno.env.get("RESEND_API_KEY");
