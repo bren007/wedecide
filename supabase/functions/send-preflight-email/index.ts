@@ -41,7 +41,7 @@ serve(async (req) => {
                 Authorization: `Bearer ${resendApiKey}`,
             },
             body: JSON.stringify({
-                from: "Strategy <strategy@alturagov.com>",
+                from: Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev",
                 to: email,
                 subject: "Your Strategic Capacity Audit — Preparing for Your Slot-Sync Session",
                 html: `
