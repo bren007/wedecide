@@ -436,6 +436,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (rpcError) {
           console.error('❌ RPC Error:', rpcError);
+          if (rpcError.message?.includes('users_email_key') || rpcError.message?.includes('users_pkey') || rpcError.message?.includes('duplicate key value')) {
+            throw new Error('An account with this email address already exists. Please sign in instead or reset your password.');
+          }
           throw new Error(`Failed to create account data: ${rpcError.message}`);
         }
         console.log('✅ Signup data created successfully:', rpcData);
