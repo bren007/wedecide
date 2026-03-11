@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const profileFetchRef = React.useRef<Promise<User | null> | null>(null);
   const initialFetchDoneRef = React.useRef(false);
   const lastProcessedUserIdRef = React.useRef<string | null>(null);
+  const isSigningUpRef = React.useRef(false);
 
   // Fetch user profile from users table with optional retries
   const fetchUserProfile = async (
@@ -99,7 +100,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         );
 
         if (profileError) {
-          if (profileError.code === 'PGRST116') return null;
+          if (profileError.code === 'PGRST116') {
+            if (retryCount < maxRetries) {
+               console.log(`📡 [fetchUserProfile] Profile not found yet (PGRST116). Retrying...`);
+               throw new Error('Profile not found yet'); // Throw to trigger outer catch/retry
+            }
+            return null;
+          }
           throw profileError;
         }
 
@@ -285,9 +292,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setUser(result);
             }
           } else {
-            console.warn('⚠️ No profile found - forcing logout');
-            setUser(null);
-            supabase.auth.signOut(); // Ensure session is cleared if profile is gone
+            console.warn('⚠️ No profile found');
+            if (isSigningUpRef.current) {
+              console.log('⏳ Skipping forced logout because user is currently signing up (RPC pending).');
+            } else {
+              console.warn('⚠️ Forcing logout');
+              setUser(null);
+              supabase.auth.signOut(); // Ensure session is cleared if profile is gone
+            }
           }
         }
       } catch (err) {
@@ -366,104 +378,109 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signup = async (name: string, email: string, password: string, token?: string) => {
-    // First, sign up with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: name
-        }
-      }
-    });
-
-    if (authError) {
-      throw new Error(authError.message);
-    }
-
-    if (!authData.user) {
-      throw new Error('Signup failed - no user returned');
-    }
-
-    console.log('🔵 Signup successful. User ID:', authData.user.id);
-    console.log('🔵 Session exists:', !!authData.session);
-
+    isSigningUpRef.current = true;
     try {
-      console.log('🔵 Starting signup process via RPC...');
-
-      if (token) {
-        // FLOW A: Join existing organization via Invitation
-        console.log('🔵 Joining organization via invitation...', { token });
-
-        const { data: rpcData, error: rpcError } = await supabase.rpc('accept_invitation', {
-          p_token: token
-        });
-
-        if (rpcError) {
-          console.error('❌ RPC Error (accept_invitation):', rpcError);
-          throw new Error(`Failed to join organization: ${rpcError.message}`);
-        }
-
-        console.log('✅ Invitation accepted:', rpcData);
-
-      } else {
-        // FLOW B: Create new organization
-        console.log('🔵 Creating new organization...');
-
-        // Generate a slug from the user's name or email
-        const orgSlug = name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '') || email.split('@')[0];
-
-        // Add timestamp to ensure uniqueness
-        const uniqueSlug = `${orgSlug}-${Date.now()}`;
-
-        console.log('🔵 Calling create_signup_data function...', {
-          email,
-          name,
-          slug: uniqueSlug
-        });
-
-        // Call the Security Definer function
-        const { data: rpcData, error: rpcError } = await supabase.rpc('create_signup_data', {
-          p_user_id: authData.user.id,
-          p_email: email,
-          p_name: name,
-          p_org_name: `${name}'s Organization`,
-          p_org_slug: uniqueSlug
-        });
-
-        if (rpcError) {
-          console.error('❌ RPC Error:', rpcError);
-          if (rpcError.message?.includes('users_email_key') || rpcError.message?.includes('users_pkey') || rpcError.message?.includes('duplicate key value')) {
-            throw new Error('An account with this email address already exists. Please sign in instead or reset your password.');
+      // First, sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name
           }
-          throw new Error(`Failed to create account data: ${rpcError.message}`);
         }
-        console.log('✅ Signup data created successfully:', rpcData);
+      });
+
+      if (authError) {
+        throw new Error(authError.message);
       }
 
-      // Fetch the created profile ONLY if we have a session
-      if (authData.session) {
-        const result = await fetchUserProfile(authData.user);
+      if (!authData.user) {
+        throw new Error('Signup failed - no user returned');
+      }
 
-        if (result && result !== 'NETWORK_ERROR') {
-          console.log('✅ Signup complete! Profile:', result);
-          setUser(result);
-        } else if (result === 'NETWORK_ERROR') {
-          console.error('❌ Connection error after signup');
-          // Still consider signup successful if session exists, 
-          // but we won't have the profile in state yet.
+      console.log('🔵 Signup successful. User ID:', authData.user.id);
+      console.log('🔵 Session exists:', !!authData.session);
+
+      try {
+        console.log('🔵 Starting signup process via RPC...');
+
+        if (token) {
+          // FLOW A: Join existing organization via Invitation
+          console.log('🔵 Joining organization via invitation...', { token });
+
+          const { data: rpcData, error: rpcError } = await supabase.rpc('accept_invitation', {
+            p_token: token
+          });
+
+          if (rpcError) {
+            console.error('❌ RPC Error (accept_invitation):', rpcError);
+            throw new Error(`Failed to join organization: ${rpcError.message}`);
+          }
+
+          console.log('✅ Invitation accepted:', rpcData);
+
         } else {
-          console.error('❌ Failed to fetch profile after creation (returned null)');
+          // FLOW B: Create new organization
+          console.log('🔵 Creating new organization...');
+
+          // Generate a slug from the user's name or email
+          const orgSlug = name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') || email.split('@')[0];
+
+          // Add timestamp to ensure uniqueness
+          const uniqueSlug = `${orgSlug}-${Date.now()}`;
+
+          console.log('🔵 Calling create_signup_data function...', {
+            email,
+            name,
+            slug: uniqueSlug
+          });
+
+          // Call the Security Definer function
+          const { data: rpcData, error: rpcError } = await supabase.rpc('create_signup_data', {
+            p_user_id: authData.user.id,
+            p_email: email,
+            p_name: name,
+            p_org_name: `${name}'s Organization`,
+            p_org_slug: uniqueSlug
+          });
+
+          if (rpcError) {
+            console.error('❌ RPC Error:', rpcError);
+            if (rpcError.message?.includes('users_email_key') || rpcError.message?.includes('users_pkey') || rpcError.message?.includes('duplicate key value')) {
+              throw new Error('An account with this email address already exists. Please sign in instead or reset your password.');
+            }
+            throw new Error(`Failed to create account data: ${rpcError.message}`);
+          }
+          console.log('✅ Signup data created successfully:', rpcData);
         }
-      } else {
-        console.log('🔵 No session returned (email confirmation likely required). Skipping profile fetch.');
+
+        // Fetch the created profile ONLY if we have a session
+        if (authData.session) {
+          const result = await fetchUserProfile(authData.user);
+
+          if (result && result !== 'NETWORK_ERROR') {
+            console.log('✅ Signup complete! Profile:', result);
+            setUser(result);
+          } else if (result === 'NETWORK_ERROR') {
+            console.error('❌ Connection error after signup');
+            // Still consider signup successful if session exists, 
+            // but we won't have the profile in state yet.
+          } else {
+            console.error('❌ Failed to fetch profile after creation (returned null)');
+          }
+        } else {
+          console.log('🔵 No session returned (email confirmation likely required). Skipping profile fetch.');
+        }
+      } catch (error) {
+        console.error('Signup process error:', error);
+        throw error;
       }
-    } catch (error) {
-      console.error('Signup process error:', error);
-      throw error;
+    } finally {
+      isSigningUpRef.current = false;
     }
   };
 
