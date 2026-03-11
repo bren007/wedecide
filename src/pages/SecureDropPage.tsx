@@ -197,11 +197,14 @@ export const SecureDropPage: React.FC = () => {
                         </h2>
 
                         <div className="mb-8">
-                            <label className="block text-sm font-bold text-slate-300 mb-2">Booking Email Address</label>
+                            <label className={`block text-sm font-bold mb-2 transition-colors ${file && !bookingEmail ? 'text-red-400' : 'text-slate-300'}`}>
+                                Booking Email Address
+                                {file && !bookingEmail && <span className="ml-2 px-2 py-0.5 rounded text-[10px] bg-red-400/20 text-red-400 uppercase tracking-tighter">Required</span>}
+                            </label>
                             <input
                                 type="email"
                                 required
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-action-blue focus:border-action-blue transition-all"
+                                className={`w-full bg-slate-950 border rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-action-blue focus:border-action-blue transition-all ${file && !bookingEmail ? 'border-red-500/50' : 'border-slate-700'}`}
                                 placeholder="The email used to purchase your audit"
                                 value={bookingEmail}
                                 onChange={(e) => setBookingEmail(e.target.value)}
@@ -234,6 +237,12 @@ export const SecureDropPage: React.FC = () => {
                                     )}
                                 </div>
                             </div>
+                            {file && !bookingEmail && (
+                                <p className="text-sm text-red-400 mt-3 font-semibold flex items-center gap-1">
+                                    <span className="w-4 h-4 rounded-full bg-red-400/20 flex items-center justify-center text-[10px]">&times;</span>
+                                    Please enter your booking email above to enable the transfer button.
+                                </p>
+                            )}
                         </div>
 
                         {error && (
@@ -257,7 +266,7 @@ export const SecureDropPage: React.FC = () => {
 
                 <div className="mt-8 text-center px-4">
                     <p className="text-xs text-slate-500 tracking-wide font-medium uppercase">
-                        Protected by AlturaGov Enterprise Encryption. All data purged after 7 days.
+                        Protected by AlturaGov Enterprise Encryption. All data purged after 60 days.
                     </p>
                 </div>
             </div>
