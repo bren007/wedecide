@@ -8,6 +8,15 @@ interface AuditImportPromptProps {
     onSkip: () => void;
 }
 
+const normalizeToken = (input: string) => {
+    const cleaned = input.replace(/\s+/g, '').toUpperCase();
+    const prefixMatch = cleaned.match(/^ALTA-?(.*)$/);
+    if (prefixMatch && prefixMatch[1]) {
+        return `ALTA-${prefixMatch[1].replace(/-/g, '')}`;
+    }
+    return cleaned;
+};
+
 export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportComplete, onSkip }) => {
     const [step, setStep] = useState<'input' | 'confirm' | 'importing' | 'error'>('input');
     const [token, setToken] = useState('');
@@ -20,13 +29,15 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
         setValidating(true);
         setErrorMessage('');
 
+        const cleanedToken = normalizeToken(token);
+
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Not authenticated');
 
             // Call Edge Function to validate token (uses service role)
             const { data, error } = await supabase.functions.invoke('import-audit-portfolio', {
-                body: { action: 'validate', audit_token: token.trim() }
+                body: { action: 'validate', audit_token: cleanedToken }
             });
 
             if (error) throw error;
@@ -51,9 +62,10 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
 
     const handleImport = async () => {
         setStep('importing');
+        const cleanedToken = normalizeToken(token);
         try {
             const { data, error } = await supabase.functions.invoke('import-audit-portfolio', {
-                body: { action: 'import', audit_token: token.trim() }
+                body: { action: 'import', audit_token: cleanedToken }
             });
 
             if (error) throw error;
@@ -68,9 +80,10 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
 
     const handleStartFresh = async () => {
         // Mark token as declined (but not consumed — client can return later)
+        const cleanedToken = normalizeToken(token);
         try {
             await supabase.functions.invoke('import-audit-portfolio', {
-                body: { action: 'decline', audit_token: token.trim() }
+                body: { action: 'decline', audit_token: cleanedToken }
             });
         } catch { /* non-critical */ }
         onSkip();

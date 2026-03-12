@@ -14,14 +14,21 @@ serve(async (req: Request) => {
     }
 
     try {
-        const { action, audit_token } = await req.json();
+        const { action, audit_token: raw_token } = await req.json();
 
-        if (!audit_token) {
+        if (!raw_token) {
             return new Response(
                 JSON.stringify({ status: "error", message: "Missing audit_token" }),
                 { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
             );
         }
+
+        // Normalize token: ALTA-XXXX-XXXX -> ALTA-XXXXXXXX
+        const cleaned = raw_token.replace(/\s+/g, '').toUpperCase();
+        const prefixMatch = cleaned.match(/^ALTA-?(.*)$/);
+        const audit_token = prefixMatch && prefixMatch[1] 
+            ? `ALTA-${prefixMatch[1].replace(/-/g, '')}`
+            : cleaned;
 
         // Create admin client (service role) for reading audit data
         const supabaseAdmin = createClient(
