@@ -81,9 +81,20 @@ export function useSandboxState() {
                 setPillarsMap(pMap);
             }
 
-            const inits = (initiativesData as unknown as Initiative[]) || [];
+            const rawInits = (initiativesData as any[]) || [];
+            const inits: Initiative[] = rawInits.map(raw => ({
+                ...raw,
+                // Primary mapping: Use DB names (required) for frontend display (current_fy)
+                capex_current_fy: Number(raw.capex_required ?? 0),
+                opex_current_fy: Number(raw.opex_required ?? 0),
+                total_initiative_cost: Number(raw.total_initiative_cost ?? 0),
+                is_multi_year: Boolean(raw.is_multi_year),
+                future_annual_opex: Number(raw.future_annual_opex ?? 0),
+                current_fy_budget: Number(raw.current_fy_budget ?? 0),
+            }));
+            
             setDbInitiatives(inits);
-            setLocalInitiatives(inits); // Reset simulation to DB state
+            setLocalInitiatives(inits); 
 
         } catch (err: any) {
             console.error('Error fetching sandbox state:', err);

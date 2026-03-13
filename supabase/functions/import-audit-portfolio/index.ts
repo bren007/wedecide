@@ -142,9 +142,41 @@ serve(async (req: Request) => {
                 );
             }
 
-            // Insert all initiatives scoped to the user's org
+            // 1. Resolve Pillars (String Name -> UUID)
+            const pillarNames = [...new Set(parsedJson.map((i: any) => i.alignment_pillar).filter(Boolean))];
+            const pillarMap: Record<string, string> = {};
+
+            for (const name of pillarNames) {
+                // Try to find existing pillar for this org
+                const { data: existingPillar } = await supabaseAdmin
+                    .from("strategic_pillars")
+                    .select("id")
+                    .eq("org_id", orgId)
+                    .eq("title", name)
+                    .maybeSingle();
+
+                if (existingPillar) {
+                    pillarMap[name as string] = existingPillar.id;
+                } else {
+                    // Create missing pillar for this org
+                    const { data: newPillar, error: pillarError } = await supabaseAdmin
+                        .from("strategic_pillars")
+                        .insert({ org_id: orgId, title: name })
+                        .select("id")
+                        .single();
+                    
+                    if (pillarError) {
+                        console.error(`[IMPORT] Failed to create pillar "${name}":`, pillarError);
+                    } else if (newPillar) {
+                        pillarMap[name as string] = newPillar.id;
+                    }
+                }
+            }
+
+            // 2. Insert all initiatives with full data retention
             let imported = 0;
             let errors = 0;
+            let lastErrorMessage = "";
 
             for (const initiative of parsedJson) {
                 const { error: insertError } = await supabaseAdmin
@@ -152,37 +184,63 @@ serve(async (req: Request) => {
                     .insert({
                         org_id: orgId,
                         owner_id: user.id,
-                        title: initiative.title || initiative.initiative_name || "Untitled",
-                        focus_slots: initiative.focus_slots || initiative.focus_slots_required || 3,
-                        capex_current_fy: initiative.capex_current_fy || initiative.capex_required || 0,
-                        opex_current_fy: initiative.opex_current_fy || initiative.opex_required || 0,
-                        total_initiative_cost: initiative.total_initiative_cost || 0,
+                        title: initiative.initiative_name || initiative.title || "Untitled",
+                        focus_slots: initiative.calculated_focus_slots || initiative.focus_slots || 3,
+                        
+                        // Financial Mapping: Unified current_fy_budget maps to operational budget
+                        opex_required: initiative.current_fy_budget || 0,
+                        capex_required: 0,
+                        current_fy_budget: initiative.current_fy_budget || 0,
+
+                        // Multi-year and metadata
+                        total_initiative_cost: initiative.total_initiative_cost || initiative.current_fy_budget || 0,
                         is_multi_year: initiative.is_multi_year || false,
                         future_annual_opex: initiative.future_annual_opex || 0,
-                        short_term_win: initiative.short_term_win || false,
+                        lifecycle_stage: initiative.lifecycle_stage || null,
+
+                        // Gate/Mandate logic
                         approval_mandate: initiative.approval_mandate || null,
                         relative_priority: initiative.relative_priority || null,
                         target_delivery_quarter: initiative.target_delivery_quarter || null,
-                        current_fy_budget: initiative.current_fy_budget || 0,
+                        
+                        // Pillar Link
+                        strategic_pillar_id: initiative.alignment_pillar ? pillarMap[initiative.alignment_pillar] : null,
+                        
+                        short_term_win: initiative.short_term_win || false,
                         status: "proposed",
                     });
 
                 if (insertError) {
-                    console.error("Import error for initiative:", initiative.title, insertError);
+                    console.error(`[IMPORT] Error for initiative "${initiative.initiative_name || initiative.title}":`, insertError);
                     errors++;
+                    lastErrorMessage = insertError.message;
                 } else {
                     imported++;
                 }
             }
 
+            if (imported === 0 && parsedJson.length > 0) {
+                return new Response(
+                    JSON.stringify({ 
+                        status: "error", 
+                        message: `Failed to import any initiatives: ${lastErrorMessage}` 
+                    }),
+                    { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+                );
+            }
+
             // Mark token as consumed and record the licence org
-            await supabaseAdmin
+            const { error: consumeError } = await supabaseAdmin
                 .from("leads")
                 .update({
                     audit_token_status: "consumed",
                     licence_org_id: orgId,
                 })
                 .eq("audit_token", audit_token);
+
+            if (consumeError) {
+                console.error("[IMPORT] Failed to mark token as consumed:", consumeError);
+            }
 
             return new Response(
                 JSON.stringify({
