@@ -426,14 +426,17 @@ serve(async (req: Request) => {
         const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // 1. Fetch lead
+        // 1. Normalize and Fetch latest lead
+        const normalizedEmail = email.trim().toLowerCase();
         const { data: leads, error: leadError } = await supabase
             .from("leads")
             .select("*")
-            .eq("email", email);
+            .eq("email", normalizedEmail)
+            .order("created_at", { ascending: false });
 
-        if (leadError || !leads || leads.length === 0) {
-            throw new Error("Lead not found.");
+        if (leadError) throw leadError;
+        if (!leads || leads.length === 0) {
+            throw new Error(`Lead not found for email: ${normalizedEmail}`);
         }
         const lead = leads[0];
 
@@ -481,7 +484,7 @@ serve(async (req: Request) => {
         }
 
         // 5. Update lead status
-        await supabase
+        const { error: updateError } = await supabase
             .from("leads")
             .update({
                 audit_status: "report_delivered",
@@ -492,6 +495,11 @@ serve(async (req: Request) => {
                 audit_completed_at: new Date().toISOString()
             })
             .eq("id", lead.id);
+
+        if (updateError) {
+            console.error(`[PUBLISHER] Update error for lead ${lead.id}:`, updateError);
+            throw new Error(`Failed to update lead record: ${updateError.message}`);
+        }
 
         console.log(`[PUBLISHER] Report published: ${reportFileName} with token ${auditToken}`);
 
