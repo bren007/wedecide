@@ -490,7 +490,7 @@ serve(async (req: Request) => {
                 audit_status: "report_delivered",
                 report_url: reportFileName,
                 audit_token: auditToken,
-                audit_token_status: "active",
+                audit_token_status: "unconsumed",
                 audit_parsed_json: data.portfolio,
                 audit_completed_at: new Date().toISOString()
             })
