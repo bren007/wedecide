@@ -1,0 +1,40 @@
+﻿On branch feature/decision-triage
+Your branch is up to date with 'origin/feature/decision-triage'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   package-lock.json
+	modified:   package.json
+	modified:   server/index.ts
+	modified:   src/App.tsx
+	modified:   src/components/AuditImportPrompt.tsx
+	modified:   src/pages/AuditFunnelPage.tsx
+	modified:   src/pages/AuditReviewPage.tsx
+	modified:   src/pages/OrganizationSettingsPage.tsx
+	modified:   supabase/.temp/cli-latest
+	modified:   supabase/functions/generate-draft/index.ts
+	modified:   supabase/functions/import-audit-portfolio/index.ts
+	modified:   supabase/functions/publish-report/index.ts
+	modified:   supabase/functions/send-preflight-email/index.ts
+	modified:   tailwind.config.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	audit_data_sample.json
+	audit_test_compliant.csv
+	check_migrations_db.js
+	dev_deploy_log.txt
+	git_log.txt
+	git_status.txt
+	initiatives_schema_dump.json
+	phase7_revenue.sql
+	public/test_audit_data_balanced.csv
+	src/pages/AuditSuccessPage.css
+	src/pages/AuditSuccessPage.tsx
+	supabase/functions/create-checkout/
+	supabase/functions/get-session-details/
+	supabase/functions/stripe-webhook/
+	supabase/migrations/phase_7_5_calibration_alignment.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")

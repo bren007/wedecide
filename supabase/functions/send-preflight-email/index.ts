@@ -16,10 +16,15 @@ serve(async (req) => {
 
     try {
         const { email, organizationName } = await req.json();
+        console.log(`📩 Request to send email to: ${email}`);
 
         if (!email) {
+            console.error("❌ Missing email parameter in request");
             throw new Error("Missing email parameter");
         }
+
+        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
+        console.log(`📤 Sending via Resend. From: ${fromEmail}, API Key Set: ${!!resendApiKey}`);
 
         if (!resendApiKey) {
             console.warn("RESEND_API_KEY not set. Mocking email send logic to:", email);
@@ -71,10 +76,12 @@ serve(async (req) => {
 
         if (!res.ok) {
             const errBody = await res.text();
+            console.error(`❌ Resend API Error: ${res.status}`, errBody);
             throw new Error(`Resend API error: ${res.status} ${errBody}`);
         }
 
         const responseData = await res.json();
+        console.log("✅ Resend success response:", responseData);
 
         return new Response(JSON.stringify({ message: "Email sent successfully", data: responseData }), {
             headers: {

@@ -1,0 +1,17 @@
+﻿commit 67c162033add07bdbb174c1e31ecfdec392db73d
+Author: Blair <blairmrenwick@gmail.com>
+Date:   Fri Mar 13 21:53:51 2026 +1300
+
+    fix(audit): restore missing columns, implement pillar upsert, and correct financial mapping for import
+
+commit 885113ae0a5a6cefc3c67cf9bf2c467bcc23ffc0
+Author: Blair <blairmrenwick@gmail.com>
+Date:   Fri Mar 13 20:09:28 2026 +1300
+
+    Fix audit_token_status constraint violation: set status to 'unconsumed'
+
+commit 8efe14019020c29cf08efe29b14f36dfd1bbcbbe
+Author: Blair <blairmrenwick@gmail.com>
+Date:   Fri Mar 13 18:44:47 2026 +1300
+
+    Fix audit token persistence silent failure: add explicit error handling, lead sorting, and email normalization

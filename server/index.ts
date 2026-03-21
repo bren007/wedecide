@@ -136,24 +136,28 @@ const parseAndStructurePortfolio = async (email: string, token: string) => {
 
     const totalLoad = initiatives.reduce((sum, init) => sum + init.calculated_focus_slots, 0);
 
-    // 3. Define Baseline Capacity
-    let parsedBaseline = 5;
-    if (lead.portfolio_scale) {
-        if (lead.portfolio_scale.includes('11-25')) parsedBaseline = 15;
-        else if (lead.portfolio_scale.includes('26-50')) parsedBaseline = 25;
-        else if (lead.portfolio_scale.includes('50+')) parsedBaseline = 40;
-    }
+    // 3. Capacity Baseline from calibration (unified formula)
+    // Falls back to values from lead record, or defaults if not present
+    const largeSteerable = parseInt(lead.calibration_large_steerable, 10) || 2;
+    const historicalAvg = parseInt(lead.calibration_historical_avg, 10) || 8;
+    const capacityBaseline = (largeSteerable * 5) + (Math.max(0, historicalAvg - largeSteerable) * 3);
 
     return {
         lead,
         payload: {
             organisation_name: lead.organization_name || 'Public Sector Organisation',
-            calculated_capacity_baseline: parsedBaseline,
+            calculated_capacity_baseline: capacityBaseline,
             total_current_load: totalLoad,
+            overcommitment_pct: capacityBaseline > 0 ? Math.round(((totalLoad - capacityBaseline) / capacityBaseline) * 100) : 0,
+            absolute_slot_deficit: Math.max(0, totalLoad - capacityBaseline),
             fiscal_drag: fiscalDrag,
             dependency_risk_list: dependencyRiskList,
             zombie_projects: zombieProjects,
-            portfolio: initiatives
+            portfolio: initiatives,
+            calibration: {
+                large_steerable: largeSteerable,
+                historical_avg: historicalAvg,
+            },
         }
     };
 };

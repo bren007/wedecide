@@ -1,0 +1,242 @@
+{
+  "columns": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "nullable": "NO",
+      "default": "gen_random_uuid()"
+    },
+    {
+      "name": "org_id",
+      "type": "uuid",
+      "nullable": "NO",
+      "default": null
+    },
+    {
+      "name": "owner_id",
+      "type": "uuid",
+      "nullable": "YES",
+      "default": null
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "nullable": "NO",
+      "default": null
+    },
+    {
+      "name": "focus_slots",
+      "type": "integer",
+      "nullable": "NO",
+      "default": "3"
+    },
+    {
+      "name": "capex_required",
+      "type": "numeric",
+      "nullable": "NO",
+      "default": "0"
+    },
+    {
+      "name": "opex_required",
+      "type": "numeric",
+      "nullable": "NO",
+      "default": "0"
+    },
+    {
+      "name": "short_term_win",
+      "type": "boolean",
+      "nullable": "NO",
+      "default": "false"
+    },
+    {
+      "name": "strategic_pillar_id",
+      "type": "uuid",
+      "nullable": "YES",
+      "default": null
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": "NO",
+      "default": "'proposed'::text"
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": "NO",
+      "default": "now()"
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": "NO",
+      "default": "now()"
+    },
+    {
+      "name": "dependency_count",
+      "type": "integer",
+      "nullable": "YES",
+      "default": "0"
+    },
+    {
+      "name": "novelty_score",
+      "type": "integer",
+      "nullable": "YES",
+      "default": "1"
+    },
+    {
+      "name": "bottleneck_roles",
+      "type": "jsonb",
+      "nullable": "YES",
+      "default": "'[]'::jsonb"
+    },
+    {
+      "name": "funding_status",
+      "type": "text",
+      "nullable": "YES",
+      "default": "'pending'::text"
+    },
+    {
+      "name": "value_drop",
+      "type": "text",
+      "nullable": "YES",
+      "default": null
+    },
+    {
+      "name": "coi_amount",
+      "type": "numeric",
+      "nullable": "YES",
+      "default": "0"
+    },
+    {
+      "name": "coi_months",
+      "type": "integer",
+      "nullable": "YES",
+      "default": "0"
+    },
+    {
+      "name": "sponsor",
+      "type": "text",
+      "nullable": "YES",
+      "default": null
+    },
+    {
+      "name": "complexity_stakeholder",
+      "type": "integer",
+      "nullable": "YES",
+      "default": "1"
+    },
+    {
+      "name": "complexity_tech",
+      "type": "integer",
+      "nullable": "YES",
+      "default": "1"
+    },
+    {
+      "name": "complexity_dependency",
+      "type": "integer",
+      "nullable": "YES",
+      "default": "1"
+    },
+    {
+      "name": "approval_mandate",
+      "type": "text",
+      "nullable": "YES",
+      "default": null
+    },
+    {
+      "name": "relative_priority",
+      "type": "text",
+      "nullable": "YES",
+      "default": null
+    },
+    {
+      "name": "target_delivery_quarter",
+      "type": "text",
+      "nullable": "YES",
+      "default": null
+    },
+    {
+      "name": "current_fy_budget",
+      "type": "numeric",
+      "nullable": "YES",
+      "default": "0"
+    }
+  ],
+  "constraints": [
+    {
+      "name": "initiatives_approval_mandate_check",
+      "definition": "CHECK ((approval_mandate = ANY (ARRAY['Cabinet Approved'::text, 'Ministerial Approved'::text, 'Board/Delegated'::text, 'Pre-Approval'::text])))"
+    },
+    {
+      "name": "initiatives_funding_status_check",
+      "definition": "CHECK ((funding_status = ANY (ARRAY['funded'::text, 'partially_funded'::text, 'not_funded'::text, 'pending'::text])))"
+    },
+    {
+      "name": "initiatives_novelty_score_check",
+      "definition": "CHECK (((novelty_score >= 1) AND (novelty_score <= 5)))"
+    },
+    {
+      "name": "initiatives_org_id_fkey",
+      "definition": "FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "initiatives_owner_id_fkey",
+      "definition": "FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "initiatives_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "initiatives_relative_priority_check",
+      "definition": "CHECK ((relative_priority = ANY (ARRAY['Tier 1'::text, 'Tier 2'::text, 'Tier 3'::text])))"
+    },
+    {
+      "name": "initiatives_strategic_pillar_id_fkey",
+      "definition": "FOREIGN KEY (strategic_pillar_id) REFERENCES strategic_pillars(id)"
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "initiatives",
+      "policyname": "View initiatives",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "(org_id = get_auth_user_org_id())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "initiatives",
+      "policyname": "Propose initiatives",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(org_id = get_auth_user_org_id())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "initiatives",
+      "policyname": "Update own proposed initiatives",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((org_id = get_auth_user_org_id()) AND (owner_id = auth.uid()) AND (status = 'proposed'::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "initiatives",
+      "policyname": "Chair/Admin manage all initiatives",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((org_id = get_auth_user_org_id()) AND (EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.organization_id = initiatives.org_id) AND (user_roles.role = ANY (ARRAY['chair'::text, 'admin'::text]))))))",
+      "with_check": null
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+initiative_name,strategic_pillar,approval_mandate,relative_priority,complexity_stakeholders_1_to_3,complexity_novelty_1_to_3,complexity_dependency_1_to_3,current_fy_budget,lifecycle_stage,target_delivery_quarter,next_milestone_date,dependency_blockers
+Citizen Portal App,Digital Services,Cabinet Approved,Tier 1,1,1,1,500000,In-Flight,Q3 FY27,2026-10-15,None
+Intranet Refresh,Corporate Services,Board/Delegated,Tier 2,1,1,1,150000,Active,Q4 FY27,2027-02-01,None
+Policy Knowledge Base,Resilient Infrastructure,Pre-Approval,Tier 3,1,1,1,50000,Concept,Q1 FY28,2027-05-30,None

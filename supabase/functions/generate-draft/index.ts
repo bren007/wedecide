@@ -67,8 +67,8 @@ Perform the following analyses in sequence and return them as a single JSON obje
 - Identify the approval mandate / priority tension: list every initiative where approval_mandate is Cabinet Approved or Ministerial Approved but relative_priority is Tier 2 or Tier 3
 
 **2. Overcommitment Calculation**
-- State total portfolio Focus Slots vs capacity baseline
-- Express overcommitment as a percentage
+- State the total portfolio load (use the exact total_current_load value from the input data) vs the capacity baseline (use the exact calculated_capacity_baseline value from the input data). NEVER substitute the number of initiatives for the capacity baseline.
+- Express overcommitment as a percentage based on these two pre-calculated values
 - Calculate the absolute slot deficit (total load minus baseline)
 - Identify the minimum number of initiatives that would need to be re-sequenced or suspended to reach the baseline
 
@@ -120,10 +120,10 @@ async function runAgent2(anthropicApiKey: string, agent1Analysis: any, payload: 
     const systemPrompt = `You are an expert Lead Editor at AlturaGov. You translate structured analytical findings into authoritative executive prose. Format your response strictly as valid JSON.`;
 
     const userPrompt = `**Role:**
-You are the Lead Editor at AlturaGov. Your task is to rewrite the structured analytical brief in <raw_analysis> into two sections of a formal Strategic Capacity Assessment for a public sector Chief Executive. You are translating mathematical findings into executive prose — you are not performing analysis, and you must not introduce findings, initiatives, or figures that are not present in the raw analysis.
+You are the Lead Editor at AlturaGov. Your task is to rewrite the structured analytical brief in <raw_analysis> into two sections of a formal Strategic Capacity Assessment for a public sector executive team. You are translating mathematical findings into executive prose — you are not performing analysis, and you must not introduce findings, initiatives, or figures that are not present in the raw analysis.
 
 **Narrative Core:**
-The central theme is Ambition vs. Reality. A strategic portfolio contains politically sanctioned, organisationally important work. Cabinet mandates do not suspend the physics of delivery capacity. The report's value lies in stating this plainly, with evidence, in terms that a Chief Executive can act on and defend under scrutiny.
+The central theme is Ambition vs. Reality. A strategic portfolio contains politically sanctioned, organisationally important work. Cabinet mandates do not suspend the physics of delivery capacity. The report's value lies in stating this plainly, with evidence, in terms that the organisation's leadership can act on and defend under scrutiny.
 
 **Strict Style Guide:**
 1. Audit Lexicon: Use precise governance terms — Suspend, Halt, De-prioritise, Re-sequence. Never use informal terms.
@@ -131,7 +131,8 @@ The central theme is Ambition vs. Reality. A strategic portfolio contains politi
 3. Re-sequencing framing: When recommending re-sequencing in Scenario C, always name the specific initiative, its current target_delivery_quarter, and the proposed revised quarter from the raw analysis. Never describe re-sequencing in the abstract.
 4. Gap-closure discipline: Each scenario must state explicitly what percentage of the total slot deficit it closes. A scenario that closes less than 25% of the deficit must include a sentence acknowledging this limitation plainly.
 5. Voice: Senior analyst advising a peer. Precise, direct, without diplomatic softening. Active voice throughout. Short paragraphs. No sentence longer than 25 words.
-6. Forbidden words: leverage, holistic, synergy, solution, seamless, paradigm, ecosystem, stakeholder, value-add, robust, best-in-class, park, put on ice, going forward, it should be noted, it is recommended.
+6. Risk Attribution: Never attribute risk acceptance or consequences personally to a "Chief Executive". Attribute risks to "the organisation", "executive governance", or "the executive group".
+7. Forbidden words: leverage, holistic, synergy, solution, seamless, paradigm, ecosystem, stakeholder, value-add, robust, best-in-class, park, put on ice, going forward, it should be noted, it is recommended, Chief Executive.
 
 **Required JSON Output Structure:**
 Return ONLY a raw JSON object with no markdown formatting outside the JSON structure.
@@ -148,11 +149,22 @@ ${JSON.stringify(agent1Analysis, null, 2)}
 
 <portfolio_summary>
 Organisation: ${payload.organisation_name}
-Capacity Baseline: ${payload.calculated_capacity_baseline} Focus Slots
+Capacity Baseline: ${payload.calculated_capacity_baseline} Focus Slots (derived from executive steering capacity of ${payload.calibration.large_steerable} large initiatives and historical throughput of ${payload.calibration.historical_avg} active projects)
 Total Current Load: ${payload.total_current_load} Focus Slots
+Overcommitment: ${payload.overcommitment_pct}% (${payload.absolute_slot_deficit > 0 ? `deficit of ${payload.absolute_slot_deficit} slots` : 'within limits'})
 Fiscal Drag: $${payload.fiscal_drag.toLocaleString()}
 Total Initiatives: ${payload.portfolio.length}
-</portfolio_summary>`;
+</portfolio_summary>
+
+<verified_mathematical_findings>
+CRITICAL DIRECTIVE: These are verified geometric facts. You MUST use these exact numbers. If the raw analysis proposes different mathematics, the raw analysis is WRONG and you must overwrite it with these figures:
+- Maximum Capacity Baseline: ${payload.calculated_capacity_baseline} Focus Slots
+- Total Portfolio Load: ${payload.total_current_load} Focus Slots
+- Overcommitment: ${payload.overcommitment_pct}% of structural capacity
+- Absolute Slot Deficit: ${payload.absolute_slot_deficit}
+- Fiscal Drag: $${payload.fiscal_drag.toLocaleString()}
+${payload.total_current_load > payload.calculated_capacity_baseline ? `\nCRITICAL FINDING (inject verbatim at end of Section 3 opening paragraph): "At this load, fiscal drag is structurally guaranteed, and Tier 1 mandated programmes are mathematically at risk of failure through resource starvation."` : ''}
+</verified_mathematical_findings>`;
 
     console.log("[AGENT 2] Calling Claude for editorial rewrite...");
     const claudeRespText = await callClaude(anthropicApiKey, systemPrompt, userPrompt);
@@ -184,7 +196,7 @@ Total Initiatives: ${payload.portfolio.length}
 
 // ── Portfolio Parser ──────────────────────────────────────────────────
 
-function parsePortfolio(csvString: string, lead: any) {
+function parsePortfolio(csvString: string, lead: any, calibration: { large_steerable: number, historical_avg: number }) {
     const parsed = Papa.parse(csvString, { header: true, skipEmptyLines: true });
     const rows = parsed.data;
 
@@ -253,21 +265,27 @@ function parsePortfolio(csvString: string, lead: any) {
 
     const totalLoad = initiatives.reduce((sum: number, init: any) => sum + init.calculated_focus_slots, 0);
 
-    // Baseline capacity from portfolio_scale
-    let parsedBaseline = 5;
-    if (lead.portfolio_scale) {
-        if (lead.portfolio_scale.includes("11-25")) parsedBaseline = 15;
-        else if (lead.portfolio_scale.includes("26-50")) parsedBaseline = 25;
-        else if (lead.portfolio_scale.includes("50+")) parsedBaseline = 40;
-    }
+    // Capacity Baseline from Slot-Sync calibration (unified formula)
+    const capacityBaseline = (calibration.large_steerable * 5) + (Math.max(0, calibration.historical_avg - calibration.large_steerable) * 3);
+
+    // Pre-calculated hard facts (injected into AI prompts, not for AI to derive)
+    const rawOverPct = capacityBaseline > 0 ? Math.round(((totalLoad - capacityBaseline) / capacityBaseline) * 100) : 0;
+    const overcommitmentPct = Math.max(0, rawOverPct);
+    const absoluteSlotDeficit = Math.max(0, totalLoad - capacityBaseline);
 
     return {
         organisation_name: lead.organization_name || "Public Sector Organisation",
-        calculated_capacity_baseline: parsedBaseline,
+        calculated_capacity_baseline: capacityBaseline,
         total_current_load: totalLoad,
+        overcommitment_pct: overcommitmentPct,
+        absolute_slot_deficit: absoluteSlotDeficit,
         fiscal_drag: fiscalDrag,
         dependency_risk_list: dependencyRiskList,
         portfolio: initiatives,
+        calibration: {
+            large_steerable: calibration.large_steerable,
+            historical_avg: calibration.historical_avg,
+        },
     };
 }
 
@@ -279,9 +297,15 @@ serve(async (req: Request) => {
     }
 
     try {
-        const { email } = await req.json();
+        const { email, calibration_large_steerable, calibration_historical_avg } = await req.json();
         if (!email) {
             return new Response(JSON.stringify({ error: "Email is required" }), {
+                status: 400,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+        if (!calibration_large_steerable || !calibration_historical_avg) {
+            return new Response(JSON.stringify({ error: "Calibration inputs are required" }), {
                 status: 400,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
@@ -322,9 +346,13 @@ serve(async (req: Request) => {
 
         const csvString = await fileData.text();
 
-        // 3. Parse portfolio
-        const payload = parsePortfolio(csvString, lead);
-        console.log(`[DRAFT] Parsed ${payload.portfolio.length} initiatives, ${payload.total_current_load} total slots`);
+        // 3. Parse portfolio with calibration
+        const calibration = {
+            large_steerable: parseInt(calibration_large_steerable, 10),
+            historical_avg: parseInt(calibration_historical_avg, 10),
+        };
+        const payload = parsePortfolio(csvString, lead, calibration);
+        console.log(`[DRAFT] Parsed ${payload.portfolio.length} initiatives, ${payload.total_current_load} total slots, baseline: ${payload.calculated_capacity_baseline}`);
 
         // 4. Agent 1: Gemini structured analysis
         const agent1Analysis = await runAgent1(geminiKey, payload);

@@ -1,0 +1,6 @@
+initiative_name,strategic_pillar,approval_mandate,relative_priority,complexity_stakeholders_1_to_3,complexity_novelty_1_to_3,complexity_dependency_1_to_3,current_fy_budget,lifecycle_stage,target_delivery_quarter,next_milestone_date,dependency_blockers
+National Identity Core Upgrade,Digital Services,Cabinet Approved,Tier 1,3,2,2,4200000,In-Flight,Q2 FY27,2026-09-30,None
+Unified Payments Platform,Finance & Revenue,Ministerial Approved,Tier 1,2,2,1,3800000,Design,Q3 FY27,2026-12-15,None
+Legacy System Decommission,Resilient Infrastructure,Board/Delegated,Tier 2,2,1,2,950000,Active,Q2 FY27,2026-08-30,None
+Internal Knowledge Management System,Corporate Services,Pre-Approval,Tier 3,1,1,1,220000,Concept,Q1 FY28,2027-06-30,None
+Ministerial Correspondence Tracker,Corporate Services,Ministerial Approved,Tier 3,2,1,1,175000,Active,Q3 FY27,2026-12-01,None

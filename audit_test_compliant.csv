@@ -1,0 +1,6 @@
+initiative_name,strategic_pillar,approval_mandate,relative_priority,complexity_stakeholders_1_to_3,complexity_novelty_1_to_3,complexity_dependency_1_to_3,current_fy_budget,lifecycle_stage,target_delivery_quarter,dependency_blockers
+Cloud Transformation Alpha,Core Infrastructure,Cabinet Approved,Tier 1,1,1,1,500000,Active,Q1 FY26,None
+Data Mesh Pilot,Innovation,Board/Delegated,Tier 2,1,1,1,120000,Planning,Q2 FY26,None
+Legacy API Sunsetting,Modernisation,Ministerial Approved,Tier 1,1,1,1,85000,Active,Q3 FY26,None
+Citizen Portal UX,Internal Tools,Board/Delegated,Tier 3,1,1,1,45000,Active,Q4 FY26,None
+Mobile Workforce App,Operations,Ministerial Approved,Tier 2,1,1,1,210000,Planning,Q1 FY26,None

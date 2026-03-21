@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { FileText, ArrowRight, RotateCcw, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { FileText, ArrowRight, RotateCcw, AlertTriangle, CheckCircle, Loader2, Gauge } from 'lucide-react';
 import { Button } from './Button';
 
 interface AuditImportPromptProps {
@@ -17,12 +17,19 @@ const normalizeToken = (input: string) => {
     return cleaned;
 };
 
+interface CalibrationData {
+    large_steerable: number | null;
+    historical_avg: number | null;
+    capacity_baseline: number | null;
+}
+
 export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportComplete, onSkip }) => {
-    const [step, setStep] = useState<'input' | 'confirm' | 'importing' | 'error'>('input');
+    const [step, setStep] = useState<'input' | 'confirm' | 'importing' | 'imported' | 'error'>('input');
     const [token, setToken] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [initiativeCount, setInitiativeCount] = useState(0);
     const [validating, setValidating] = useState(false);
+    const [calibration, setCalibration] = useState<CalibrationData | null>(null);
 
     const handleValidateToken = async () => {
         if (!token.trim()) return;
@@ -71,7 +78,12 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
             if (error) throw error;
             if (data.status !== 'success') throw new Error(data.message || 'Import failed');
 
-            onImportComplete();
+            // Store calibration data for confirmation screen
+            if (data.calibration) {
+                setCalibration(data.calibration);
+            }
+
+            setStep('imported');
         } catch (err: any) {
             setErrorMessage(err.message || 'Import failed. Please try again.');
             setStep('error');
@@ -175,6 +187,54 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
                         <Loader2 size={32} className="text-blue-400 animate-spin mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-white mb-1">Importing Portfolio</h3>
                         <p className="text-sm text-slate-400">Loading {initiativeCount} initiatives into your Command Centre...</p>
+                    </div>
+                )}
+
+                {/* Step: Import Complete — Capacity Baseline Confirmation */}
+                {step === 'imported' && (
+                    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-8 backdrop-blur-sm">
+                        <div className="text-center mb-6">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500/10 border border-green-500/20 mb-4">
+                                <Gauge size={32} className="text-green-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Your Capacity Baseline Has Been Set</h3>
+                            <p className="text-sm text-slate-400">
+                                Based on your Strategic Capacity Audit, your organisation's governance physics have been configured.
+                            </p>
+                        </div>
+
+                        {calibration && calibration.large_steerable && calibration.historical_avg && (
+                            <div className="space-y-3 mb-6">
+                                <div className="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg">
+                                    <span className="text-sm text-slate-400">Executive Steering Capacity</span>
+                                    <span className="text-white font-bold">{calibration.large_steerable} large initiatives</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg">
+                                    <span className="text-sm text-slate-400">Historical Throughput Reference</span>
+                                    <span className="text-white font-bold">{calibration.historical_avg} active projects</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-green-900/30 border border-green-500/30 rounded-lg">
+                                    <span className="text-sm text-green-300 font-medium">Maximum Capacity Baseline</span>
+                                    <span className="text-green-400 font-bold text-lg">
+                                        {calibration.capacity_baseline ||
+                                            ((calibration.large_steerable * 5) + Math.max(0, calibration.historical_avg - calibration.large_steerable) * 3)
+                                        } Focus Slots
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        <p className="text-xs text-slate-500 text-center mb-6">
+                            Your portfolio has been imported. Your Command Centre is ready.
+                        </p>
+
+                        <Button
+                            variant="primary"
+                            onClick={onImportComplete}
+                            className="w-full justify-center bg-green-600 hover:bg-green-500"
+                        >
+                            Open Command Centre <ArrowRight size={16} className="ml-2" />
+                        </Button>
                     </div>
                 )}
             </div>

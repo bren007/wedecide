@@ -1,0 +1,134 @@
+[
+  {
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "column_name": "coi_amount",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "coi_months",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "capex_current_fy",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "opex_current_fy",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "total_initiative_cost",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "is_multi_year",
+    "data_type": "boolean"
+  },
+  {
+    "column_name": "future_annual_opex",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "complexity_stakeholder",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "complexity_tech",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "complexity_dependency",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "current_fy_budget",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "focus_slots",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "capex_required",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "opex_required",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "short_term_win",
+    "data_type": "boolean"
+  },
+  {
+    "column_name": "strategic_pillar_id",
+    "data_type": "uuid"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "dependency_count",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "novelty_score",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "bottleneck_roles",
+    "data_type": "jsonb"
+  },
+  {
+    "column_name": "org_id",
+    "data_type": "text"
+  },
+  {
+    "column_name": "owner_id",
+    "data_type": "text"
+  },
+  {
+    "column_name": "title",
+    "data_type": "text"
+  },
+  {
+    "column_name": "sponsor",
+    "data_type": "text"
+  },
+  {
+    "column_name": "strategic_tradeoff",
+    "data_type": "text"
+  },
+  {
+    "column_name": "relative_priority",
+    "data_type": "text"
+  },
+  {
+    "column_name": "funding_status",
+    "data_type": "text"
+  },
+  {
+    "column_name": "value_drop",
+    "data_type": "text"
+  },
+  {
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "column_name": "target_delivery_quarter",
+    "data_type": "text"
+  },
+  {
+    "column_name": "approval_mandate",
+    "data_type": "text"
+  }
+]

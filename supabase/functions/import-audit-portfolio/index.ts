@@ -75,7 +75,7 @@ serve(async (req: Request) => {
         // Look up the audit record by token
         const { data: auditRecord, error: auditError } = await supabaseAdmin
             .from("leads")
-            .select("id, audit_token_status, audit_parsed_json, audit_completed_at, licence_org_id")
+            .select("id, audit_token_status, audit_parsed_json, audit_completed_at, licence_org_id, calibration_large_steerable, calibration_historical_avg, capacity_baseline")
             .eq("audit_token", audit_token)
             .single();
 
@@ -196,11 +196,10 @@ serve(async (req: Request) => {
                         total_initiative_cost: initiative.total_initiative_cost || initiative.current_fy_budget || 0,
                         is_multi_year: initiative.is_multi_year || false,
                         future_annual_opex: initiative.future_annual_opex || 0,
-                        lifecycle_stage: initiative.lifecycle_stage || null,
 
-                        // Gate/Mandate logic
-                        approval_mandate: initiative.approval_mandate || null,
-                        relative_priority: initiative.relative_priority || null,
+                        // Gate/Mandate logic: strictly validate against DB CHECK constraints
+                        approval_mandate: ['Cabinet Approved', 'Ministerial Approved', 'Board/Delegated', 'Pre-Approval'].includes(initiative.approval_mandate) ? initiative.approval_mandate : null,
+                        relative_priority: ['Tier 1', 'Tier 2', 'Tier 3'].includes(initiative.relative_priority) ? initiative.relative_priority : null,
                         target_delivery_quarter: initiative.target_delivery_quarter || null,
                         
                         // Pillar Link
@@ -242,12 +241,56 @@ serve(async (req: Request) => {
                 console.error("[IMPORT] Failed to mark token as consumed:", consumeError);
             }
 
+            // Pre-populate capacity_settings from audit calibration
+            if (auditRecord.calibration_large_steerable && auditRecord.calibration_historical_avg) {
+                const baseline = auditRecord.capacity_baseline || 
+                    (auditRecord.calibration_large_steerable * 5) + (Math.max(0, auditRecord.calibration_historical_avg - auditRecord.calibration_large_steerable) * 3);
+
+                // Check if capacity_settings exists for this org
+                const { data: existingSettings } = await supabaseAdmin
+                    .from("capacity_settings")
+                    .select("id")
+                    .eq("org_id", orgId)
+                    .maybeSingle();
+
+                if (existingSettings) {
+                    const { error: capUpdateError } = await supabaseAdmin
+                        .from("capacity_settings")
+                        .update({
+                            calibration_large_steerable: auditRecord.calibration_large_steerable,
+                            calibration_historical_avg: auditRecord.calibration_historical_avg,
+                            total_focus_slots: baseline,
+                        })
+                        .eq("id", existingSettings.id);
+                    if (capUpdateError) console.error("[IMPORT] Failed to update capacity_settings:", capUpdateError);
+                    else console.log(`[IMPORT] Updated capacity_settings: baseline=${baseline}`);
+                } else {
+                    const { error: capInsertError } = await supabaseAdmin
+                        .from("capacity_settings")
+                        .insert({
+                            org_id: orgId,
+                            calibration_large_steerable: auditRecord.calibration_large_steerable,
+                            calibration_historical_avg: auditRecord.calibration_historical_avg,
+                            total_focus_slots: baseline,
+                            total_capex_limit: 0,
+                            total_opex_limit: 0,
+                        });
+                    if (capInsertError) console.error("[IMPORT] Failed to insert capacity_settings:", capInsertError);
+                    else console.log(`[IMPORT] Created capacity_settings: baseline=${baseline}`);
+                }
+            }
+
             return new Response(
                 JSON.stringify({
                     status: "success",
                     imported,
                     errors,
                     message: `Imported ${imported} initiatives${errors > 0 ? `, ${errors} failed` : ""}`,
+                    calibration: {
+                        large_steerable: auditRecord.calibration_large_steerable || null,
+                        historical_avg: auditRecord.calibration_historical_avg || null,
+                        capacity_baseline: auditRecord.capacity_baseline || null,
+                    }
                 }),
                 { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );

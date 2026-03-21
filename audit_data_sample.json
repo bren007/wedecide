@@ -1,0 +1,13 @@
+{
+  "blockers": [
+    "Requires legislative change"
+  ],
+  "initiative_name": "National Identity Revamp",
+  "lifecycle_stage": "Planning",
+  "alignment_pillar": "Security",
+  "approval_mandate": "Cabinet Approved",
+  "relative_priority": "Tier 1",
+  "fiscal_tail_impact": 1200000,
+  "calculated_focus_slots": 6,
+  "target_delivery_quarter": "Q1 FY26"
+}

@@ -30,13 +30,7 @@ function generatePdf(data: any): Uint8Array {
 
     // ── Helper: Add Footer ──
     const addFooter = () => {
-        const y = 285;
-        doc.setDrawColor(226, 232, 240);
-        doc.line(margin, y - 5, pageW - margin, y - 5);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 116, 139);
-        doc.text(`${organizationName} — Strategic Capacity Assessment`, margin, y);
-        doc.text(dateStr, pageW - margin, y, { align: "right" });
+        // Footers are now applied in a final pass to include page numbers
     };
 
     // ── Helper: Wrap Text ──
@@ -191,7 +185,7 @@ function generatePdf(data: any): Uint8Array {
     doc.setFontSize(11);
     doc.setTextColor(51, 65, 85);
     y = addWrappedText(
-        "A Strategic Capacity Baseline is the maximum volume of concurrent strategic initiatives an organisation can sustain before rigorous delivery discipline collapses into reactive firefighting.",
+        "A Strategic Capacity Baseline is the maximum volume of concurrent strategic initiatives an organisation can sustain before delivery efficiency and strategic alignment begin to degrade.",
         margin, y, contentW, 5.5, 11
     );
 
@@ -275,7 +269,10 @@ function generatePdf(data: any): Uint8Array {
 
     doc.setFontSize(11);
     doc.setTextColor(51, 65, 85);
-    const cleanSection3 = (analysis.section3 || "").replace(/^#+\s+.*$/gm, "").trim();
+    const cleanSection3 = (analysis.section3 || "")
+        .replace(/^#+\s+(.*)$/gm, "$1")
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .trim();
     y = addWrappedText(cleanSection3, margin, y, contentW, 5.5, 11);
 
     addFooter();
@@ -287,7 +284,10 @@ function generatePdf(data: any): Uint8Array {
 
     doc.setFontSize(11);
     doc.setTextColor(51, 65, 85);
-    const cleanSection4 = (analysis.section4 || "").replace(/^#+\s+.*$/gm, "").trim();
+    const cleanSection4 = (analysis.section4 || "")
+        .replace(/^#+\s+(.*)$/gm, "$1")
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .trim();
     y = addWrappedText(cleanSection4, margin, y, contentW, 5.5, 11);
 
     addFooter();
@@ -403,6 +403,20 @@ function generatePdf(data: any): Uint8Array {
 
     addFooter();
 
+    // ── Apply Footers and Page Numbers ──
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const footerY = 285;
+        doc.setDrawColor(226, 232, 240);
+        doc.line(margin, footerY - 5, pageW - margin, footerY - 5);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`${organizationName} — Strategic Capacity Assessment`, margin, footerY);
+        doc.text(`Page ${i} of ${pageCount}`, pageW / 2, footerY, { align: "center" });
+        doc.text(dateStr, pageW - margin, footerY, { align: "right" });
+    }
+
     return new Uint8Array(doc.output("arraybuffer"));
 }
 
@@ -414,7 +428,7 @@ serve(async (req: Request) => {
     }
 
     try {
-        const { email, data, analysis } = await req.json();
+        const { email, data, analysis, calibration_large_steerable, calibration_historical_avg, capacity_baseline } = await req.json();
         if (!email || !data || !analysis) {
             return new Response(
                 JSON.stringify({ error: "Email, data, and edited analysis are required" }),
@@ -492,7 +506,10 @@ serve(async (req: Request) => {
                 audit_token: auditToken,
                 audit_token_status: "unconsumed",
                 audit_parsed_json: data.portfolio,
-                audit_completed_at: new Date().toISOString()
+                audit_completed_at: new Date().toISOString(),
+                calibration_large_steerable: calibration_large_steerable || null,
+                calibration_historical_avg: calibration_historical_avg || null,
+                capacity_baseline: capacity_baseline || null,
             })
             .eq("id", lead.id);
 

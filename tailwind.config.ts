@@ -23,6 +23,7 @@ export default {
                 // Strategic Status Colors
                 action: {
                     primary: '#3b82f6', // Bright Blue (Primary Action)
+                    blue: '#3b82f6',    // Added to fix broken bg-action-blue classes
                     hover: '#2563eb',
                 },
                 status: {

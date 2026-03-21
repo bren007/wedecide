@@ -614,6 +614,13 @@ export const OrganizationSettingsPage: React.FC = () => {
                                                 return null;
                                             })()}
                                         </div>
+                                        {capacitySettings && capacitySettings.calibration_large_steerable > 0 && capacitySettings.calibration_historical_avg > 0 && (
+                                            <div className="mt-4 p-3 bg-blue-950/30 border border-blue-800/30 rounded-lg">
+                                                <p className="text-xs text-blue-300/80">
+                                                    These values were set from your Strategic Capacity Audit. You may update them at any time as your organisation evolves.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

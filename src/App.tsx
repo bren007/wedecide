@@ -15,6 +15,7 @@ import { AuditFunnelPage } from './pages/AuditFunnelPage';
 import { SecureDropPage } from './pages/SecureDropPage';
 import { AuditReviewPage } from './pages/AuditReviewPage';
 import { PulseDashboardPage } from './pages/PulseDashboardPage';
+import { AuditSuccessPage } from './pages/AuditSuccessPage';
 
 import { CommandCenterPage } from './pages/CommandCenterPage';
 import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
@@ -39,7 +40,7 @@ function AppContent() {
     <div className="flex min-h-screen bg-slate-950 text-slate-200">
       <Navbar />
       <ToastContainer />
-      <div className={`flex-1 flex flex-col min-w-0 ${isAuthenticated && location.pathname !== '/' ? 'lg:ml-64' : ''}`}>
+      <div className={`flex-1 flex flex-col min-w-0 ${isAuthenticated && location.pathname !== '/' ? 'pt-16 lg:pt-0 lg:ml-64' : ''}`}>
         <ErrorBoundary>
           <Routes>
             <Route element={<PublicLayout />}>
@@ -50,6 +51,10 @@ function AppContent() {
               <Route
                 path="/audit"
                 element={<AuditFunnelPage />}
+              />
+              <Route
+                path="/audit-success"
+                element={<AuditSuccessPage />}
               />
               <Route
                 path="/secure-drop"
