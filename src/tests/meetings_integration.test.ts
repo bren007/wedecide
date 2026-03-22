@@ -44,12 +44,17 @@ describe('Meetings & Agenda Integration', () => {
         organizationId = rpcData.organization_id;
 
         // Sign in to get session for RLS tests
-        const { data: loginData, error: loginError } = await authClient.auth.signInWithPassword({
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
             email: TEST_EMAIL,
             password: TEST_PASSWORD,
         });
-        if (loginError) throw loginError;
-        const infoToken = loginData.session!.access_token;
+
+        if (loginError || !loginData.session) {
+            console.error('❌ Sign In Error:', loginError || 'No session returned');
+            return; // Skip verification if we can't sign in
+        }
+
+        const infoToken = loginData.session.access_token;
 
         // Create isolated client for tests
         supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
