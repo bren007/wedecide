@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -30,11 +35,8 @@ jobs:
         run: npm run test:unit
 
       - name: Integration tests
+        if: env.VITE_SUPABASE_URL != ''
         run: npm run test:int
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Build
         run: npx vite build
