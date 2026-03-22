@@ -1,0 +1,27 @@
+﻿[dotenv@17.3.1] injecting env (15) from .env.local -- tip: ΓÜí∩╕Å secrets for agents: https://dotenvx.com/as2
+1. Signing up...
+   User ID: 3b911933-5eb7-4efb-8297-471fe040c6d7
+2. Running RPC create_signup_data...
+   Org ID: 477d07e8-b834-4987-b635-ab89e13c3f88
+3. Verifying records in DB via direct PG...
+   User Row: {
+  id: '3b911933-5eb7-4efb-8297-471fe040c6d7',
+  email: 'debug-1774144842990@example.com',
+  name: 'Debug User',
+  organization_id: '477d07e8-b834-4987-b635-ab89e13c3f88',
+  created_at: 2026-03-21T13:00:44.190Z,
+  updated_at: 2026-03-21T13:00:44.190Z
+}
+   Role Row: {
+  id: '9cbc3831-5a44-47b9-bca6-9138d9de58ba',
+  user_id: '3b911933-5eb7-4efb-8297-471fe040c6d7',
+  organization_id: '477d07e8-b834-4987-b635-ab89e13c3f88',
+  role: 'admin',
+  created_at: 2026-03-21T13:00:44.190Z
+}
+4. Signing in to get token...
+5. Attempting meetings insert via RLS client...
+6. Testing get_auth_org_id() directly...
+   Function Result (Direct PG - likely null as no session): null
+7. Testing get_auth_org_id() with set_config simulating the user...
+   Function Result (Simulated Auth): null

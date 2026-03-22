@@ -1,0 +1,23 @@
+[dotenv@17.3.1] injecting env (15) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+╔══════════════════════════════════════════════════════════════╗
+║  🧪  WeDecide Deploy — Staging                                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Environment:  Staging
+  Using:        STAGING_DATABASE_URL
+  Database:     postgresql://postgres.bxiylyhkxdyreveervhj:****@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=no-verify
+  Mode:         ▶️  LIVE
+
+  📁 Found 11 migration(s) in supabase/migrations/
+  ✅ Connected to database.
+
+  📋 Pending migrations (2):
+     1. 20260322115100_align_staging_rls.sql
+     2. 20260322120000_cleanup_old_auth_policies.sql
+
+  ▶️  Applying: 20260322115100_align_staging_rls.sql
+
+  ⚠️  Deploy incomplete. Fix the failing migration and re-run.
+     ❌ FAILED: function get_auth_org_id() does not exist
+     ⏹️  Stopping — 0 migration(s) applied before failure.

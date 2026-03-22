@@ -25,6 +25,10 @@ import { MeetingLayout } from './components/layouts/MeetingLayout';
 import { PublicLayout } from './components/layouts/PublicLayout';
 import { MeetingListPage } from './pages/meetings/MeetingListPage';
 import { MeetingDetailPage } from './pages/meetings/MeetingDetailPage';
+import { PricingPage } from './pages/PricingPage';
+import { MissionPage } from './pages/MissionPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
 import './App.css';
 import { LoadingSpinner } from './components/Loading';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -60,6 +64,10 @@ function AppContent() {
                 path="/secure-drop"
                 element={<SecureDropPage />}
               />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/mission" element={<MissionPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
             </Route>
 
             <Route

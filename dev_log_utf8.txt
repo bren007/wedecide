@@ -1,0 +1,39 @@
+﻿
+> wedecide@0.0.0 deploy:dev
+> node scripts/deploy.js --env dev
+
+[dotenv@17.3.1] injecting env (15) from .env.local -- tip: ΓÜÖ∩╕Å  override existing env vars with { override: true }
+
+ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ  ≡ƒöº  WeDecide Deploy ΓÇö Development                               Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  Environment:  Development
+  Using:        DATABASE_URL
+  Database:     postgresql://postgres.dakkjqqfskzsymkclymw:****@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+  Mode:         Γû╢∩╕Å  LIVE
+
+  ≡ƒôü Found 9 migration(s) in supabase/migrations/
+  Γ£à Connected to database.
+
+  ≡ƒôï Pending migrations (2):
+     1. 20260322115100_align_staging_rls.sql
+     2. pivot_to_strategic_governance.sql
+
+  Γû╢∩╕Å  Applying: 20260322115100_align_staging_rls.sql
+node.exe :      Γ¥î FAILED: relation 
+"affected_parties" does not exist
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (     Γ¥î 
+    FAILED... does not exist:String) [], RemoteExcep  
+  tion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     ΓÅ╣∩╕Å  Stopping ΓÇö 0 migration(s) applied 
+before failure.
+
+  ΓÜá∩╕Å  Deploy incomplete. Fix the failing migration and re-run.

@@ -1,0 +1,31 @@
+[dotenv@17.3.1] injecting env (15) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+╔══════════════════════════════════════════════════════════════╗
+║  🔧  WeDecide Deploy — Development                               ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Environment:  Development
+  Using:        DATABASE_URL
+  Database:     postgresql://postgres.dakkjqqfskzsymkclymw:****@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+  Mode:         ▶️  LIVE
+
+  📁 Found 10 migration(s) in supabase/migrations/
+  ✅ Connected to database.
+
+  📋 Pending migrations (10):
+     1. 20260101000000_pivot_to_strategic_governance.sql
+     2. 20260228085344_phase_5_telemetry.sql
+     3. 20260306063600_relax_ledger_rls.sql
+     4. 20260309212000_secure_rls_warnings.sql
+     5. 20260310000000_phase_6_ambition_vs_reality.sql
+     6. 20260311000000_phase_6_purge_cron.sql
+     7. 20260311500000_phase_7_revenue.sql
+     8. 20260312000000_phase_7_5_calibration_alignment.sql
+     9. 20260322115100_align_staging_rls.sql
+     10. 20260322120000_cleanup_old_auth_policies.sql
+
+  ▶️  Applying: 20260101000000_pivot_to_strategic_governance.sql
+
+  ⚠️  Deploy incomplete. Fix the failing migration and re-run.
+     ❌ FAILED: operator does not exist: text = uuid
+     ⏹️  Stopping — 0 migration(s) applied before failure.

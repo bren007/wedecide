@@ -1,0 +1,22 @@
+[dotenv@17.3.1] injecting env (15) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+╔══════════════════════════════════════════════════════════════╗
+║  🔧  WeDecide Deploy — Development                               ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Environment:  Development
+  Using:        DATABASE_URL
+  Database:     postgresql://postgres.dakkjqqfskzsymkclymw:****@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+  Mode:         ▶️  LIVE
+
+  📁 Found 9 migration(s) in supabase/migrations/
+  ✅ Connected to database.
+
+  📋 Pending migrations (1):
+     1. pivot_to_strategic_governance.sql
+
+  ▶️  Applying: pivot_to_strategic_governance.sql
+
+  ⚠️  Deploy incomplete. Fix the failing migration and re-run.
+     ❌ FAILED: operator does not exist: text = uuid
+     ⏹️  Stopping — 0 migration(s) applied before failure.

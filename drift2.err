@@ -1,0 +1,56 @@
+[dotenv@17.3.1] injecting env (15) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+╔══════════════════════════════════════════════════════════════╗
+║  🧪  WeDecide Deploy — Staging                                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Environment:  Staging
+  Using:        STAGING_DATABASE_URL
+  Database:     postgresql://postgres.bxiylyhkxdyreveervhj:****@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=no-verify
+  Mode:         ▶️  LIVE
+
+  ✅ Connected to both Dev and Staging
+
+📊 Comparing schemas...
+
+  🔐 Missing policy:   audit_records::Admins can manage audit_records
+  🔐 Missing policy:   decision_feedback::Chairs can create feedback
+  🔐 Missing policy:   decision_feedback::Users can view feedback for their org decisions
+  🔐 Missing policy:   decisions::Chairs can update decisions in their organization
+  🔐 Missing policy:   decisions::Owners can delete their decisions
+  🔐 Missing policy:   decisions::Owners can update their decisions
+  🔐 Missing policy:   decisions::Users can create decisions for their organization
+  🔐 Missing policy:   decisions::Users can view decisions of their organization
+  🔐 Missing policy:   documents::Decision owners can add documents
+  🔐 Missing policy:   documents::Decision owners can delete documents
+  🔐 Missing policy:   documents::Users can create documents in their organization
+  🔐 Missing policy:   documents::Users can view documents in their organization
+  🔐 Missing policy:   documents::Users can view documents of their org decisions
+  🔐 Missing policy:   license_transactions::Admins can manage license_transactions
+  🔐 Missing policy:   meeting_attendees::Admins can manage meeting attendees
+  🔐 Missing policy:   meeting_attendees::Users can view meeting attendees
+  🔐 Missing policy:   organizations::Users can view their own organization
+  🔐 Missing policy:   organizations::admins_update_org
+  🔐 Missing policy:   stakeholders::Decision owners can add stakeholders
+  🔐 Missing policy:   stakeholders::Decision owners can remove stakeholders
+  🔐 Missing policy:   stakeholders::Users can view stakeholders of their org decisions
+  🔐 Missing policy:   user_roles::roles_read_org
+  🔐 Missing policy:   users::Users can insert their own user record
+  🔐 Missing policy:   users::Users can update their own user record
+  🔐 Missing policy:   users::users_read_org
+  🔐 Missing policy:   users::users_update_own
+  🔓 Extra policy:     affected_parties::Decision owners can add affected_parties
+  🔓 Extra policy:     affected_parties::Decision owners can remove affected_parties
+  🔓 Extra policy:     affected_parties::Users can view affected_parties of their org decisions
+  🔓 Extra policy:     decisions::manage_org_decisions
+  🔓 Extra policy:     documents::manage_documents
+  🔓 Extra policy:     invitations::Admins can create invitations
+  🔓 Extra policy:     invitations::Admins can delete invitations
+  🔓 Extra policy:     invitations::Admins can view invitations
+  🔓 Extra policy:     organizations::Users can see their own org
+  🔓 Extra policy:     stakeholders::manage_stakeholders
+  🔓 Extra policy:     user_roles::Users can see their own roles
+  🔓 Extra policy:     user_roles::admins_select_org_roles
+  🔓 Extra policy:     user_roles::select_own_roles
+  🔓 Extra policy:     user_roles::signup_insert_role
+  🔓 Extra policy:     users::Users can update their own profile

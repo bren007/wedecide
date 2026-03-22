@@ -1,0 +1,129 @@
+﻿[dotenv@17.3.1] injecting env (15) from .env.local -- tip: ΓÜÖ∩╕Å  write to custom object with { processEnv: myObject }
+
+--- organizations ---
+RLS Enabled: true
+Policy: orgs_read_own | CMD: SELECT
+  QUAL: (id IN ( SELECT users.organization_id
+   FROM users
+  WHERE (users.id = (auth.uid())::text)))
+  WITH CHECK: null
+Policy: select_own_org | CMD: SELECT
+  QUAL: (id = get_auth_org_id())
+  WITH CHECK: null
+Policy: signup_insert_org | CMD: INSERT
+  QUAL: null
+  WITH CHECK: true
+Policy: Users can view their own organization | CMD: SELECT
+  QUAL: ((id IN ( SELECT user_roles.organization_id
+   FROM user_roles
+  WHERE (user_roles.user_id = (auth.uid())::text))) OR (id IN ( SELECT users.organization_id
+   FROM users
+  WHERE (users.id = (auth.uid())::text))))
+  WITH CHECK: null
+Policy: admins_update_org | CMD: UPDATE
+  QUAL: (EXISTS ( SELECT 1
+   FROM user_roles
+  WHERE (((user_roles.user_id)::uuid = auth.uid()) AND ((user_roles.organization_id)::uuid = (organizations.id)::uuid) AND (user_roles.role = ANY (ARRAY['admin'::text, 'chair'::text])))))
+  WITH CHECK: (EXISTS ( SELECT 1
+   FROM user_roles
+  WHERE (((user_roles.user_id)::uuid = auth.uid()) AND ((user_roles.organization_id)::uuid = (organizations.id)::uuid) AND (user_roles.role = ANY (ARRAY['admin'::text, 'chair'::text])))))
+
+--- users ---
+RLS Enabled: true
+Policy: users_read_own | CMD: SELECT
+  QUAL: (((auth.uid())::text = id) OR (organization_id = get_auth_org_id()))
+  WITH CHECK: null
+Policy: users_update_own | CMD: UPDATE
+  QUAL: ((auth.uid())::text = id)
+  WITH CHECK: ((auth.uid())::text = id)
+Policy: Users can insert their own user record | CMD: INSERT
+  QUAL: null
+  WITH CHECK: ((auth.uid())::text = id)
+Policy: Users can update their own user record | CMD: UPDATE
+  QUAL: ((auth.uid())::text = id)
+  WITH CHECK: null
+Policy: users_read_org | CMD: SELECT
+  QUAL: (organization_id = get_auth_user_org_id_safe())
+  WITH CHECK: null
+
+--- user_roles ---
+RLS Enabled: true
+Policy: roles_read_own | CMD: SELECT
+  QUAL: ((user_id = (auth.uid())::text) OR (organization_id = get_auth_org_id()))
+  WITH CHECK: null
+Policy: admins_update_org_roles | CMD: UPDATE
+  QUAL: ((organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1
+   FROM user_roles ur
+  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))
+  WITH CHECK: null
+Policy: admins_delete_org_roles | CMD: DELETE
+  QUAL: ((organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1
+   FROM user_roles ur
+  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))
+  WITH CHECK: null
+Policy: roles_read_org | CMD: SELECT
+  QUAL: (organization_id = get_auth_user_org_id_safe())
+  WITH CHECK: null
+
+--- meetings ---
+RLS Enabled: true
+Policy: Users can view org meetings | CMD: SELECT
+  QUAL: (organization_id = get_auth_org_id())
+  WITH CHECK: null
+Policy: Admins can manage meetings | CMD: ALL
+  QUAL: ((organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1
+   FROM user_roles ur
+  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))
+  WITH CHECK: null
+
+--- meeting_groups ---
+RLS Enabled: true
+Policy: Users can view org meeting groups | CMD: SELECT
+  QUAL: (organization_id = get_auth_org_id())
+  WITH CHECK: null
+Policy: Admins can manage meeting groups | CMD: ALL
+  QUAL: ((organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1
+   FROM user_roles ur
+  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))
+  WITH CHECK: null
+
+--- agenda_items ---
+RLS Enabled: true
+Policy: Users can view agenda items | CMD: SELECT
+  QUAL: (EXISTS ( SELECT 1
+   FROM meetings m
+  WHERE ((m.id = agenda_items.meeting_id) AND (m.organization_id = get_auth_org_id()))))
+  WITH CHECK: null
+Policy: Admins can manage agenda items | CMD: ALL
+  QUAL: (EXISTS ( SELECT 1
+   FROM meetings m
+  WHERE ((m.id = agenda_items.meeting_id) AND (m.organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1
+           FROM user_roles ur
+          WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))))
+  WITH CHECK: null
+
+--- decisions ---
+RLS Enabled: true
+Policy: Chairs can update decisions in their organization | CMD: UPDATE
+  QUAL: (EXISTS ( SELECT 1
+   FROM user_roles
+  WHERE ((user_roles.user_id = (auth.uid())::text) AND (user_roles.organization_id = decisions.organization_id) AND (user_roles.role = 'chair'::text))))
+  WITH CHECK: (EXISTS ( SELECT 1
+   FROM user_roles
+  WHERE ((user_roles.user_id = (auth.uid())::text) AND (user_roles.organization_id = decisions.organization_id) AND (user_roles.role = 'chair'::text))))
+Policy: Owners can delete their decisions | CMD: DELETE
+  QUAL: (owner_id = (auth.uid())::text)
+  WITH CHECK: null
+Policy: Owners can update their decisions | CMD: UPDATE
+  QUAL: (owner_id = (auth.uid())::text)
+  WITH CHECK: null
+Policy: Users can create decisions for their organization | CMD: INSERT
+  QUAL: null
+  WITH CHECK: ((organization_id IN ( SELECT users.organization_id
+   FROM users
+  WHERE (users.id = (auth.uid())::text))) AND (owner_id = (auth.uid())::text))
+Policy: Users can view decisions of their organization | CMD: SELECT
+  QUAL: (organization_id IN ( SELECT users.organization_id
+   FROM users
+  WHERE (users.id = (auth.uid())::text)))
+  WITH CHECK: null

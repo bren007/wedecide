@@ -3,7 +3,7 @@
 -- 1. Capacity Settings
 CREATE TABLE IF NOT EXISTS capacity_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   total_focus_slots INTEGER NOT NULL DEFAULT 20,
   total_capex_limit NUMERIC NOT NULL DEFAULT 0,
   total_opex_limit NUMERIC NOT NULL DEFAULT 0,
@@ -18,7 +18,7 @@ ALTER TABLE capacity_settings ENABLE ROW LEVEL SECURITY;
 -- 2. Strategic Pillars
 CREATE TABLE IF NOT EXISTS strategic_pillars (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   target_weight INTEGER NOT NULL DEFAULT 0, -- Percentage or weight
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -30,8 +30,8 @@ ALTER TABLE strategic_pillars ENABLE ROW LEVEL SECURITY;
 -- 3. Initiatives
 CREATE TABLE IF NOT EXISTS initiatives (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  owner_id UUID REFERENCES users(id) ON DELETE SET NULL, -- The Proposer
+  org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  owner_id TEXT REFERENCES users(id) ON DELETE SET NULL, -- The Proposer
   title TEXT NOT NULL,
   focus_slots_required INTEGER NOT NULL DEFAULT 3,
   capex_required NUMERIC NOT NULL DEFAULT 0,
@@ -48,9 +48,9 @@ ALTER TABLE initiatives ENABLE ROW LEVEL SECURITY;
 -- 4. Strategic Ledger (Audit/History)
 CREATE TABLE IF NOT EXISTS strategic_ledger (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   initiative_id UUID REFERENCES initiatives(id) ON DELETE SET NULL,
-  chair_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  chair_id TEXT REFERENCES users(id) ON DELETE SET NULL,
   action_type TEXT NOT NULL, -- create, update, swap, approve
   rationale TEXT,
   replaced_ids JSONB DEFAULT '[]'::jsonb, -- Array of initiative IDs that were swapped out
@@ -75,8 +75,8 @@ ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 -- Helper function to get current user's org_id
 DROP FUNCTION IF EXISTS get_auth_user_org_id() CASCADE;
 CREATE OR REPLACE FUNCTION get_auth_user_org_id()
-RETURNS UUID AS $$
-  SELECT organization_id FROM users WHERE id = auth.uid()
+RETURNS TEXT AS $$
+  SELECT organization_id FROM users WHERE id = auth.uid()::text
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- Capacity Settings
@@ -92,7 +92,7 @@ CREATE POLICY "Manage capacity settings" ON capacity_settings
     org_id = get_auth_user_org_id() AND
     EXISTS (
       SELECT 1 FROM user_roles
-      WHERE user_id = auth.uid()
+      WHERE user_id = auth.uid()::text
       AND organization_id = capacity_settings.org_id
       AND role IN ('chair', 'admin')
     )
@@ -111,7 +111,7 @@ CREATE POLICY "Manage strategic pillars" ON strategic_pillars
     org_id = get_auth_user_org_id() AND
     EXISTS (
       SELECT 1 FROM user_roles
-      WHERE user_id = auth.uid()
+      WHERE user_id = auth.uid()::text
       AND organization_id = strategic_pillars.org_id
       AND role IN ('chair', 'admin')
     )
@@ -134,7 +134,7 @@ CREATE POLICY "Update own proposed initiatives" ON initiatives
   FOR UPDATE
   USING (
     org_id = get_auth_user_org_id() AND
-    owner_id = auth.uid() AND
+    owner_id = auth.uid()::text AND
     status = 'proposed'
   );
 
@@ -145,7 +145,7 @@ CREATE POLICY "Chair/Admin manage all initiatives" ON initiatives
     org_id = get_auth_user_org_id() AND
     EXISTS (
       SELECT 1 FROM user_roles
-      WHERE user_id = auth.uid()
+      WHERE user_id = auth.uid()::text
       AND organization_id = initiatives.org_id
       AND role IN ('chair', 'admin')
     )
@@ -164,7 +164,7 @@ CREATE POLICY "Append to ledger" ON strategic_ledger
     org_id = get_auth_user_org_id() AND
     EXISTS (
       SELECT 1 FROM user_roles
-      WHERE user_id = auth.uid()
+      WHERE user_id = auth.uid()::text
       AND organization_id = strategic_ledger.org_id
       AND role IN ('chair', 'admin')
     )

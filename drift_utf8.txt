@@ -1,0 +1,56 @@
+﻿[dotenv@17.3.1] injecting env (15) from .env.local -- tip: ΓÜÖ∩╕Å  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ  ≡ƒº¬  WeDecide Deploy ΓÇö Staging                                   Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  Environment:  Staging
+  Using:        STAGING_DATABASE_URL
+  Database:     postgresql://postgres.bxiylyhkxdyreveervhj:****@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=no-verify
+  Mode:         Γû╢∩╕Å  LIVE
+
+  Γ£à Connected to both Dev and Staging
+
+≡ƒôè Comparing schemas...
+
+  ≡ƒöÉ Missing policy:   audit_records::Admins can manage audit_records
+  ≡ƒöÉ Missing policy:   decision_feedback::Chairs can create feedback
+  ≡ƒöÉ Missing policy:   decision_feedback::Users can view feedback for their org decisions
+  ≡ƒöÉ Missing policy:   decisions::Chairs can update decisions in their organization
+  ≡ƒöÉ Missing policy:   decisions::Owners can delete their decisions
+  ≡ƒöÉ Missing policy:   decisions::Owners can update their decisions
+  ≡ƒöÉ Missing policy:   decisions::Users can create decisions for their organization
+  ≡ƒöÉ Missing policy:   decisions::Users can view decisions of their organization
+  ≡ƒöÉ Missing policy:   documents::Decision owners can add documents
+  ≡ƒöÉ Missing policy:   documents::Decision owners can delete documents
+  ≡ƒöÉ Missing policy:   documents::Users can create documents in their organization
+  ≡ƒöÉ Missing policy:   documents::Users can view documents in their organization
+  ≡ƒöÉ Missing policy:   documents::Users can view documents of their org decisions
+  ≡ƒöÉ Missing policy:   license_transactions::Admins can manage license_transactions
+  ≡ƒöÉ Missing policy:   meeting_attendees::Admins can manage meeting attendees
+  ≡ƒöÉ Missing policy:   meeting_attendees::Users can view meeting attendees
+  ≡ƒöÉ Missing policy:   organizations::Users can view their own organization
+  ≡ƒöÉ Missing policy:   organizations::admins_update_org
+  ≡ƒöÉ Missing policy:   stakeholders::Decision owners can add stakeholders
+  ≡ƒöÉ Missing policy:   stakeholders::Decision owners can remove stakeholders
+  ≡ƒöÉ Missing policy:   stakeholders::Users can view stakeholders of their org decisions
+  ≡ƒöÉ Missing policy:   user_roles::roles_read_org
+  ≡ƒöÉ Missing policy:   users::Users can insert their own user record
+  ≡ƒöÉ Missing policy:   users::Users can update their own user record
+  ≡ƒöÉ Missing policy:   users::users_read_org
+  ≡ƒöÉ Missing policy:   users::users_update_own
+  ≡ƒöô Extra policy:     affected_parties::Decision owners can add affected_parties
+  ≡ƒöô Extra policy:     affected_parties::Decision owners can remove affected_parties
+  ≡ƒöô Extra policy:     affected_parties::Users can view affected_parties of their org decisions
+  ≡ƒöô Extra policy:     decisions::manage_org_decisions
+  ≡ƒöô Extra policy:     documents::manage_documents
+  ≡ƒöô Extra policy:     invitations::Admins can create invitations
+  ≡ƒöô Extra policy:     invitations::Admins can delete invitations
+  ≡ƒöô Extra policy:     invitations::Admins can view invitations
+  ≡ƒöô Extra policy:     organizations::Users can see their own org
+  ≡ƒöô Extra policy:     stakeholders::manage_stakeholders
+  ≡ƒöô Extra policy:     user_roles::Users can see their own roles
+  ≡ƒöô Extra policy:     user_roles::admins_select_org_roles
+  ≡ƒöô Extra policy:     user_roles::select_own_roles
+  ≡ƒöô Extra policy:     user_roles::signup_insert_role
+  ≡ƒöô Extra policy:     users::Users can update their own profile

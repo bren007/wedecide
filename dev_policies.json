@@ -1,0 +1,474 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "agenda_items",
+    "policyname": "Admins can manage agenda items",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM meetings m\n  WHERE ((m.id = agenda_items.meeting_id) AND (m.organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1\n           FROM user_roles ur\n          WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "agenda_items",
+    "policyname": "Users can view agenda items",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM meetings m\n  WHERE ((m.id = agenda_items.meeting_id) AND (m.organization_id = get_auth_org_id()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_records",
+    "policyname": "Admins can manage audit_records",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_roles ur\n  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "capacity_settings",
+    "policyname": "Manage capacity settings",
+    "cmd": "ALL",
+    "qual": "((org_id = get_auth_user_org_id()) AND (EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = (auth.uid())::text) AND (user_roles.organization_id = capacity_settings.org_id) AND (user_roles.role = ANY (ARRAY['chair'::text, 'admin'::text]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "capacity_settings",
+    "policyname": "View capacity settings",
+    "cmd": "SELECT",
+    "qual": "(org_id = get_auth_user_org_id())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_feedback",
+    "policyname": "Chairs can create feedback",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((EXISTS ( SELECT 1\n   FROM (user_roles ur\n     JOIN decisions d ON ((d.organization_id = ur.organization_id)))\n  WHERE ((d.id = decision_feedback.decision_id) AND (ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['chair'::text, 'admin'::text]))))) AND (user_id = (auth.uid())::text))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_feedback",
+    "policyname": "Users can view feedback for their org decisions",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM (decisions d\n     JOIN users u ON ((u.organization_id = d.organization_id)))\n  WHERE ((d.id = decision_feedback.decision_id) AND (u.id = (auth.uid())::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_feedback",
+    "policyname": "users_delete_own_decision_feedback",
+    "cmd": "DELETE",
+    "qual": "((user_id = (auth.uid())::text) OR (decision_id IN ( SELECT d.id\n   FROM (decisions d\n     JOIN user_roles ur ON ((ur.organization_id = d.organization_id)))\n  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_feedback",
+    "policyname": "users_insert_decision_feedback",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(decision_id IN ( SELECT decisions.id\n   FROM decisions\n  WHERE (decisions.organization_id IN ( SELECT users.organization_id\n           FROM users\n          WHERE (users.id = (auth.uid())::text)))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_feedback",
+    "policyname": "users_select_decision_feedback",
+    "cmd": "SELECT",
+    "qual": "(decision_id IN ( SELECT decisions.id\n   FROM decisions\n  WHERE (decisions.organization_id IN ( SELECT users.organization_id\n           FROM users\n          WHERE (users.id = (auth.uid())::text)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_feedback",
+    "policyname": "users_update_own_decision_feedback",
+    "cmd": "UPDATE",
+    "qual": "(user_id = (auth.uid())::text)",
+    "with_check": "(user_id = (auth.uid())::text)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_rapid_roles",
+    "policyname": "Decision owners and admins can manage RAPID roles",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM decisions d\n  WHERE ((d.id = decision_rapid_roles.decision_id) AND (d.organization_id IN ( SELECT u.organization_id\n           FROM users u\n          WHERE (u.id = (auth.uid())::text))) AND ((d.owner_id = (auth.uid())::text) OR (EXISTS ( SELECT 1\n           FROM user_roles ur\n          WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text])))))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decision_rapid_roles",
+    "policyname": "Users can view decision RAPID roles",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM decisions d\n  WHERE ((d.id = decision_rapid_roles.decision_id) AND (d.organization_id IN ( SELECT u.organization_id\n           FROM users u\n          WHERE (u.id = (auth.uid())::text))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decisions",
+    "policyname": "Chairs can update decisions in their organization",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = (auth.uid())::text) AND (user_roles.organization_id = decisions.organization_id) AND (user_roles.role = 'chair'::text))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = (auth.uid())::text) AND (user_roles.organization_id = decisions.organization_id) AND (user_roles.role = 'chair'::text))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decisions",
+    "policyname": "Owners can delete their decisions",
+    "cmd": "DELETE",
+    "qual": "(owner_id = (auth.uid())::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decisions",
+    "policyname": "Owners can update their decisions",
+    "cmd": "UPDATE",
+    "qual": "(owner_id = (auth.uid())::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decisions",
+    "policyname": "Users can create decisions for their organization",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text))) AND (owner_id = (auth.uid())::text))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "decisions",
+    "policyname": "Users can view decisions of their organization",
+    "cmd": "SELECT",
+    "qual": "(organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documents",
+    "policyname": "Decision owners can add documents",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((EXISTS ( SELECT 1\n   FROM decisions d\n  WHERE ((d.id = documents.decision_id) AND (d.owner_id = (auth.uid())::text)))) AND (organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text))) AND (uploaded_by = (auth.uid())::text))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documents",
+    "policyname": "Decision owners can delete documents",
+    "cmd": "DELETE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM decisions d\n  WHERE ((d.id = documents.decision_id) AND (d.owner_id = (auth.uid())::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documents",
+    "policyname": "Users can create documents in their organization",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text)))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documents",
+    "policyname": "Users can view documents in their organization",
+    "cmd": "SELECT",
+    "qual": "(organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documents",
+    "policyname": "Users can view documents of their org decisions",
+    "cmd": "SELECT",
+    "qual": "(organization_id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "initiatives",
+    "policyname": "Chair/Admin manage all initiatives",
+    "cmd": "UPDATE",
+    "qual": "((org_id = get_auth_user_org_id()) AND (EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = (auth.uid())::text) AND (user_roles.organization_id = initiatives.org_id) AND (user_roles.role = ANY (ARRAY['chair'::text, 'admin'::text]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "initiatives",
+    "policyname": "Propose initiatives",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(org_id = get_auth_user_org_id())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "initiatives",
+    "policyname": "Update own proposed initiatives",
+    "cmd": "UPDATE",
+    "qual": "((org_id = get_auth_user_org_id()) AND (owner_id = (auth.uid())::text) AND (status = 'proposed'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "initiatives",
+    "policyname": "View initiatives",
+    "cmd": "SELECT",
+    "qual": "(org_id = get_auth_user_org_id())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Allow anonymous inserts for leads",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Allow anonymous update to lead file_url",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Allow authenticated read for leads",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Public insert leads",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "license_transactions",
+    "policyname": "Admins can manage license_transactions",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_roles ur\n  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "meeting_attendees",
+    "policyname": "Admins can manage meeting attendees",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM meetings m\n  WHERE ((m.id = meeting_attendees.meeting_id) AND (m.organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1\n           FROM user_roles ur\n          WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "meeting_attendees",
+    "policyname": "Users can view meeting attendees",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM meetings m\n  WHERE ((m.id = meeting_attendees.meeting_id) AND (m.organization_id = get_auth_org_id()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "meeting_groups",
+    "policyname": "Admins can manage meeting groups",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_roles ur\n  WHERE (((ur.user_id)::uuid = auth.uid()) AND ((ur.organization_id)::uuid = (meeting_groups.organization_id)::uuid) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "meeting_groups",
+    "policyname": "Users can view org meeting groups",
+    "cmd": "SELECT",
+    "qual": "(organization_id IN ( SELECT u.organization_id\n   FROM users u\n  WHERE (u.id = (auth.uid())::text)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "meetings",
+    "policyname": "Admins can manage meetings",
+    "cmd": "ALL",
+    "qual": "((organization_id = get_auth_org_id()) AND (EXISTS ( SELECT 1\n   FROM user_roles ur\n  WHERE ((ur.user_id = (auth.uid())::text) AND (ur.role = ANY (ARRAY['admin'::text, 'chair'::text]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "meetings",
+    "policyname": "Users can view org meetings",
+    "cmd": "SELECT",
+    "qual": "(organization_id = get_auth_org_id())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "Users can view their own organization",
+    "cmd": "SELECT",
+    "qual": "((id IN ( SELECT user_roles.organization_id\n   FROM user_roles\n  WHERE (user_roles.user_id = (auth.uid())::text))) OR (id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "admins_update_org",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE (((user_roles.user_id)::uuid = auth.uid()) AND ((user_roles.organization_id)::uuid = (organizations.id)::uuid) AND (user_roles.role = ANY (ARRAY['admin'::text, 'chair'::text])))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE (((user_roles.user_id)::uuid = auth.uid()) AND ((user_roles.organization_id)::uuid = (organizations.id)::uuid) AND (user_roles.role = ANY (ARRAY['admin'::text, 'chair'::text])))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "orgs_read_own",
+    "cmd": "SELECT",
+    "qual": "(id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "select_own_org",
+    "cmd": "SELECT",
+    "qual": "(id IN ( SELECT users.organization_id\n   FROM users\n  WHERE (users.id = (auth.uid())::text)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organizations",
+    "policyname": "signup_insert_org",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "stakeholders",
+    "policyname": "Decision owners can add stakeholders",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(EXISTS ( SELECT 1\n   FROM decisions d\n  WHERE ((d.id = stakeholders.decision_id) AND (d.owner_id = (auth.uid())::text))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "stakeholders",
+    "policyname": "Decision owners can remove stakeholders",
+    "cmd": "DELETE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM decisions d\n  WHERE ((d.id = stakeholders.decision_id) AND (d.owner_id = (auth.uid())::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "stakeholders",
+    "policyname": "Users can view stakeholders of their org decisions",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM (decisions d\n     JOIN users u ON ((u.organization_id = d.organization_id)))\n  WHERE ((d.id = stakeholders.decision_id) AND (u.id = (auth.uid())::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "strategic_ledger",
+    "policyname": "Append to ledger",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(org_id = get_auth_user_org_id())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "strategic_ledger",
+    "policyname": "View ledger",
+    "cmd": "SELECT",
+    "qual": "(org_id = get_auth_user_org_id())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "strategic_pillars",
+    "policyname": "Manage strategic pillars",
+    "cmd": "ALL",
+    "qual": "((org_id = get_auth_user_org_id()) AND (EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = (auth.uid())::text) AND (user_roles.organization_id = strategic_pillars.org_id) AND (user_roles.role = ANY (ARRAY['chair'::text, 'admin'::text]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "strategic_pillars",
+    "policyname": "View strategic pillars",
+    "cmd": "SELECT",
+    "qual": "(org_id = get_auth_user_org_id())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "admins_delete_org_roles",
+    "cmd": "DELETE",
+    "qual": "is_org_admin(organization_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "admins_update_org_roles",
+    "cmd": "UPDATE",
+    "qual": "is_org_admin(organization_id)",
+    "with_check": "is_org_admin(organization_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "roles_read_org",
+    "cmd": "SELECT",
+    "qual": "(organization_id = get_auth_user_org_id_safe())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_roles",
+    "policyname": "roles_read_own",
+    "cmd": "SELECT",
+    "qual": "(user_id = (auth.uid())::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "Users can insert their own user record",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((auth.uid())::text = id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "Users can update their own user record",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid())::text = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "users_read_org",
+    "cmd": "SELECT",
+    "qual": "(organization_id = get_auth_user_org_id_safe())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "users_read_own",
+    "cmd": "SELECT",
+    "qual": "(id = (auth.uid())::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "policyname": "users_update_own",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid())::text = id)",
+    "with_check": "((auth.uid())::text = id)"
+  }
+]
