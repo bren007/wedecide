@@ -1,15 +1,4 @@
-// @ts-nocheck
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.local' });
-
-// Use direct DB access for setup/teardown if needed, but try to use API for tests
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-// Remove global instance
-// const supabase = createClient(supabaseUrl, supabaseKey);
+import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv } from './helpers/setup';
 
 // Test Data
 const TEST_ORG_NAME = 'Admin Test Org ' + Date.now();
@@ -21,15 +10,19 @@ describe('Admin Functionality', () => {
     let orgId: string;
     let memberId: string;
     let memberEmail: string;
-    let supabase: any; // Type as needed, 'any' for quick fix or import specific type
+    let supabase: any;
+    let pgClient: any = null;
 
     beforeAll(async () => {
+        if (!hasRequiredEnv()) return;
+        pgClient = await tryCreatePgClient();
+
         // Create fresh client
-        supabase = createClient(supabaseUrl, supabaseKey);
+        supabase = createTestSupabaseClient();
         await supabase.auth.signOut();
 
         // 1. Create a fresh Admin User
-        const adminEmail = `admin_test_${Date.now()}@example.com`;
+        const adminEmail = `admin_test_${Date.now()}@test.alturagov.com`;
         const adminPassword = 'password123';
 
         const { data: adminAuth, error: adminError } = await supabase.auth.signUp({
@@ -95,7 +88,7 @@ describe('Admin Functionality', () => {
         // We rely on the fact that the first user in an org is usually the Admin/Chair.
 
         // 4. Create a Secondary "Member" User for role testing
-        memberEmail = `member_test_${Date.now()}@example.com`;
+        memberEmail = `member_test_${Date.now()}@test.alturagov.com`;
         const { data: memberAuth, error: memberError } = await supabase.auth.signUp({
             email: memberEmail,
             password: adminPassword,

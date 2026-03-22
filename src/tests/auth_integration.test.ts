@@ -1,34 +1,17 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
-import { Client } from 'pg';
-import * as dotenv from 'dotenv';
+import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv } from './helpers/setup';
 
-// Load env vars
-dotenv.config({ path: '.env.local' });
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const DB_CONNECTION_STRING = process.env.DATABASE_URL || process.env.DIRECT_URL;
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !DB_CONNECTION_STRING) {
-    throw new Error('Missing environment variables. Check .env.local');
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const pgClient = new Client({
-    connectionString: DB_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false }
-});
-
-const TEST_EMAIL = `auto-test-${Date.now()}@example.com`;
+const TEST_EMAIL = `auto-test-${Date.now()}@test.alturagov.com`;
 const TEST_PASSWORD = 'Password123!';
 const TEST_ORG_NAME = 'Automated Test Org';
 const TEST_ORG_SLUG = `auto-org-${Date.now()}`;
 
 describe('Auth & Signup Integration Flow', () => {
+    let pgClient: any = null;
+    const supabase = createTestSupabaseClient();
 
     beforeAll(async () => {
-        await pgClient.connect();
+        if (!hasRequiredEnv()) return;
+        pgClient = await tryCreatePgClient();
     });
 
     afterAll(async () => {

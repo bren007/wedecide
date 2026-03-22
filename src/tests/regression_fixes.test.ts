@@ -121,7 +121,7 @@ describe('Regression Tests: Bug Fixes', () => {
 
     describe('Validation Logic (New Fixes)', () => {
         it('should validate emails correctly', () => {
-            expect(isValidEmail('test@example.com')).toBe(true);
+            expect(isValidEmail('test@test.alturagov.com')).toBe(true);
             expect(isValidEmail('test.name+alias@sub.domain.org')).toBe(true);
             expect(isValidEmail('invalid-email')).toBe(false);
             expect(isValidEmail('test@example')).toBe(false);
@@ -139,8 +139,8 @@ describe('Regression Tests: Bug Fixes', () => {
     describe('Capture Logic (Data Persistence)', () => {
         it('should handle both internal and external stakeholders for DB insertion', () => {
             const initialPeople = [
-                { userId: 'user-123', name: 'Internal User', email: 'internal@example.com' },
-                { name: 'External User', email: 'external@example.com' }
+                { userId: 'user-123', name: 'Internal User', email: 'internal@test.alturagov.com' },
+                { name: 'External User', email: 'external@test.alturagov.com' }
             ];
 
             // Simulate DecisionCreatePage/EditPage processing
@@ -153,7 +153,7 @@ describe('Regression Tests: Bug Fixes', () => {
             expect(processed[0].user_id).toBe('user-123');
             expect(processed[1].user_id).toBeNull();
             expect(processed[1].name).toBe('External User');
-            expect(processed[1].email).toBe('external@example.com');
+            expect(processed[1].email).toBe('external@test.alturagov.com');
         });
     });
 });

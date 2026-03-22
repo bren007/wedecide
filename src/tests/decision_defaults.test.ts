@@ -28,7 +28,7 @@ describe.skip('Decision Creation & Schema Defaults', () => {
         await client.query(`INSERT INTO organizations (id, name, slug) VALUES ($1, 'Test Org Defaults', $2)`, [orgId, `test-defaults-${randomUUID()}`]);
 
         // Create User
-        await client.query(`INSERT INTO users (id, email, name, organization_id) VALUES ($1, $2, 'Test User', $3)`, [userId, `test-defaults-${randomUUID()}@example.com`, orgId]);
+        await client.query(`INSERT INTO users (id, email, name, organization_id) VALUES ($1, $2, 'Test User', $3)`, [userId, `test-defaults-${randomUUID()}@test.alturagov.com`, orgId]);
     });
 
     afterAll(async () => {
