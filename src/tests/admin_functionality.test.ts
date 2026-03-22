@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv } from './helpers/setup';
 
 // Test Data

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, SUPABASE_URL, SUPABASE_ANON_KEY } from './helpers/setup';
 
 const TEST_EMAIL = `meeting-test-${Date.now()}@test.alturagov.com`;
