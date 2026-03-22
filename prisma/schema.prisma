@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,81 +7,77 @@ datasource db {
 }
 
 model Organization {
-  id                  String   @id @default(uuid())
+  id                  String         @id @default(uuid())
   name                String
-  slug                String   @unique
-  subscription_tier   String   @default("free")
-  subscription_status String   @default("active")
-  max_users           Int      @default(5)
-  max_decisions       Int      @default(10)
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
-
-  users          User[]
-  decisions      Decision[]
-  documents      Document[]
-  user_roles     UserRole[]
-  meeting_groups MeetingGroup[]
-  meetings       Meeting[]
+  slug                String         @unique
+  subscription_tier   String         @default("free")
+  subscription_status String         @default("active")
+  max_users           Int            @default(5)
+  max_decisions       Int            @default(10)
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @updatedAt
+  decisions           Decision[]
+  documents           Document[]
+  meeting_groups      MeetingGroup[]
+  meetings            Meeting[]
+  user_roles          UserRole[]
+  users               User[]
 
   @@map("organizations")
 }
 
 model User {
-  id              String   @id @default(uuid())
-  email           String   @unique
+  id              String              @id @default(uuid())
+  email           String              @unique
   name            String
   organization_id String
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-
-  organization Organization        @relation(fields: [organization_id], references: [id])
-  roles        UserRole[]
-  decisions    Decision[]
-  documents    Document[]
-  stakeholders Stakeholder[]
-  feedback     DecisionFeedback[]
-  rapid_roles  DecisionRapidRole[]
-  meetings     MeetingAttendee[]
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+  feedback        DecisionFeedback[]
+  rapid_roles     DecisionRapidRole[]
+  decisions       Decision[]
+  documents       Document[]
+  meetings        MeetingAttendee[]
+  stakeholders    Stakeholder[]
+  roles           UserRole[]
+  organization    Organization        @relation(fields: [organization_id], references: [id])
 
   @@index([email])
   @@map("users")
 }
 
 model UserRole {
-  id              String   @id @default(uuid())
+  id              String       @id @default(uuid())
   user_id         String
   organization_id String
-  role            String   // chair, admin, member, secretary
-  created_at      DateTime @default(now())
-
-  user         User         @relation(fields: [user_id], references: [id])
-  organization Organization @relation(fields: [organization_id], references: [id])
+  role            String
+  created_at      DateTime     @default(now())
+  organization    Organization @relation(fields: [organization_id], references: [id])
+  user            User         @relation(fields: [user_id], references: [id])
 
   @@unique([user_id, organization_id, role])
   @@map("user_roles")
 }
 
 model Decision {
-  id                 String   @id @default(uuid())
+  id                 String              @id @default(uuid())
   title              String
   description        String?
-  status             String   @default("draft") // draft, submitted, active, completed, rejected
-  decision_type      String?  // approve, note
-  reversibility_type String?  // type1_irreversible, type2_reversible
+  status             String              @default("draft")
   owner_id           String
   organization_id    String
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-
-  owner        User                  @relation(fields: [owner_id], references: [id])
-  organization Organization          @relation(fields: [organization_id], references: [id])
-  stakeholders Stakeholder[]
-  documents    Document[]
-  feedback     DecisionFeedback[]
-  rapid_roles  DecisionRapidRole[]
-  agenda_item_id String?
-  agenda_item    AgendaItem?   @relation("AgendaDecision", fields: [agenda_item_id], references: [id])
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  agenda_item_id     String?
+  decision_type      String?
+  reversibility_type String?
+  feedback           DecisionFeedback[]
+  rapid_roles        DecisionRapidRole[]
+  agenda_item        AgendaItem?         @relation("AgendaDecision", fields: [agenda_item_id], references: [id])
+  organization       Organization        @relation(fields: [organization_id], references: [id])
+  owner              User                @relation(fields: [owner_id], references: [id])
+  documents          Document[]
+  stakeholders       Stakeholder[]
 
   @@map("decisions")
 }
@@ -92,12 +85,11 @@ model Decision {
 model DecisionFeedback {
   id          String   @id @default(uuid())
   decision_id String
-  user_id     String   // The chair/reviewer who gave feedback
+  user_id     String
   content     String
   created_at  DateTime @default(now())
-
-  decision Decision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [user_id], references: [id])
+  decision    Decision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [user_id], references: [id])
 
   @@map("decision_feedback")
 }
@@ -108,115 +100,108 @@ model Stakeholder {
   email       String
   name        String
   created_at  DateTime @default(now())
-
-  decision Decision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
-  user     User?    @relation(fields: [user_id], references: [id])
-  user_id  String?
+  user_id     String?
+  decision    Decision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [user_id], references: [id])
 
   @@map("stakeholders")
 }
 
 model Document {
-  id                     String   @id @default(uuid())
-  decision_id            String
-  uploaded_by            String
-  organization_id        String
-  name                   String
-  type                   String   // google_docs, google_sheets, m365_word, m365_excel, pdf, url
-  url                    String
-  file_size              Int?
-  mime_type              String?
-  description            String?
-  is_part_of_meeting_pack Boolean  @default(false)
-  created_at             DateTime @default(now())
-  updated_at             DateTime @updatedAt
-
-  decision     Decision     @relation(fields: [decision_id], references: [id], onDelete: Cascade)
-  uploader     User         @relation(fields: [uploaded_by], references: [id])
-  organization Organization @relation(fields: [organization_id], references: [id])
+  id                      String       @id @default(uuid())
+  decision_id             String
+  uploaded_by             String
+  organization_id         String
+  name                    String
+  type                    String
+  url                     String
+  file_size               Int?
+  mime_type               String?
+  description             String?
+  is_part_of_meeting_pack Boolean      @default(false)
+  created_at              DateTime     @default(now())
+  updated_at              DateTime     @updatedAt
+  decision                Decision     @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  organization            Organization @relation(fields: [organization_id], references: [id])
+  uploader                User         @relation(fields: [uploaded_by], references: [id])
 
   @@map("documents")
 }
 
 model MeetingGroup {
-  id              String   @id @default(uuid())
+  id              String              @id @default(uuid())
   organization_id String
   name            String
   description     String?
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-
-  organization Organization        @relation(fields: [organization_id], references: [id])
-  rapid_roles  DecisionRapidRole[]
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+  rapid_roles     DecisionRapidRole[]
+  organization    Organization        @relation(fields: [organization_id], references: [id])
 
   @@map("meeting_groups")
 }
 
 model DecisionRapidRole {
-  id               String   @id @default(uuid())
+  id               String        @id @default(uuid())
   decision_id      String
-  role_type        String   // recommend, agree, perform, input, decide
+  role_type        String
   user_id          String?
   external_name    String?
   external_role    String?
   meeting_group_id String?
-  created_at       DateTime @default(now())
-
-  decision      Decision      @relation(fields: [decision_id], references: [id], onDelete: Cascade)
-  user          User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  meeting_group MeetingGroup? @relation(fields: [meeting_group_id], references: [id], onDelete: SetNull)
+  created_at       DateTime      @default(now())
+  decision         Decision      @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  meeting_group    MeetingGroup? @relation(fields: [meeting_group_id], references: [id])
+  user             User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("decision_rapid_roles")
 }
 
 model Meeting {
-  id              String   @id @default(uuid())
+  id              String            @id @default(uuid())
   organization_id String
   title           String
   description     String?
-  scheduled_at    DateTime @default(now())
-  started_at      DateTime?
-  ended_at        DateTime?
+  scheduled_at    DateTime          @default(now())
+  location        String?
+  status          String            @default("scheduled")
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
   snapshot_start  Json?
   snapshot_end    Json?
-  location        String?
-  status          String   @default("scheduled") // scheduled, in_progress, completed, cancelled
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  started_at      DateTime?
+  ended_at        DateTime?
+  agenda_items    AgendaItem[]
+  attendees       MeetingAttendee[]
+  organization    Organization      @relation(fields: [organization_id], references: [id])
 
-  organization   Organization      @relation(fields: [organization_id], references: [id])
-  agenda_items   AgendaItem[]
-  attendees      MeetingAttendee[]
-  
   @@map("meetings")
 }
 
 model AgendaItem {
-  id          String   @id @default(uuid())
-  meeting_id  String
-  title       String
-  description String?
-  notes       String?  // For minutes
-  order_index Int      @default(0)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id               String     @id @default(uuid())
+  meeting_id       String
+  title            String
+  description      String?
+  notes            String?
+  order_index      Int        @default(0)
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+  meeting          Meeting    @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  linked_decisions Decision[] @relation("AgendaDecision")
 
-  meeting          Meeting            @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
-  linked_decisions Decision[]         @relation("AgendaDecision")
-  
   @@map("agenda_items")
 }
 
 model MeetingAttendee {
-  id          String   @id @default(uuid())
-  meeting_id  String
-  user_id     String
-  status      String   @default("invited") // invited, accepted, declined, present, absent
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-
-  meeting Meeting @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  meeting_id String
+  user_id    String
+  status     String   @default("invited")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  meeting    Meeting  @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([meeting_id, user_id])
   @@map("meeting_attendees")

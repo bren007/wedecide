@@ -29,6 +29,13 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Integration tests
+        run: npm run test:int
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Build
         run: npx vite build
 
