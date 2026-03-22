@@ -33,7 +33,6 @@ describe('Admin Functionality', () => {
             }
         });
         if (adminError) throw adminError;
-        if (adminError) throw adminError;
         adminId = adminAuth.user!.id;
 
         // Login to get token
@@ -47,16 +46,11 @@ describe('Admin Functionality', () => {
         }
         adminToken = loginData.session!.access_token;
 
-        // Create explict client to avoid any session persistence issues
-        supabase = createClient(supabaseUrl, supabaseKey, {
-            global: {
-                headers: {
-                    Authorization: `Bearer ${adminToken}`
-                }
-            },
-            auth: {
-                persistSession: false // Disable persistence
-            }
+        // Re-initialize authenticated client
+        supabase = createTestSupabaseClient();
+        await supabase.auth.setSession({
+            access_token: adminToken,
+            refresh_token: loginData.session!.refresh_token
         });
 
         // 2. Manually Create Organization & Profile via RPC
@@ -110,6 +104,12 @@ describe('Admin Functionality', () => {
         // Because this is a test running against a real Supabase instance (staging/dev), 
         // we might not have permissions to move users between orgs easily with Anon key.
         // WORKAROUND: We will test "Meeting Groups" and "Org Settings" which only depend on the Admin.
+    });
+
+    afterAll(async () => {
+        if (pgClient) {
+            try { await pgClient.end(); } catch { /* ignore */ }
+        }
     });
 
     it('should update organization name', async () => {

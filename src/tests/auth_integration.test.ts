@@ -1,4 +1,6 @@
-import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv } from './helpers/setup';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
+import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, SUPABASE_URL, SUPABASE_ANON_KEY } from './helpers/setup';
 
 const TEST_EMAIL = `auto-test-${Date.now()}@test.alturagov.com`;
 const TEST_PASSWORD = 'Password123!';
@@ -39,7 +41,9 @@ describe('Auth & Signup Integration Flow', () => {
         } catch (e) {
             console.error('⚠️ Cleanup failed (non-critical for dev):', e);
         } finally {
-            await pgClient.end();
+            if (pgClient) {
+                await pgClient.end();
+            }
         }
     });
 

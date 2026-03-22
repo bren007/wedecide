@@ -1,4 +1,4 @@
-import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv } from './helpers/setup';
+import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, SUPABASE_URL, SUPABASE_ANON_KEY } from './helpers/setup';
 
 const TEST_EMAIL = `meeting-test-${Date.now()}@test.alturagov.com`;
 const TEST_PASSWORD = 'Password123!';
@@ -78,7 +78,9 @@ describe('Meetings & Agenda Integration', () => {
         } catch (e) {
             console.error('⚠️ Cleanup failed:', e);
         } finally {
-            await pgClient.end();
+            if (pgClient) {
+                await pgClient.end();
+            }
         }
     });
 
