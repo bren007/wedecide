@@ -9,7 +9,6 @@ describe('Admin Functionality', () => {
     let adminToken: string;
     let adminId: string;
     let orgId: string;
-    let memberId: string;
     let memberEmail: string;
     let supabase: any;
     let pgClient: any = null;
@@ -84,7 +83,7 @@ describe('Admin Functionality', () => {
 
         // 4. Create a Secondary "Member" User for role testing
         memberEmail = `member_test_${Date.now()}@test.alturagov.com`;
-        const { data: memberAuth, error: memberError } = await supabase.auth.signUp({
+        const { error: memberError } = await supabase.auth.signUp({
             email: memberEmail,
             password: adminPassword,
             options: { data: { name: 'Test Member' } }
@@ -153,7 +152,7 @@ describe('Admin Functionality', () => {
 
         expect(error).toBeNull();
         expect(data!.length).toBeGreaterThan(0);
-        expect(data!.find(g => g.name === BOARD_GROUP_NAME)).toBeDefined();
+        expect(data!.find((g: any) => g.name === BOARD_GROUP_NAME)).toBeDefined();
     });
 
     it('should delete a meeting group', async () => {
