@@ -48,6 +48,7 @@ export function createAuthenticatedClient(accessToken: string): SupabaseClient {
 export async function createPgClient(): Promise<Client> {
     const client = new Client({
         connectionString: DB_CONNECTION_STRING,
+        connectionTimeoutMillis: 5000, // Fail fast — don't hang if host is unreachable
         // pgbouncer=true is already in the URL for transaction mode
     });
     await client.connect();
