@@ -13,7 +13,7 @@ describe('Meetings & Agenda Integration', () => {
     let meetingId: string;
     let agendaItemId: string;
     let decisionId: string;
-    let supabase: any;
+    let supabase: any = createTestSupabaseClient(); // Initialize early so it's never undefined
     let pgClient: any = null;
 
     beforeAll(async () => {
@@ -44,7 +44,7 @@ describe('Meetings & Agenda Integration', () => {
         organizationId = rpcData.organization_id;
 
         // Sign in to get session for RLS tests
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        const { data: loginData, error: loginError } = await authClient.auth.signInWithPassword({
             email: TEST_EMAIL,
             password: TEST_PASSWORD,
         });
