@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
+import { Footer } from '../Footer';
 import './PublicLayout.css';
 
 export const PublicLayout: React.FC = () => {
@@ -12,6 +13,7 @@ export const PublicLayout: React.FC = () => {
             <main className="public-layout-content">
                 <Outlet />
             </main>
+            <Footer />
         </div>
     );
 };

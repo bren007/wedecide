@@ -30,6 +30,7 @@ import { PricingPage } from './pages/PricingPage';
 import { MissionPage } from './pages/MissionPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
+import { NDAPage } from './pages/NDAPage';
 import './App.css';
 import { LoadingSpinner } from './components/Loading';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -69,6 +70,7 @@ function AppContent() {
               <Route path="/mission" element={<MissionPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsPage />} />
+              <Route path="/nda" element={<NDAPage />} />
             </Route>
 
             <Route

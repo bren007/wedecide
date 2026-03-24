@@ -1,0 +1,67 @@
+/* Footer Section Styles */
+.footer-section {
+    padding: 4rem 2rem;
+    background-color: var(--slate-950);
+    border-top: 1px solid var(--border-dark);
+    margin-top: 2rem;
+}
+
+.footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .footer-container {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+    }
+}
+
+.footer-brand .brand-text {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #fff;
+    font-weight: 700;
+}
+
+.footer-copy {
+    color: var(--slate-400);
+    font-size: 0.875rem;
+}
+
+.footer-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.footer-col-title {
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.footer-link {
+    color: var(--slate-400);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+}
+
+.footer-link:hover {
+    color: var(--action-blue);
+}

@@ -35,7 +35,7 @@ jobs:
         run: npm run test:unit
 
       - name: Integration tests
-        if: env.VITE_SUPABASE_URL != ''
+        if: ${{ env.VITE_SUPABASE_URL != '' }}
         run: npm run test:int
 
       - name: Build

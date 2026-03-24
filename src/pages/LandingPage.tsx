@@ -53,10 +53,10 @@ export const LandingPage: React.FC = () => {
                 onClick={() => navigate('/audit')}
                 className="bg-action-blue text-white font-bold py-4 px-10 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:shadow-[0_0_35px_rgba(59,130,246,0.7)] hover:-translate-y-1 transition-all flex items-center gap-3 text-lg mb-3"
               >
-                Get Your Strategic Capacity Audit <ArrowRight size={20} />
+                Begin Your Strategic Capacity Audit <ArrowRight size={20} />
               </button>
-              <p className="text-sm text-slate-400 font-medium max-w-lg text-center">
-                A fixed-fee diagnostic that proves what your organisation can deliver — and gives you the evidence to act on it.
+              <p className="text-sm text-slate-300 font-medium max-w-lg text-center leading-relaxed">
+                A fixed-fee <strong>$1,950 NZD</strong> diagnostic that identifies your focus limit — and gives you the evidence to defend it.
               </p>
             </div>
           </div>
@@ -168,32 +168,50 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer Section */}
-      <footer className="footer-section">
-        <div className="footer-container">
-          <div className="footer-brand">
-            <span className="brand-text">AlturaGov</span>
-            <p className="footer-copy">© 2026 AlturaGov. All rights reserved.</p>
-          </div>
+      {/* Mission & Founding Authority Section */}
+      <section className="mission-preview-section py-20 px-4">
+        <div className="container max-w-6xl mx-auto">
+          <div className="mission-content-wrapper bg-slate-900/40 border border-slate-700/50 rounded-2xl p-8 lg:p-12 shadow-2xl backdrop-blur-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="fade-in">
+                <span className="text-action-blue font-bold uppercase tracking-widest text-sm mb-4 block">The Mission</span>
+                <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight">
+                  Restoring Integrity to Public Sector Delivery.
+                </h2>
+                <div className="space-y-4 text-slate-300 leading-relaxed">
+                  <p>
+                    AlturaGov wasn't built to find "efficiencies." It was built to solve the fundamental crisis of the modern public sector: <strong>Strategic Drift.</strong>
+                  </p>
+                  <p>
+                    When agencies over-commit, focus dilutes, delivery slows, and institutional trust erodes. We provide the tools to anchor your portfolio to the physical limits of your capacity.
+                  </p>
+                  <Link to="/mission" className="inline-flex items-center text-action-blue font-bold hover:gap-2 transition-all mt-4 border-b border-action-blue/30 pb-1">
+                    Read our full mission <ArrowRight size={18} className="ml-2" />
+                  </Link>
+                </div>
+              </div>
 
-          <div className="footer-links">
-            <div className="footer-col">
-              <span className="footer-col-title">Product</span>
-              <Link to="/pricing" className="footer-link">Pricing</Link>
-              <Link to="/audit" className="footer-link">Strategic Audit</Link>
-            </div>
-            <div className="footer-col">
-              <span className="footer-col-title">Company</span>
-              <Link to="/mission" className="footer-link">Our Mission</Link>
-            </div>
-            <div className="footer-col">
-              <span className="footer-col-title">Legal</span>
-              <Link to="/privacy" className="footer-link">Privacy Policy</Link>
-              <Link to="/terms" className="footer-link">Terms of Service</Link>
+              <div className="founder-card bg-slate-950/50 border border-slate-700/30 p-8 rounded-xl relative overflow-hidden shadow-inner group transition-all duration-300 hover:border-slate-600/50">
+                <div className="absolute -top-10 -right-10 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <ShieldCheck size={200} />
+                </div>
+                <p className="text-lg italic text-slate-200 mb-6 relative z-10 leading-relaxed">
+                  "Government agencies don't lack funding, what they do lack is focus. AlturaGov provides the evidence to say 'No' to the noise, and 'Yes' to strategic delivery."
+                </p>
+                <div className="flex items-center gap-4 relative z-10 border-t border-slate-800 pt-6">
+                  <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-400">
+                    BR
+                  </div>
+                  <div>
+                    <p className="font-bold text-white">Blair Renwick</p>
+                    <p className="text-slate-400 text-sm italic">Founding Authority, AlturaGov</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </footer>
+      </section>
     </div>
   );
 };

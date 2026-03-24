@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
 import { Activity, AlertTriangle, ArrowRight, CheckCircle, Database, ShieldCheck, DollarSign } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 type Lead = any; // simplified for dashboard
 
 export const PulseDashboardPage: React.FC = () => {
     const { isAdmin } = useAuth();
     const [leads, setLeads] = useState<Lead[]>([]);
+    const [invoiceRequests, setInvoiceRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -16,13 +17,22 @@ export const PulseDashboardPage: React.FC = () => {
 
     const fetchTelemtry = async () => {
         setLoading(true);
-        const { data, error } = await supabase
+        const { data: leadData, error: leadError } = await supabase
             .from('leads')
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (!error && data) {
-            setLeads(data);
+        if (!leadError && leadData) {
+            setLeads(leadData);
+        }
+
+        const { data: invData, error: invError } = await supabase
+            .from('invoice_requests' as any)
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (!invError && invData) {
+            setInvoiceRequests(invData);
         }
         setLoading(false);
     };
@@ -199,6 +209,57 @@ export const PulseDashboardPage: React.FC = () => {
                                             </div>
                                             <button className="bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg px-4 py-2 text-sm font-bold text-slate-200 transition-colors">
                                                 Email Nudge
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden mt-8">
+                    <div className="bg-slate-800/50 border-b border-slate-700 p-4 px-6 flex justify-between items-center">
+                        <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <DollarSign className="text-blue-500" size={20} />
+                            Procurement: Manual Invoice Requests
+                        </h3>
+                        <span className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded text-sm font-bold border border-blue-500/20">
+                            {invoiceRequests.length} Pending
+                        </span>
+                    </div>
+
+                    <div className="p-0">
+                        {invoiceRequests.length === 0 ? (
+                            <div className="p-8 text-center text-slate-400">
+                                <p className="font-medium">No pending invoice requests.</p>
+                            </div>
+                        ) : (
+                            <ul className="divide-y divide-slate-700">
+                                {invoiceRequests.map(req => (
+                                    <li key={req.id} className="p-6 flex flex-col lg:flex-row justify-between lg:items-center hover:bg-slate-700/30 transition-colors gap-4">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h4 className="text-lg font-bold text-white">{req.agency_name}</h4>
+                                                <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-300 border border-slate-600 uppercase">
+                                                    {req.tier.replace('-', ' ')}
+                                                </span>
+                                            </div>
+                                            <p className="text-slate-400 text-sm">{req.requester_name} ({req.requester_email})</p>
+                                            {req.po_number && <p className="text-xs text-blue-400 mt-1 font-mono">PO: {req.po_number}</p>}
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <p className="text-slate-400 text-xs mb-1 uppercase tracking-wider font-bold">Status</p>
+                                                <p className={`font-bold ${req.status === 'pending' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                                    {req.status.toUpperCase()}
+                                                </p>
+                                            </div>
+                                            <button 
+                                                disabled={req.status === 'activated'}
+                                                className={`rounded-lg px-4 py-2 text-sm font-bold transition-all ${req.status === 'activated' ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20'}`}
+                                            >
+                                                {req.status === 'activated' ? 'Activated' : 'Activate Licence'}
                                             </button>
                                         </div>
                                     </li>

@@ -15,6 +15,7 @@ export const AuditFunnelPage: React.FC = () => {
         portfolioContextCount: '',
         painPoints: '',
         dataMinimisationAcknowledged: false,
+        aiProcessingConsented: false,
         ndaAccepted: false,
     });
 
@@ -36,7 +37,7 @@ export const AuditFunnelPage: React.FC = () => {
 
     const handleSubmitTrust = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.dataMinimisationAcknowledged || !formData.ndaAccepted) return;
+        if (!formData.dataMinimisationAcknowledged || !formData.aiProcessingConsented || !formData.ndaAccepted) return;
 
         setLoading(true);
         // Save initial lead to database
@@ -201,7 +202,7 @@ export const AuditFunnelPage: React.FC = () => {
                                 <h2 className="text-3xl font-extrabold text-white tracking-tight mb-2 flex items-center gap-3">
                                     <ShieldCheck className="text-green-400" size={32} /> Security & Trust
                                 </h2>
-                                <p className="text-slate-400">To maintain NZ Public Sector standards, please comply with our Data Minimization protocols before your session.</p>
+                                <p className="text-slate-400">To comply with New Zealand information security obligations and your agency's data classification requirements, please review our data minimisation protocols before proceeding.</p>
                             </div>
 
                             <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-6 mb-8">
@@ -235,7 +236,23 @@ export const AuditFunnelPage: React.FC = () => {
                                     </div>
                                     <div className="text-sm">
                                         <span className="block font-bold text-slate-200 mb-1">I acknowledge the Data Minimisation protocols</span>
-                                        <span className="text-slate-500">I will ensure the data brought to the Slot-Sync session has been scrubbed of sensitive PII.</span>
+                                        <span className="text-slate-500">I will ensure the data brought to the Slot-Sync session has been scrubbed of sensitive personally identifiable information.</span>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start gap-4 p-4 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800/30 transition-colors">
+                                    <div className="pt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            required
+                                            className="w-5 h-5 rounded border-slate-600 text-action-blue focus:ring-action-blue focus:ring-offset-slate-900 bg-slate-900"
+                                            checked={formData.aiProcessingConsented}
+                                            onChange={(e) => setFormData({ ...formData, aiProcessingConsented: e.target.checked })}
+                                        />
+                                    </div>
+                                    <div className="text-sm">
+                                        <span className="block font-bold text-slate-200 mb-1">I consent to AI-assisted processing</span>
+                                        <span className="text-slate-500">I understand that anonymised portfolio metadata will be processed by a zero-retention AI provider to generate the audit report. No data is used for model training.</span>
                                     </div>
                                 </label>
 
@@ -251,7 +268,7 @@ export const AuditFunnelPage: React.FC = () => {
                                     </div>
                                     <div className="text-sm">
                                         <span className="block font-bold text-slate-200 mb-1">I accept the AlturaGov Mutual NDA</span>
-                                        <span className="text-slate-500">I agree to the terms outlined in the <a href="#" target="_blank" className="text-blue-400 hover:underline" onClick={(e) => e.stopPropagation()}>Standard Mutual NDA</a> to protect both parties.</span>
+                                        <span className="text-slate-500">I agree to the terms outlined in the <a href="/nda" target="_blank" className="text-blue-400 hover:underline" onClick={(e) => e.stopPropagation()}>Standard Mutual NDA</a> to protect both parties.</span>
                                     </div>
                                 </label>
                             </div>
@@ -274,20 +291,20 @@ export const AuditFunnelPage: React.FC = () => {
                                 <h2 className="text-3xl font-extrabold text-white tracking-tight mb-6">
                                     What You're Commissioning
                                 </h2>
-                                <div className="space-y-6">
-                                    <div className="p-6 bg-slate-950/50 border border-slate-800 rounded-xl">
+                                <div className="space-y-3">
+                                    <div className="p-4 bg-slate-950/50 border border-slate-800 rounded-xl">
                                         <p className="text-slate-300 leading-relaxed">
                                             <strong className="text-white">What Your Audit Delivers:</strong> Based on your portfolio scope, AlturaGov will map your current initiative load against your organisation's realistic delivery capacity — producing an objective, quantified assessment of where your strategy is exposed.
                                         </p>
                                     </div>
-                                    <div className="p-6 bg-slate-950/50 border border-slate-800 rounded-xl">
+                                    <div className="p-4 bg-slate-950/50 border border-slate-800 rounded-xl">
                                         <p className="text-slate-300 leading-relaxed">
                                             You will receive a Strategic Capacity Report that identifies which programmes are structurally at risk, where capacity is being consumed by low-value work, and what your organisation can credibly commit to delivering.
                                         </p>
                                     </div>
-                                    <div className="p-6 bg-slate-950/50 border border-slate-800 rounded-xl">
+                                    <div className="p-4 bg-slate-950/50 border border-slate-800 rounded-xl">
                                         <p className="text-slate-300 leading-relaxed">
-                                            The process is straightforward. Once payment is confirmed, you'll schedule a 60-minute Slot-Sync Session. This is a focused working session — not a sales call — where we align on your portfolio inputs and agree the parameters of the assessment. Your report follows within five working days. Everything produced is covered by the Mutual NDA you reviewed in the previous step.
+                                            The process is straightforward. Once payment is confirmed, you'll schedule a 60-minute Slot-Sync Session — a focused working session where we align on your portfolio inputs and agree the parameters of the assessment. Your report follows within five working days. Everything produced is covered by the Mutual NDA you reviewed in the previous step.
                                         </p>
                                     </div>
                                 </div>

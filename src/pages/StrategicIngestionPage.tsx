@@ -4,7 +4,7 @@ import Papa from 'papaparse';
 import { Button } from '../components/Button';
 import { supabase } from '../lib/supabase';
 import { StagingGrid, type StagingInitiative } from '../components/StagingGrid';
-import { Upload, FileUp, CheckCircle, AlertTriangle, Wand2 } from 'lucide-react';
+import { Upload, FileUp, CheckCircle, AlertTriangle, Wand2, Database } from 'lucide-react';
 import { useAIMapping } from '../hooks/useAIMapping';
 
 export const StrategicIngestionPage: React.FC = () => {
@@ -12,6 +12,8 @@ export const StrategicIngestionPage: React.FC = () => {
     const [uploading, setUploading] = useState(false);
     const [stagingData, setStagingData] = useState<StagingInitiative[]>([]);
     const [pillars, setPillars] = useState<{ id: string; title: string }[]>([]);
+    const [existingCount, setExistingCount] = useState<number | null>(null);
+    const [shouldOverwrite, setShouldOverwrite] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
 
     // AI Magic
@@ -22,11 +24,30 @@ export const StrategicIngestionPage: React.FC = () => {
     const [bulkFocus, setBulkFocus] = useState<number | ''>('');
 
     useEffect(() => {
-        const fetchPillars = async () => {
+        const fetchInitialData = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Get user's org
+            const { data: userData } = await supabase
+                .from('users' as any)
+                .select('organization_id')
+                .eq('id', user.id)
+                .single();
+            const orgId = (userData as any)?.organization_id;
+
+            if (orgId) {
+                const { count } = await supabase
+                    .from('initiatives' as any)
+                    .select('*', { count: 'exact', head: true })
+                    .eq('org_id', orgId);
+                setExistingCount(count);
+            }
+
             const { data } = await supabase.from('strategic_pillars' as any).select('id, title');
             if (data) setPillars(data as any);
         };
-        fetchPillars();
+        fetchInitialData();
     }, []);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,6 +201,15 @@ export const StrategicIngestionPage: React.FC = () => {
                 .single();
             const orgId = (userData as any)?.organization_id;
 
+            if (shouldOverwrite) {
+                setLogs(prev => [...prev, '⚠️ Overwrite mode active: Clearing existing ledger...']);
+                const { error: deleteError } = await supabase
+                    .from('initiatives' as any)
+                    .delete()
+                    .eq('org_id', orgId);
+                if (deleteError) throw new Error(`Could not clear ledger: ${deleteError.message}`);
+            }
+
             let imported = 0;
             let errors = 0;
 
@@ -283,13 +313,47 @@ export const StrategicIngestionPage: React.FC = () => {
                             onClick={handleImport}
                             disabled={!isValid || uploading || stagingData.length === 0}
                             isLoading={uploading}
-                            className="shadow-lg shadow-blue-500/20"
+                            className={`shadow-lg ${shouldOverwrite ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'shadow-blue-500/20'}`}
                         >
                             <CheckCircle size={16} className="mr-2" />
-                            Import to Ledger ({stagingData.length})
+                            {shouldOverwrite ? 'Overwrite Ledger' : `Import to Ledger (${stagingData.length})`}
                         </Button>
                     </div>
                 </header>
+
+                <div className="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-navy-800/80 p-4 rounded-lg border border-navy-700">
+                    <div className="flex gap-4">
+                        <div className="text-sm">
+                            <span className="text-slate-500 uppercase tracking-widest font-bold text-xs block mb-1">Current Ledger Status</span>
+                            <div className="flex items-center gap-2">
+                                <Database size={14} className="text-blue-400" />
+                                <span className="text-white font-medium">{existingCount !== null ? `${existingCount} Existing Initiatives` : 'Checking Ledger...'}</span>
+                            </div>
+                        </div>
+
+                        <div className="h-10 w-px bg-navy-600 mx-2 hidden md:block"></div>
+
+                        <div className="flex flex-col justify-center">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input 
+                                    type="checkbox" 
+                                    className="w-4 h-4 rounded border-navy-500 bg-navy-900 text-red-500 focus:ring-red-500 focus:ring-offset-navy-800"
+                                    checked={shouldOverwrite}
+                                    onChange={(e) => setShouldOverwrite(e.target.checked)}
+                                />
+                                <span className={`text-sm font-medium transition-colors ${shouldOverwrite ? 'text-red-400' : 'text-slate-400 group-hover:text-slate-300'}`}>
+                                    Overwrite existing ledger data
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {shouldOverwrite && (
+                        <div className="text-xs text-red-400 bg-red-400/10 px-3 py-1.5 rounded border border-red-400/20 flex items-center gap-2 animate-pulse">
+                            <AlertTriangle size={14} /> Warning: This will delete all current initiatives before importing.
+                        </div>
+                    )}
+                </div>
 
                 {stagingData.length > 0 && (
                     <div className="mb-6 flex justify-between items-center bg-navy-800/50 p-4 rounded-lg border border-navy-700">

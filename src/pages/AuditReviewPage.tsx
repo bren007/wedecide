@@ -367,7 +367,7 @@ export const AuditReviewPage: React.FC = () => {
                                 <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-8 text-center">
                                     <Loader2 className="animate-spin mb-4" size={48} />
                                     <p className="font-bold text-lg mb-2">Running AI Analysis Pipeline...</p>
-                                    <p className="text-sm">Agent 1 (Gemini 2.5 Pro) is building the structured analytical brief. Agent 2 (Claude) will rewrite it into executive prose.</p>
+                                    <p className="text-sm">Agent 1 (AI Context Engine) is building the structured analytical brief. Agent 2 (AI Editorial) will rewrite it into executive prose.</p>
                                 </div>
                             ) : draftData && draftAnalysis ? (
                                 /* Draft review editor */
