@@ -9,10 +9,11 @@ interface User {
   email: string;
   name: string;
   organization_id: string;
+  is_global_admin: boolean;
   roles: string[];
 }
 
-const PROFILE_CACHE_KEY = 'wedecide_profile_cache_v1';
+const PROFILE_CACHE_KEY = 'wedecide_profile_cache_v2';
 
 
 interface AuthContextType {
@@ -25,6 +26,7 @@ interface AuthContextType {
   hasRole: (role: string) => boolean;
   isChair: boolean;
   isAdmin: boolean;
+  isGlobalAdmin: boolean;
 }
 
 
@@ -91,7 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           Promise.resolve(
             supabase
               .from('users')
-              .select('id, email, name, organization_id')
+              .select('id, email, name, organization_id, is_global_admin')
               .eq('id', userId)
               .single()
           ),
@@ -509,6 +511,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     hasRole,
     isChair: hasRole('chair'),
     isAdmin: hasRole('admin') || hasRole('chair'), // Chair is always an admin by default UX
+    isGlobalAdmin: user?.is_global_admin || false,
   };
 
 

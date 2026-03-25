@@ -12,7 +12,7 @@ import {
   ChevronDown,
   User,
   Activity,
-  ShieldCheck,
+  Users,
   Menu,
   X
 } from 'lucide-react';
@@ -21,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 export const Navbar: React.FC = () => {
-  const { isAuthenticated, user, logout, isChair, isAdmin } = useAuth();
+  const { isAuthenticated, user, logout, isChair, isAdmin, isGlobalAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -181,33 +181,42 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Admin Zone (Invisible to Non-Admins) */}
-          {isAdmin && (
+          {/* Administration Zone */}
+          {(isAdmin || isGlobalAdmin) && (
             <div className="pt-4 border-t border-slate-800/50">
-              <h3 className="px-3 text-[10px] font-bold text-red-500/50 uppercase tracking-widest mb-3">System Admin</h3>
+              <h3 className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Administration</h3>
               <div className="space-y-1">
-                <Link
-                  to="/admin/audit-review"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/audit-review')
+                {/* Customer Admin Links */}
+                {isAdmin && (
+                  <>
+                    <Link
+                      to="/settings"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/settings')
+                        ? 'bg-blue-500/10 text-blue-400'
+                        : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                        }`}
+                    >
+                      <Users size={16} className="mr-3 flex-shrink-0" />
+                      Team & Governance
+                    </Link>
+                  </>
+                )}
+
+                {/* Global Admin Links */}
+                {isGlobalAdmin && (
+                  <Link
+                    to="/admin/pulse"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/pulse')
                       ? 'bg-red-500/10 text-red-400'
                       : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
-                    }`}
-                >
-                  <ShieldCheck size={16} className="mr-3 flex-shrink-0" />
-                  Audit Review
-                </Link>
-                <Link
-                  to="/admin/pulse"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/pulse')
-                      ? 'bg-red-500/10 text-red-400'
-                      : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
-                    }`}
-                >
-                  <Activity size={16} className="mr-3 flex-shrink-0" />
-                  Pulse Dashboard
-                </Link>
+                      }`}
+                  >
+                    <Activity size={16} className="mr-3 flex-shrink-0" />
+                    System Pulse
+                  </Link>
+                )}
               </div>
             </div>
           )}

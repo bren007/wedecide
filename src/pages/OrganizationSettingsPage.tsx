@@ -6,7 +6,7 @@ import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 
 import { LoadingSpinner } from '../components/Loading';
-import { Plus, Trash2, Save, CircleHelp, TriangleAlert } from 'lucide-react';
+import { Plus, Trash2, Save, CircleHelp, TriangleAlert, ShieldCheck } from 'lucide-react';
 
 interface Organization {
     id: string;
@@ -24,6 +24,16 @@ interface Member {
         name: string;
         email: string;
     }
+}
+
+interface PendingInvite {
+    id: string;
+    email: string;
+    role: string;
+    status: string;
+    expires_at: string;
+    token: string;
+    created_at: string;
 }
 
 interface MeetingGroup {
@@ -72,6 +82,7 @@ export const OrganizationSettingsPage: React.FC = () => {
     const [inviteRole, setInviteRole] = useState('member');
     const [inviteLoading, setInviteLoading] = useState(false);
     const [inviteLink, setInviteLink] = useState<string | null>(null);
+    const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
 
     useEffect(() => {
         if (user) {
@@ -139,6 +150,18 @@ export const OrganizationSettingsPage: React.FC = () => {
                     setMembers(membersWithDetails);
                 }
 
+                // 3b. Pending Invites
+                const { data: invitesData, error: invitesError } = await supabase
+                    .from('invitations')
+                    .select('*')
+                    .eq('organization_id', orgId)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (!invitesError && invitesData) {
+                    setPendingInvites(invitesData);
+                }
+
                 // 4. Meeting Groups
                 const { data: groupsData, error: groupsError } = await supabase
                     .from('meeting_groups')
@@ -183,19 +206,20 @@ export const OrganizationSettingsPage: React.FC = () => {
                 }
 
                 // 7. Governance: Current Load
-                const { data: initiatives } = await supabase
-                    .from('initiatives' as any)
-                    .select('focus_slots')
-                    .eq('org_id', orgId)
-                    .neq('status', 'completed')
-                    .neq('status', 'rejected')
-                    .neq('status', 'proposed'); // Actually we might only count active/approved ones, let's just count 'active' or 'approved'
+                // Only count initiatives that are actively drawing from capacity balance
+                try {
+                    const { data: initiatives } = await supabase
+                        .from('initiatives' as any)
+                        .select('focus_slots_required')
+                        .eq('org_id', orgId)
+                        .in('status', ['active', 'approved', 'on_hold', 'delayed']);
 
-                // For simplicity assuming active load includes any that are not rejected/completed.
-                // Wait, proposals aren't active yet. So let's exclude 'proposed' and 'draft' too if they exist.
-                if (initiatives) {
-                    const totalTokens = (initiatives as any[]).reduce((sum, init) => sum + (Number(init.focus_slots) || 0), 0);
-                    setCurrentLoad(totalTokens);
+                    if (initiatives) {
+                        const totalTokens = (initiatives as any[]).reduce((sum, init) => sum + (Number(init.focus_slots_required) || 0), 0);
+                        setCurrentLoad(totalTokens);
+                    }
+                } catch (loadErr) {
+                    console.error('Error loading current load:', loadErr);
                 }
             }
         } catch (error) {
@@ -824,20 +848,23 @@ export const OrganizationSettingsPage: React.FC = () => {
                                                     className="mb-4"
                                                 />
 
-                                                <div className="mb-6">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                                                    <select
-                                                        value={inviteRole}
-                                                        onChange={(e) => setInviteRole(e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    >
-                                                        <option value="member">Member</option>
-                                                        <option value="admin">Admin</option>
-                                                        <option value="chair">Chair</option>
-                                                        <option value="secretary">Secretary</option>
-                                                    </select>
-                                                </div>
-
+                                                 <div className="mb-6">
+                                                     <label className="block text-sm font-medium text-slate-400 mb-1">Role</label>
+                                                     <select
+                                                         value={inviteRole}
+                                                         onChange={(e) => setInviteRole(e.target.value)}
+                                                         className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-md text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                                                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
+                                                     >
+                                                         <option value="member" className="bg-slate-900">Member</option>
+                                                         <option value="admin" className="bg-slate-900">Admin</option>
+                                                         <option value="chair" className="bg-slate-900">Chair</option>
+                                                         <option value="secretary" className="bg-slate-900">Secretary</option>
+                                                     </select>
+                                                     <p className="mt-2 text-[10px] text-slate-500 italic">
+                                                         Note: The generated link will securely expire in 7 days. You will need to share it manually.
+                                                     </p>
+                                                 </div>
                                                 <div className="flex justify-end gap-3">
                                                     <Button
                                                         type="button"
@@ -856,22 +883,27 @@ export const OrganizationSettingsPage: React.FC = () => {
                                                 </div>
                                             </form>
                                         ) : (
-                                            <div className="space-y-4">
-                                                <div className="p-4 bg-green-50 rounded-md border border-green-200">
-                                                    <p className="text-sm text-green-800 mb-2 font-medium">Invitation Created!</p>
-                                                    <p className="text-xs text-green-600 mb-3">Share this link with the user to let them join your organization.</p>
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="text"
-                                                            readOnly
-                                                            value={inviteLink}
-                                                            className="flex-1 text-sm p-2 border border-gray-300 rounded bg-white text-gray-600 font-mono"
-                                                        />
-                                                        <Button type="button" variant="secondary" onClick={copyInviteLink} size="sm">
-                                                            Copy
-                                                        </Button>
-                                                    </div>
-                                                </div>
+                                             <div className="space-y-4">
+                                                 <div className="p-4 bg-blue-500/10 rounded-md border border-blue-500/30">
+                                                     <div className="flex items-center gap-2 text-blue-400 mb-2 font-bold animate-pulse">
+                                                         <ShieldCheck size={18} />
+                                                         <span>Invitation Link Ready</span>
+                                                     </div>
+                                                     <p className="text-xs text-slate-300 mb-4 leading-relaxed">
+                                                         Copy the secure link below and send it to <span className="text-blue-400 font-mono">{inviteEmail}</span> via Teams, Slack, or Email.
+                                                     </p>
+                                                     <div className="flex gap-2">
+                                                         <input
+                                                             type="text"
+                                                             readOnly
+                                                             value={inviteLink}
+                                                             className="flex-1 text-xs p-3 border border-slate-700 rounded bg-slate-950 text-slate-300 font-mono shadow-inner"
+                                                         />
+                                                         <Button type="button" variant="primary" onClick={copyInviteLink} size="sm">
+                                                             Copy Link
+                                                         </Button>
+                                                     </div>
+                                                 </div>
                                                 <div className="flex justify-end">
                                                     <Button
                                                         type="button"
@@ -950,11 +982,63 @@ export const OrganizationSettingsPage: React.FC = () => {
                                                 </tr>
                                             )}
                                         </tbody>
-                                    </table>
-                                </div>
-                            </Card>
-                        </>
-                    )}
+                                     </table>
+                                 </div>
+                             </Card>
+
+                             {pendingInvites.length > 0 && (
+                                 <Card className="mt-6 border border-slate-700/50 bg-slate-900/20">
+                                     <h2 className="text-lg font-semibold mb-4 text-slate-300">Pending Invitations (7-Day Expiry)</h2>
+                                     <div className="overflow-x-auto">
+                                         <table className="w-full text-left border-collapse">
+                                             <thead>
+                                                 <tr>
+                                                     <th className="py-2 px-4 border-b border-slate-700 bg-slate-900/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">Email</th>
+                                                     <th className="py-2 px-4 border-b border-slate-700 bg-slate-900/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">Role</th>
+                                                     <th className="py-2 px-4 border-b border-slate-700 bg-slate-900/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">Created</th>
+                                                     <th className="py-2 px-4 border-b border-slate-700 bg-slate-900/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">Expires In</th>
+                                                     <th className="py-2 px-4 border-b border-slate-700 bg-slate-900/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
+                                                 </tr>
+                                             </thead>
+                                             <tbody>
+                                                 {pendingInvites.map((invite) => {
+                                                     const daysLeft = Math.max(0, Math.ceil((new Date(invite.expires_at).getTime() - new Date().getTime()) / (1000 * 3600 * 24)));
+                                                     return (
+                                                         <tr key={invite.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                                             <td className="py-3 px-4 font-mono text-xs text-slate-300">
+                                                                 {invite.email}
+                                                             </td>
+                                                             <td className="py-3 px-4">
+                                                                 <span className="text-xs px-2 py-1 bg-slate-800 text-slate-300 rounded uppercase tracking-wider">{invite.role}</span>
+                                                             </td>
+                                                             <td className="py-3 px-4 text-xs text-slate-500">
+                                                                 {new Date(invite.created_at).toLocaleDateString()}
+                                                             </td>
+                                                             <td className="py-3 px-4 text-xs">
+                                                                 {daysLeft > 0 ? (
+                                                                     <span className="text-yellow-500/80">{daysLeft} days</span>
+                                                                 ) : (
+                                                                     <span className="text-red-500/80">Expired</span>
+                                                                 )}
+                                                             </td>
+                                                             <td className="py-3 px-4">
+                                                                 <Button variant="danger" size="sm" onClick={() => handleRevokeInvite(invite.id)}>
+                                                                     Revoke
+                                                                 </Button>
+                                                                 <Button variant="secondary" size="sm" className="ml-2" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/signup?token=${invite.token}`)}>
+                                                                     Copy Link
+                                                                 </Button>
+                                                             </td>
+                                                         </tr>
+                                                     );
+                                                 })}
+                                             </tbody>
+                                         </table>
+                                     </div>
+                                 </Card>
+                             )}
+                         </>
+                     )}
 
                     {/* Groups Tab */}
                     {currentTab === 'groups' && (

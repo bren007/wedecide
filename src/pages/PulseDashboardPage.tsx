@@ -6,10 +6,11 @@ import { supabase } from '../lib/supabase';
 type Lead = any; // simplified for dashboard
 
 export const PulseDashboardPage: React.FC = () => {
-    const { isAdmin } = useAuth();
+    const { isGlobalAdmin } = useAuth();
     const [leads, setLeads] = useState<Lead[]>([]);
     const [invoiceRequests, setInvoiceRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     useEffect(() => {
         fetchTelemtry();
@@ -37,6 +38,40 @@ export const PulseDashboardPage: React.FC = () => {
         setLoading(false);
     };
 
+    const handleActivateLicence = async (requestId: string) => {
+        setActionLoading(requestId);
+        try {
+            const { error, data } = await (supabase.rpc as any)('activate_invoice_request', {
+                p_request_id: requestId
+            });
+
+            if (error) {
+                alert(`Activation failed: ${error.message}`);
+                console.error(error);
+            } else {
+                alert(`Success! Licence activated for organisation ${data.organization_id} at tier: ${data.tier}`);
+                
+                // Fire and forget the welcome email
+                const reqRow = invoiceRequests.find(r => r.id === requestId);
+                if (reqRow && reqRow.work_email) {
+                    supabase.functions.invoke('send-licence-activation', {
+                        body: {
+                            email: reqRow.work_email,
+                            organizationName: reqRow.agency,
+                            tier: data.tier
+                        }
+                    }).catch(err => console.error("Error sending welcome email:", err));
+                }
+
+                fetchTelemtry(); // refresh
+            }
+        } catch (err: any) {
+            alert(`Unexpected error: ${err.message}`);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center ">
@@ -45,7 +80,7 @@ export const PulseDashboardPage: React.FC = () => {
         );
     }
 
-    if (!isAdmin) {
+    if (!isGlobalAdmin) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center  text-red-500 font-bold">
                 Access Denied: Admin Only Route
@@ -240,12 +275,12 @@ export const PulseDashboardPage: React.FC = () => {
                                     <li key={req.id} className="p-6 flex flex-col lg:flex-row justify-between lg:items-center hover:bg-slate-700/30 transition-colors gap-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h4 className="text-lg font-bold text-white">{req.agency_name}</h4>
+                                                <h4 className="text-lg font-bold text-white">{req.agency}</h4>
                                                 <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-300 border border-slate-600 uppercase">
-                                                    {req.tier.replace('-', ' ')}
+                                                    {req.selected_tier.replace('-', ' ')}
                                                 </span>
                                             </div>
-                                            <p className="text-slate-400 text-sm">{req.requester_name} ({req.requester_email})</p>
+                                            <p className="text-slate-400 text-sm">{req.full_name} ({req.work_email})</p>
                                             {req.po_number && <p className="text-xs text-blue-400 mt-1 font-mono">PO: {req.po_number}</p>}
                                         </div>
                                         <div className="flex items-center gap-4">
@@ -256,10 +291,11 @@ export const PulseDashboardPage: React.FC = () => {
                                                 </p>
                                             </div>
                                             <button 
-                                                disabled={req.status === 'activated'}
-                                                className={`rounded-lg px-4 py-2 text-sm font-bold transition-all ${req.status === 'activated' ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20'}`}
+                                                onClick={() => handleActivateLicence(req.id)}
+                                                disabled={req.status === 'activated' || actionLoading === req.id}
+                                                className={`rounded-lg px-4 py-2 text-sm font-bold transition-all ${req.status === 'activated' ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20'} ${actionLoading === req.id ? 'opacity-50 cursor-wait' : ''}`}
                                             >
-                                                {req.status === 'activated' ? 'Activated' : 'Activate Licence'}
+                                                {actionLoading === req.id ? 'Activating...' : req.status === 'activated' ? 'Activated' : 'Activate Licence'}
                                             </button>
                                         </div>
                                     </li>
