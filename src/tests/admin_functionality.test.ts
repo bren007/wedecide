@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv } from './helpers/setup';
+import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, createAuthenticatedClient } from './helpers/setup';
 
 // Test Data
 const TEST_ORG_NAME = 'Admin Test Org ' + Date.now();
@@ -47,11 +47,7 @@ describe('Admin Functionality', () => {
         adminToken = loginData.session!.access_token;
 
         // Re-initialize authenticated client
-        supabase = createTestSupabaseClient();
-        await supabase.auth.setSession({
-            access_token: adminToken,
-            refresh_token: loginData.session!.refresh_token
-        });
+        supabase = createAuthenticatedClient(adminToken);
 
         // 2. Manually Create Organization & Profile via RPC
         const orgName = TEST_ORG_NAME;
@@ -116,16 +112,20 @@ describe('Admin Functionality', () => {
         // Update Name
         const newName = TEST_ORG_NAME + ' Updated';
 
-        const { error } = await supabase
+        const { data: updatedData, error } = await supabase
             .from('organizations')
             .update({ name: newName })
-            .eq('id', orgId);
+            .eq('id', orgId)
+            .select()
+            .single();
+
+        if (error) {
+            console.log('Update error:', error);
+        }
+        console.log('Updated row:', updatedData);
 
         expect(error).toBeNull();
-
-        // Verify
-        const { data } = await supabase.from('organizations').select('name').eq('id', orgId).single();
-        expect(data?.name).toBe(newName);
+        expect(updatedData?.name).toBe(newName);
     });
 
     it('should create a meeting group', async () => {
@@ -139,6 +139,9 @@ describe('Admin Functionality', () => {
             .select()
             .single();
 
+        if (error) {
+            console.log('Insert error full:', JSON.stringify(error, null, 2));
+        }
         expect(error).toBeNull();
         expect(data).toBeDefined();
         expect(data!.name).toBe(BOARD_GROUP_NAME);

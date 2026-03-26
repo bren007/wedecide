@@ -807,6 +807,46 @@ export interface Database {
                         referencedColumns: ["id"]
                     }
                 ]
+            },
+            invitations: {
+                Row: {
+                    id: string
+                    organization_id: string
+                    email: string
+                    role: string
+                    token: string
+                    status: string
+                    expires_at: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    organization_id: string
+                    email: string
+                    role: string
+                    token: string
+                    status?: string
+                    expires_at: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    organization_id?: string
+                    email?: string
+                    role?: string
+                    token?: string
+                    status?: string
+                    expires_at?: string
+                    created_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "invitations_organization_id_fkey"
+                        columns: ["organization_id"]
+                        referencedRelation: "organizations"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
         }
         Views: {

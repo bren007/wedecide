@@ -1,34 +1,30 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { supabase } from './helpers/setup';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { createTestSupabaseClient } from './helpers/setup';
+
+const supabase = createTestSupabaseClient();
 
 describe('Invitation System (invite_user RPC)', () => {
-    let globalAdminUser: any;
     let orgChair: any;
     let orgMember: any;
-    let testOrgId: string;
-    let testOrg2Id: string;
 
     beforeAll(async () => {
         // Find existing users from your standard test seed data
         const { data: users } = await supabase.from('users').select('*, user_roles(*)');
         
         // Setup identifiers to run realistic tests
-        orgChair = users?.find(u => u.user_roles?.some((r: any) => r.role === 'chair' || r.role === 'admin') && !u.is_global_admin);
-        orgMember = users?.find(u => u.user_roles?.some((r: any) => r.role === 'member') && !u.is_global_admin);
-        globalAdminUser = users?.find(u => u.is_global_admin);
-
-        testOrgId = orgChair?.organization_id;
-        testOrg2Id = users?.find(u => u.organization_id !== testOrgId)?.organization_id;
+        orgChair = (users as any[])?.find((u: any) => u.user_roles?.some((r: any) => r.role === 'chair' || r.role === 'admin') && !u.is_global_admin);
+        orgMember = (users as any[])?.find((u: any) => u.user_roles?.some((r: any) => r.role === 'member') && !u.is_global_admin);
     });
 
     it('should allow an org Chair to generate an invite for their own organization', async () => {
         if (!orgChair) return;
 
         // Impersonate Chair
-        const { data: { session } } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
             email: orgChair.email,
             password: 'password123' 
         });
+        if (signInError) throw signInError;
 
         const { data: invite, error } = await supabase.rpc('invite_user', {
             p_email: 'new_hire@example.com',
@@ -55,10 +51,11 @@ describe('Invitation System (invite_user RPC)', () => {
         if (!orgMember) return;
 
         // Impersonate Member
-        const { data: { session } } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
             email: orgMember.email,
             password: 'password123'
         });
+        if (signInError) throw signInError;
 
         const { data: invite, error } = await supabase.rpc('invite_user', {
             p_email: 'hacker@example.com',

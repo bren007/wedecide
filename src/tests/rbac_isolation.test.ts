@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { supabase } from './helpers/setup';
+import { createTestSupabaseClient } from './helpers/setup';
+
+const supabase = createTestSupabaseClient();
 
 describe('Role-Based Access Control (RBAC) & Tenant Isolation', () => {
     let globalAdmin: any;
@@ -10,15 +12,15 @@ describe('Role-Based Access Control (RBAC) & Tenant Isolation', () => {
         // Fetch test users to run scenarios
         const { data: users } = await supabase.from('users').select('*, user_roles(*)');
         
-        globalAdmin = users?.find(u => u.is_global_admin);
+        globalAdmin = (users as any[])?.find((u: any) => u.is_global_admin);
         
         // Find two distinct tenant chairs for isolation testing
-        const chairs = users?.filter(u => !u.is_global_admin && u.user_roles?.some((r: any) => r.role === 'chair' || r.role === 'admin'));
+        const chairs = (users as any[])?.filter((u: any) => !u.is_global_admin && u.user_roles?.some((r: any) => r.role === 'chair' || r.role === 'admin'));
         
-        if (chairs && chairs.length >= 2) {
+        if (chairs && (chairs as any[]).length >= 2) {
             // Ensure they belong to different organizations 
             tenantA_Chair = chairs[0];
-            tenantB_Chair = chairs.find((c: any) => c.organization_id !== tenantA_Chair.organization_id);
+            tenantB_Chair = (chairs as any[]).find((c: any) => c.organization_id !== tenantA_Chair.organization_id);
         }
     });
 
@@ -61,24 +63,24 @@ describe('Role-Based Access Control (RBAC) & Tenant Isolation', () => {
 
             // Global Adim tries to invite a user to Tenant A
             // We expect the RPC `invite_user` to fail because the Global Admin does not have the 'admin' or 'chair' role inside Tenant A.
-            const { data: invite, error } = await supabase.rpc('invite_user', {
+            const { error } = await supabase.rpc('invite_user', {
                 p_email: 'rogue_global_admin@example.com',
                 p_role: 'admin'
             });
+            expect(error).toBeDefined();
 
             // Note: Our invite_user RPC gets the org_id intrinsically from the CALLER.
             // If the Global Admin executes this, the invite goes into the Global Admin's OWN organization,
             // NOT arbitrary Tenant A. The security boundary holds.
             // But if we tried to forge an insert directly into the table...
 
-            const { data: forcedInsert, error: insertError } = await supabase
+            const { error: insertError } = await supabase
                 .from('invitations')
                 .insert({
                     email: 'hacked@example.com',
                     role: 'admin',
                     organization_id: tenantA_Chair.organization_id, // Forging the target org!
                     token: 'forged_token_123',
-                    invited_by: globalAdmin.id,
                     expires_at: new Date(Date.now() + 1000000).toISOString()
                 });
 

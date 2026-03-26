@@ -13,7 +13,7 @@
     "db:push": "prisma db push",
     "test": "vitest run",
     "test:unit": "vitest run auth_singleton auth_resilience auth_timeout regression_fixes performance csv_validation capacity_load",
-    "test:int": "vitest run auth_integration meetings_integration decision_creation decision_defaults decisions_rls rls_regression admin_functionality meetings_rls",
+    "test:int": "vitest run auth_integration meetings_integration decision_creation decision_defaults decisions_rls rls_regression admin_functionality meetings_rls invite_system rbac_isolation",
     "test:watch": "vitest",
     "server": "tsx server/index.ts",
     "deploy:dev": "node scripts/deploy.js --env dev",

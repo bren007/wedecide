@@ -159,7 +159,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .order('created_at', { ascending: false });
 
                 if (!invitesError && invitesData) {
-                    setPendingInvites(invitesData);
+                    setPendingInvites(invitesData as PendingInvite[]);
                 }
 
                 // 4. Meeting Groups
@@ -255,42 +255,7 @@ export const OrganizationSettingsPage: React.FC = () => {
         }
     };
 
-    const handleInviteUser = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setInviteLoading(true);
-        setInviteLink(null);
-        setMessage(null);
 
-        try {
-            const { data, error } = await supabase.rpc('invite_user', {
-                p_email: inviteEmail,
-                p_role: inviteRole
-            });
-
-            if (error) throw error;
-
-            if (data && data.success) {
-                const link = `${window.location.origin}/signup?token=${data.token}`;
-                setInviteLink(link);
-                setMessage({ type: 'success', text: 'Invitation generated successfully!' });
-                // Optionally clear form or keep it for the next one?
-                // setInviteEmail('');
-            }
-
-        } catch (error: any) {
-            console.error('Error inviting user:', error);
-            setMessage({ type: 'error', text: error.message || 'Failed to invite user' });
-        } finally {
-            setInviteLoading(false);
-        }
-    };
-
-    const copyInviteLink = () => {
-        if (inviteLink) {
-            navigator.clipboard.writeText(inviteLink);
-            setMessage({ type: 'success', text: 'Invite link copied to clipboard!' });
-        }
-    };
 
     const handleCreateGroup = async (name: string) => {
         try {
@@ -461,6 +426,61 @@ export const OrganizationSettingsPage: React.FC = () => {
         } catch (err: any) {
             console.error('Error adding pillar:', err);
             setMessage({ type: 'error', text: 'Failed to add pillar.' });
+        }
+    };
+
+    const handleInviteUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!org || !inviteEmail) return;
+        setInviteLoading(true);
+        setMessage(null);
+
+        try {
+            const { data, error } = await supabase.rpc('invite_user', {
+                p_email: inviteEmail,
+                p_role: inviteRole
+            });
+
+            if (error) throw error;
+
+            if (data?.success) {
+                const fullLink = `${window.location.origin}/signup?token=${data.token}`;
+                setInviteLink(fullLink);
+                // Refresh pending list
+                fetchOrganization();
+            } else {
+                throw new Error('Failed to generate invite');
+            }
+        } catch (err: any) {
+            console.error('Invite error:', err);
+            setMessage({ type: 'error', text: err.message || 'Failed to send invite' });
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const handleRevokeInvite = async (inviteId: string) => {
+        if (!window.confirm('Are you sure you want to revoke this invitation?')) return;
+        try {
+            const { error } = await supabase
+                .from('invitations')
+                .delete()
+                .eq('id', inviteId);
+
+            if (error) throw error;
+
+            setPendingInvites(pendingInvites.filter(i => i.id !== inviteId));
+            setMessage({ type: 'success', text: 'Invitation revoked.' });
+        } catch (err: any) {
+            console.error('Revoke error:', err);
+            setMessage({ type: 'error', text: 'Failed to revoke invitation.' });
+        }
+    };
+
+    const copyInviteLink = () => {
+        if (inviteLink) {
+            navigator.clipboard.writeText(inviteLink);
+            // Optional: show momentary 'Copied!' state
         }
     };
 
