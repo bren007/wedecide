@@ -40,6 +40,7 @@ function parseArgs() {
         confirm: args.includes('--confirm'),
         migration: null,
         compare: args.includes('--compare'),
+        validate: args.includes('--validate'),
         help: args.includes('--help') || args.includes('-h'),
     };
 
@@ -74,6 +75,7 @@ Options:
   --dry-run           Preview migrations without applying them
   --migration <file>  Apply a single specific migration file
   --compare           Compare schema between environments (dev vs target)
+  --validate          Run automated security validation after deploy (staging/dev only)
   --confirm           Required safety flag for production deploys
   --help, -h          Show this help message
 
@@ -411,6 +413,19 @@ async function main() {
         console.log('');
         if (!failed) {
             console.log(`  🎉 Deploy complete! ${applied_count} migration(s) applied to ${config.label}.`);
+            
+            // Post-deploy validation
+            if (args.validate && (args.env === 'staging' || args.env === 'dev')) {
+                console.log('\n🔍 Running Post-Deploy Validation...');
+                const { execSync } = await import('child_process');
+                try {
+                    // Try to use the same connection if possible? No, validate-staging.js manages its own.
+                    execSync(`node scripts/validate-staging.js`, { stdio: 'inherit' });
+                } catch (err) {
+                    console.error('❌ Post-Deploy Validation FAILED.');
+                    process.exit(1);
+                }
+            }
         } else {
             console.log(`  ⚠️  Deploy incomplete. Fix the failing migration and re-run.`);
             process.exit(1);

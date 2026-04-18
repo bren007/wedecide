@@ -22,10 +22,7 @@ import { CommandCenterPage } from './pages/CommandCenterPage';
 import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
 import { StrategicIngestionPage } from './pages/StrategicIngestionPage';
 import { StrategicLedgerPage } from './pages/StrategicLedgerPage';
-import { MeetingLayout } from './components/layouts/MeetingLayout';
 import { PublicLayout } from './components/layouts/PublicLayout';
-import { MeetingListPage } from './pages/meetings/MeetingListPage';
-import { MeetingDetailPage } from './pages/meetings/MeetingDetailPage';
 import { PricingPage } from './pages/PricingPage';
 import { MissionPage } from './pages/MissionPage';
 import { PrivacyPage } from './pages/PrivacyPage';
@@ -90,10 +87,6 @@ function AppContent() {
 
             {/* Protected Routes */}
             <Route
-              path="/dashboard"
-              element={<Navigate to="/command-center" replace />}
-            />
-            <Route
               path="/command-center"
               element={
                 <ProtectedRoute>
@@ -157,17 +150,6 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/meetings"
-              element={
-                <ProtectedRoute>
-                  <MeetingLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<MeetingListPage />} />
-              <Route path=":id" element={<MeetingDetailPage />} />
-            </Route>
           </Routes>
         </ErrorBoundary>
       </div>

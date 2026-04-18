@@ -374,7 +374,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (result && result !== 'NETWORK_ERROR') {
         setUser(result);
       } else if (result === 'NETWORK_ERROR') {
-        throw new Error('Connecton error. Please try again.');
+        throw new Error('Connection error. Please try again.');
+      } else {
+        // Profile is null: the user exists in auth but has no public profile.
+        // This happens when signup completed partially (auth user created but org/profile RPC failed).
+        await supabase.auth.signOut();
+        throw new Error('Your account setup is incomplete. Please contact support or try signing up again.');
       }
     }
   };

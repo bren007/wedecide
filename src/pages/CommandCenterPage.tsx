@@ -26,7 +26,7 @@ const MandateTensionModal = ({ isOpen, item, from, to, onConfirm, onCancel }: an
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
             <div className="w-full max-w-lg bg-slate-900 border border-orange-500/50 rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.15)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center px-6 py-4 border-b border-orange-900/50 bg-orange-950/30">
                     <h3 className="text-lg font-bold text-orange-400">Mandate Tension Rationale Required</h3>
@@ -262,7 +262,7 @@ export const CommandCenterPage = () => {
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-950 pt-16 lg:pt-0">
 
             {/* --- TOP HEADER --- */}
-            <header className="shrink-0 bg-slate-900/80 border-b border-slate-800 px-6 py-4 flex flex-col xl:flex-row justify-between items-center gap-4 z-40 backdrop-blur-md shadow-lg">...
+            <header className="shrink-0 bg-slate-900/80 border-b border-slate-800 px-6 py-4 flex flex-col xl:flex-row justify-between items-center gap-4 z-10 backdrop-blur-md shadow-lg">...
 
                 {/* METRICS GAUGES */}
                 <div className="flex items-center bg-slate-950/50 rounded-xl border border-slate-800/80 p-2 shadow-inner">

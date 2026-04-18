@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* Mobile Header ( visible only on small screens ) */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950 border-b border-slate-800 z-50 flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950 border-b border-slate-800 z-[110] flex items-center justify-between px-4">
         <Link to="/command-center" className="flex items-center no-underline">
           <Layers className="text-blue-500 inline-block mr-2" size={24} />
           <span className="text-xl font-bold text-white tracking-tight">AlturaGov</span>
@@ -75,7 +75,7 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Sidebar Navigation */}
-      <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-slate-950 border-r border-slate-800 flex flex-col z-40 transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0 pt-16' : '-translate-x-full pt-16'} lg:translate-x-0 lg:pt-0`}>
+      <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-slate-950 border-r border-slate-800 flex flex-col z-[100] transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0 pt-16' : '-translate-x-full pt-16'} lg:translate-x-0 lg:pt-0`}>
         {/* Brand (Desktop only) */}
         <div className="hidden lg:flex h-16 items-center px-6 border-b border-slate-800 flex-shrink-0">
           <Link to="/command-center" className="flex items-center no-underline">
@@ -250,7 +250,7 @@ export const Navbar: React.FC = () => {
             <>
               {/* Invisible overlay to catch clicks outside dropdown */}
               <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)}></div>
-              <div className="absolute bottom-[calc(100%+8px)] left-4 right-4 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden z-50">
+              <div className="absolute bottom-[calc(100%+8px)] left-4 right-4 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden z-[120]">
                 <Link
                   to="/settings"
                   onClick={() => { setProfileOpen(false); setMobileMenuOpen(false); }}
@@ -276,7 +276,7 @@ export const Navbar: React.FC = () => {
       {/* Mobile Overlay Darken Background */}
       {mobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-30"
+          className="lg:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[90]"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
