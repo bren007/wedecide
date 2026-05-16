@@ -91,14 +91,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log(`📡 [fetchUserProfile] Querying DB (${retryCount + 1}/${maxRetries + 1}) for: ${userId}`);
         const { data: profile, error: profileError } = await withTimeout(
           Promise.resolve(
-            supabase
-              .from('users')
-              .select('id, email, name, organization_id, is_global_admin')
-              .eq('id', userId)
-              .single()
+            supabase.rpc('get_user_profile', { p_user_id: userId }).single()
           ),
           QUERY_TIMEOUT,
-          `users query (ID: ${userId})`
+          `users rpc (ID: ${userId})`
         );
 
         if (profileError) {
