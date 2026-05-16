@@ -7,47 +7,59 @@ datasource db {
 }
 
 model Organization {
-  id                  String         @id @default(uuid())
-  name                String
-  slug                String         @unique
-  subscription_tier   String         @default("free")
-  subscription_status String         @default("active")
-  max_users           Int            @default(5)
-  max_decisions       Int            @default(10)
-  created_at          DateTime       @default(now())
-  updated_at          DateTime       @updatedAt
-  decisions           Decision[]
-  documents           Document[]
-  meeting_groups      MeetingGroup[]
-  meetings            Meeting[]
-  user_roles          UserRole[]
-  users               User[]
+  id                   String                 @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name                 String
+  slug                 String                 @unique
+  subscription_tier    String                 @default("free")
+  subscription_status  String                 @default("active")
+  max_users            Int                    @default(5)
+  max_decisions        Int                    @default(10)
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @updatedAt
+  license_tier         String?                @default("free")
+  capacity_settings    capacity_settings?
+  decisions            Decision[]
+  documents            Document[]
+  initiatives          initiatives[]
+  invitations          invitations[]
+  license_transactions license_transactions[]
+  meeting_groups       MeetingGroup[]
+  meetings             Meeting[]
+  strategic_ledger     strategic_ledger[]
+  strategic_pillars    strategic_pillars[]
+  user_roles           UserRole[]
+  users                User[]
 
   @@map("organizations")
 }
 
 model User {
-  id              String              @id @default(uuid())
-  email           String              @unique
-  name            String
-  organization_id String
-  created_at      DateTime            @default(now())
-  updated_at      DateTime            @updatedAt
-  feedback        DecisionFeedback[]
-  rapid_roles     DecisionRapidRole[]
-  decisions       Decision[]
-  documents       Document[]
-  meetings        MeetingAttendee[]
-  stakeholders    Stakeholder[]
-  roles           UserRole[]
-  organization    Organization        @relation(fields: [organization_id], references: [id])
+  id               String              @id @default(dbgenerated("(gen_random_uuid())::text"))
+  email            String              @unique
+  name             String
+  organization_id  String
+  created_at       DateTime            @default(now())
+  updated_at       DateTime            @updatedAt
+  is_global_admin  Boolean             @default(false)
+  feedback         DecisionFeedback[]
+  rapid_roles      DecisionRapidRole[]
+  decisions        Decision[]
+  documents        Document[]
+  initiatives      initiatives[]
+  invitations      invitations[]
+  meetings         MeetingAttendee[]
+  stakeholders     Stakeholder[]
+  strategic_ledger strategic_ledger[]
+  roles            UserRole[]
+  organization     Organization        @relation(fields: [organization_id], references: [id])
 
   @@index([email])
+  @@index([email], map: "idx_users_email")
   @@map("users")
 }
 
 model UserRole {
-  id              String       @id @default(uuid())
+  id              String       @id @default(dbgenerated("(gen_random_uuid())::text"))
   user_id         String
   organization_id String
   role            String
@@ -60,7 +72,7 @@ model UserRole {
 }
 
 model Decision {
-  id                 String              @id @default(uuid())
+  id                 String              @id @default(dbgenerated("(gen_random_uuid())::text"))
   title              String
   description        String?
   status             String              @default("draft")
@@ -68,12 +80,12 @@ model Decision {
   organization_id    String
   created_at         DateTime            @default(now())
   updated_at         DateTime            @updatedAt
-  agenda_item_id     String?
   decision_type      String?
   reversibility_type String?
+  agenda_item_id     String?
   feedback           DecisionFeedback[]
   rapid_roles        DecisionRapidRole[]
-  agenda_item        AgendaItem?         @relation("AgendaDecision", fields: [agenda_item_id], references: [id])
+  agenda_item        AgendaItem?         @relation("AgendaDecision", fields: [agenda_item_id], references: [id], onUpdate: NoAction)
   organization       Organization        @relation(fields: [organization_id], references: [id])
   owner              User                @relation(fields: [owner_id], references: [id])
   documents          Document[]
@@ -83,7 +95,7 @@ model Decision {
 }
 
 model DecisionFeedback {
-  id          String   @id @default(uuid())
+  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
   decision_id String
   user_id     String
   content     String
@@ -95,7 +107,7 @@ model DecisionFeedback {
 }
 
 model Stakeholder {
-  id          String   @id @default(uuid())
+  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
   decision_id String
   email       String
   name        String
@@ -108,7 +120,7 @@ model Stakeholder {
 }
 
 model Document {
-  id                      String       @id @default(uuid())
+  id                      String       @id @default(dbgenerated("(gen_random_uuid())::text"))
   decision_id             String
   uploaded_by             String
   organization_id         String
@@ -129,12 +141,12 @@ model Document {
 }
 
 model MeetingGroup {
-  id              String              @id @default(uuid())
+  id              String              @id @default(dbgenerated("(gen_random_uuid())::text"))
   organization_id String
   name            String
   description     String?
   created_at      DateTime            @default(now())
-  updated_at      DateTime            @updatedAt
+  updated_at      DateTime            @default(now()) @updatedAt
   rapid_roles     DecisionRapidRole[]
   organization    Organization        @relation(fields: [organization_id], references: [id])
 
@@ -142,7 +154,7 @@ model MeetingGroup {
 }
 
 model DecisionRapidRole {
-  id               String        @id @default(uuid())
+  id               String        @id @default(dbgenerated("(gen_random_uuid())::text"))
   decision_id      String
   role_type        String
   user_id          String?
@@ -158,7 +170,7 @@ model DecisionRapidRole {
 }
 
 model Meeting {
-  id              String            @id @default(uuid())
+  id              String            @id @default(dbgenerated("(gen_random_uuid())::text"))
   organization_id String
   title           String
   description     String?
@@ -179,7 +191,7 @@ model Meeting {
 }
 
 model AgendaItem {
-  id               String     @id @default(uuid())
+  id               String     @id @default(dbgenerated("(gen_random_uuid())::text"))
   meeting_id       String
   title            String
   description      String?
@@ -194,7 +206,7 @@ model AgendaItem {
 }
 
 model MeetingAttendee {
-  id         String   @id @default(uuid())
+  id         String   @id @default(dbgenerated("(gen_random_uuid())::text"))
   meeting_id String
   user_id    String
   status     String   @default("invited")
@@ -205,4 +217,162 @@ model MeetingAttendee {
 
   @@unique([meeting_id, user_id])
   @@map("meeting_attendees")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model migration_history {
+  id         Int      @id @default(dbgenerated("nextval('_migration_history_id_seq'::regclass)"))
+  filename   String   @unique
+  applied_at DateTime @default(now()) @db.Timestamptz(6)
+  checksum   String?
+  applied_by String?  @default(dbgenerated("CURRENT_USER"))
+
+  @@map("_migration_history")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model audit_records {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purchaser_email   String
+  stripe_session_id String   @unique
+  audit_token       String   @unique
+  token_status      String   @default("unconsumed")
+  status            String   @default("awaiting_csv")
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model capacity_settings {
+  id                      String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                  String       @unique
+  total_focus_slots       Int          @default(20)
+  total_capex_limit       Decimal      @default(0) @db.Decimal
+  total_opex_limit        Decimal      @default(0) @db.Decimal
+  value_drop_horizon_days Int          @default(30)
+  created_at              DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime     @default(now()) @db.Timestamptz(6)
+  fiscal_drag_threshold   Decimal?     @db.Decimal
+  organizations           Organization @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model initiatives {
+  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                  String
+  owner_id                String?
+  title                   String
+  focus_slots_required    Int                @default(3)
+  capex_required          Decimal            @default(0) @db.Decimal
+  opex_required           Decimal            @default(0) @db.Decimal
+  short_term_win          Boolean            @default(false)
+  strategic_pillar_id     String?            @db.Uuid
+  status                  String             @default("proposed")
+  created_at              DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime           @default(now()) @db.Timestamptz(6)
+  approval_mandate        String?
+  relative_priority       String?
+  target_delivery_quarter String?
+  current_fy_budget       Decimal?           @default(0) @db.Decimal
+  organizations           Organization       @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                   User?              @relation(fields: [owner_id], references: [id], onUpdate: NoAction)
+  strategic_pillars       strategic_pillars? @relation(fields: [strategic_pillar_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  strategic_ledger        strategic_ledger[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model invitations {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String
+  role            String       @default("member")
+  organization_id String
+  token           String       @unique
+  invited_by      String
+  status          String       @default("pending")
+  expires_at      DateTime     @db.Timestamptz(6)
+  created_at      DateTime     @default(now()) @db.Timestamptz(6)
+  users           User         @relation(fields: [invited_by], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations   Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model invoice_requests {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name          String
+  work_email         String
+  phone              String
+  agency             String
+  selected_tier      String
+  po_number          String?
+  notes              String?
+  status             String   @default("pending")
+  manually_activated Boolean  @default(false)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model leads {
+  id                          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                       String
+  org_name                    String?
+  pain_point                  String?
+  created_at                  DateTime  @default(now()) @db.Timestamptz(6)
+  payment_at                  DateTime? @db.Timestamptz(6)
+  upload_at                   DateTime? @db.Timestamptz(6)
+  decision_at                 DateTime? @db.Timestamptz(6)
+  audit_token                 String?   @unique
+  audit_token_status          String?   @default("unconsumed")
+  audit_parsed_json           Json?
+  audit_completed_at          DateTime? @db.Timestamptz(6)
+  licence_org_id              String?   @db.Uuid
+  portfolio_context_count     Int?
+  calibration_large_steerable Int?
+  calibration_historical_avg  Int?
+  capacity_baseline           Int?
+  audit_status                String?   @default("new")
+  file_url                    String?
+  updated_at                  DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model license_transactions {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id   String?
+  stripe_invoice_id String        @unique
+  amount            Int
+  currency          String        @default("nzd")
+  created_at        DateTime      @default(now()) @db.Timestamptz(6)
+  organizations     Organization? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model strategic_ledger {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id        String
+  initiative_id String?      @db.Uuid
+  chair_id      String?
+  action_type   String
+  rationale     String?
+  replaced_ids  Json?        @default("[]")
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  users         User?        @relation(fields: [chair_id], references: [id], onUpdate: NoAction)
+  initiatives   initiatives? @relation(fields: [initiative_id], references: [id], onUpdate: NoAction)
+  organizations Organization @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model strategic_pillars {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id        String
+  title         String
+  target_weight Int           @default(0)
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime      @default(now()) @db.Timestamptz(6)
+  initiatives   initiatives[]
+  organizations Organization  @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }

@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ]);
     };
 
-    const QUERY_TIMEOUT = 5000; // 5 seconds per query attempt
+    const QUERY_TIMEOUT = 30000; // Increased to 30s for staging debug
 
     const fetchPromise = (async () => {
       try {
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .single()
           ),
           QUERY_TIMEOUT,
-          'users query'
+          `users query (ID: ${userId})`
         );
 
         if (profileError) {
