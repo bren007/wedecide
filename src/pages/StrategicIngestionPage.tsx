@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { StagingGrid, type StagingInitiative } from '../components/StagingGrid';
 import { Upload, FileUp, CheckCircle, AlertTriangle, Wand2, Database } from 'lucide-react';
 import { useAIMapping } from '../hooks/useAIMapping';
+import { EnvDiagnostic } from '../components/EnvDiagnostic';
 
 export const StrategicIngestionPage: React.FC = () => {
     const navigate = useNavigate();
@@ -277,6 +278,9 @@ export const StrategicIngestionPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-navy-900 text-slate-300 p-8  font-sans flex flex-col items-center">
             <div className="w-full max-w-6xl">
+                <div className="mb-4">
+                    <EnvDiagnostic />
+                </div>
                 <header className="mb-6 flex justify-between items-center bg-navy-800 p-6 rounded-lg border border-navy-700 shadow-lg">
                     <div>
                         <h1 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
