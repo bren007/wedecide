@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log(`📡 [fetchUserProfile] Querying DB (${retryCount + 1}/${maxRetries + 1}) for: ${userId}`);
         const { data: profile, error: profileError } = await withTimeout(
           Promise.resolve(
-            supabase.rpc('get_user_profile', { p_user_id: userId }).single()
+            supabase.rpc('get_user_profile' as any, { p_user_id: userId }).single()
           ),
           QUERY_TIMEOUT,
           `users rpc (ID: ${userId})`
@@ -115,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .from('user_roles')
               .select('role')
               .eq('user_id', userId)
-              .eq('organization_id', profile.organization_id)
+              .eq('organization_id', (profile as any).organization_id)
           ),
           QUERY_TIMEOUT,
           'user_roles query'
@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         measurePerformance('Profile Fetch Duration', PerformanceMarkers.PROFILE_FETCH_START, PerformanceMarkers.PROFILE_FETCH_SUCCESS);
 
         const profileData: User = {
-          ...profile,
+          ...(profile as any),
           roles: roles!.map((r: { role: string }) => r.role)
         };
 
