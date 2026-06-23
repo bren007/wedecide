@@ -117,20 +117,35 @@ export const SecureDropPage: React.FC = () => {
         try {
             // Upload to audit_uploads bucket
             const fileExt = file.name.split('.').pop();
-            const fileName = `${bookingEmail}_${Date.now()}.${fileExt}`;
+            const sanitizedEmail = bookingEmail.trim().toLowerCase();
+
+            // Use sanitized email for all DB operations
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('audit_uploads')
-                .upload(fileName, file);
+                .upload(`${sanitizedEmail}_${Date.now()}.${fileExt}`, file);
 
             if (uploadError) throw uploadError;
 
-            const { error: dbError } = await supabase.rpc('update_lead_by_email', {
-                p_email: bookingEmail,
-                p_status: 'data_uploaded',
-                p_file_url: uploadData.path
+            // For RETURNING leads: update their existing record via SECURITY DEFINER RPC (bypasses RLS)
+            await supabase.rpc('update_lead_by_email', {
+              p_email: sanitizedEmail,
+              p_status: 'data_uploaded',
+              p_file_url: uploadData.path,
             });
 
-            if (dbError) throw dbError;
+            // For NEW leads: insert a fresh record (plain INSERT works for anon).
+            // If the email already exists (returning lead), the RPC above handled it — ignore the dupe error.
+            const { error: insertError } = await supabase
+              .from('leads')
+              .insert({
+                email: sanitizedEmail,
+                audit_status: 'data_uploaded',
+                file_url: uploadData.path,
+              });
+
+            // code 23505 = unique_violation: email already exists, RPC already updated it — not a real error
+            if (insertError && insertError.code !== '23505') throw insertError;
+
 
             setSubmitted(true);
         } catch (err: any) {

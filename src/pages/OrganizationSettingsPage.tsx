@@ -51,6 +51,7 @@ interface CapacitySettings {
     value_drop_horizon_days: number;
     calibration_large_steerable: number;
     calibration_historical_avg: number;
+    friction_coefficient: number;
 }
 
 interface StrategicPillar {
@@ -75,6 +76,7 @@ export const OrganizationSettingsPage: React.FC = () => {
     const [pillars, setPillars] = useState<StrategicPillar[]>([]);
     const [newPillarTitle, setNewPillarTitle] = useState('');
     const [newPillarWeight, setNewPillarWeight] = useState(0);
+    const [frictionCoefficient, setFrictionCoefficient] = useState<number>(1.00);
 
     // Invite State
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -181,6 +183,9 @@ export const OrganizationSettingsPage: React.FC = () => {
 
                 if (capData) {
                     setCapacitySettings(capData as unknown as CapacitySettings);
+                    // Sync local Fm slider state from DB value
+                    const fm = Number((capData as any).friction_coefficient);
+                    if (fm >= 1.0 && fm <= 2.5) setFrictionCoefficient(fm);
                 } else {
                     // Initialize empty state if needed, or rely on null
                     setCapacitySettings({
@@ -190,8 +195,10 @@ export const OrganizationSettingsPage: React.FC = () => {
                         total_opex_limit: 0,
                         value_drop_horizon_days: 30,
                         calibration_large_steerable: 2,
-                        calibration_historical_avg: 8
+                        calibration_historical_avg: 8,
+                        friction_coefficient: 1.00
                     } as CapacitySettings);
+                    setFrictionCoefficient(1.00);
                 }
 
                 // 6. Governance: Strategic Pillars
@@ -353,33 +360,38 @@ export const OrganizationSettingsPage: React.FC = () => {
             const calculatedSlots = (capacitySettings.calibration_large_steerable * 5) +
                 Math.max(0, capacitySettings.calibration_historical_avg - capacitySettings.calibration_large_steerable) * 3;
 
+            // Clamp Fm to valid range before persisting
+            const clampedFm = Math.min(2.50, Math.max(1.00, frictionCoefficient));
+            const adjustedSlots = Math.round(calculatedSlots / clampedFm);
+
             if (capacitySettings.id) {
                 const { error } = await supabase
                     .from('capacity_settings' as any)
                     .update({
-                        total_focus_slots: calculatedSlots, // Use calculated from wizard
+                        total_focus_slots: adjustedSlots, // friction-adjusted limit used by Command Centre
                         total_capex_limit: capacitySettings.total_capex_limit,
                         total_opex_limit: capacitySettings.total_opex_limit,
                         value_drop_horizon_days: capacitySettings.value_drop_horizon_days,
                         calibration_large_steerable: capacitySettings.calibration_large_steerable,
-                        calibration_historical_avg: capacitySettings.calibration_historical_avg
+                        calibration_historical_avg: capacitySettings.calibration_historical_avg,
+                        friction_coefficient: clampedFm
                     })
                     .eq('id', capacitySettings.id);
                 if (error) throw error;
-                // Update local state with the newly calculated slots
-                setCapacitySettings(prev => prev ? { ...prev, total_focus_slots: calculatedSlots } : null);
+                setCapacitySettings(prev => prev ? { ...prev, total_focus_slots: adjustedSlots, friction_coefficient: clampedFm } : null);
             } else {
                 // Insert new
                 const { data, error } = await supabase
                     .from('capacity_settings' as any)
                     .insert({
                         org_id: org.id,
-                        total_focus_slots: calculatedSlots,
+                        total_focus_slots: adjustedSlots,
                         total_capex_limit: capacitySettings.total_capex_limit,
                         total_opex_limit: capacitySettings.total_opex_limit,
                         value_drop_horizon_days: capacitySettings.value_drop_horizon_days,
                         calibration_large_steerable: capacitySettings.calibration_large_steerable,
-                        calibration_historical_avg: capacitySettings.calibration_historical_avg
+                        calibration_historical_avg: capacitySettings.calibration_historical_avg,
+                        friction_coefficient: clampedFm
                     })
                     .select()
                     .single();
@@ -665,6 +677,83 @@ export const OrganizationSettingsPage: React.FC = () => {
                                                 </p>
                                             </div>
                                         )}
+                                    </div>
+
+                                    {/* ── Friction Coefficient (Fm) ── */}
+                                    <div className="bg-slate-900 border border-amber-700/30 p-6 rounded-lg mb-6">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className="text-lg font-bold text-amber-300">Organisational Friction Coefficient (F&#x2098;)</h3>
+                                            <span className="text-xs px-2 py-0.5 bg-amber-900/40 text-amber-400 rounded-full border border-amber-700/40 font-mono">ADVANCED</span>
+                                        </div>
+                                        <p className="text-sm text-slate-400 mb-5">
+                                            Applies a systemic drag multiplier to your Nominal Capacity Baseline to account for public-sector administrative overhead, legacy bureaucracy, and political compliance load. <span className="text-amber-400/80">Adjusted Baseline = Nominal ÷ F&#x2098;</span>
+                                        </p>
+
+                                        <div className="space-y-3 mb-5">
+                                            <div className="flex justify-between items-baseline">
+                                                <label className="text-sm font-medium text-slate-300">
+                                                    Friction Coefficient
+                                                </label>
+                                                <span className="text-2xl font-mono font-bold text-amber-300">{frictionCoefficient.toFixed(2)}</span>
+                                            </div>
+                                            <input
+                                                id="friction-coefficient-slider"
+                                                type="range"
+                                                min="1.00"
+                                                max="2.50"
+                                                step="0.05"
+                                                value={frictionCoefficient}
+                                                onChange={e => setFrictionCoefficient(parseFloat(e.target.value))}
+                                                className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                                                style={{
+                                                    background: `linear-gradient(to right, #f59e0b ${((frictionCoefficient - 1) / 1.5) * 100}%, #1e293b ${((frictionCoefficient - 1) / 1.5) * 100}%)`
+                                                }}
+                                            />
+                                            <div className="flex justify-between text-xs text-slate-500 font-mono">
+                                                <span>1.00 — No drag</span>
+                                                <span>1.50 — Moderate</span>
+                                                <span>2.50 — High drag</span>
+                                            </div>
+                                            <p className="text-xs text-slate-500 italic">
+                                                {frictionCoefficient <= 1.10 ? 'Minimal overhead — lean, agile delivery environment.' :
+                                                 frictionCoefficient <= 1.40 ? 'Low drag — some compliance and coordination overhead.' :
+                                                 frictionCoefficient <= 1.70 ? 'Moderate bureaucratic drag — typical for mid-size public sector bodies.' :
+                                                 frictionCoefficient <= 2.10 ? 'High drag — significant governance, reporting, and political compliance load.' :
+                                                 'Severe systemic drag — mandates and legacy obligations heavily constrain operational throughput.'}
+                                            </p>
+                                        </div>
+
+                                        {/* Live Baseline Preview */}
+                                        {(() => {
+                                            const nominal = capacitySettings
+                                                ? (capacitySettings.calibration_large_steerable * 5) + Math.max(0, capacitySettings.calibration_historical_avg - capacitySettings.calibration_large_steerable) * 3
+                                                : 0;
+                                            const adjusted = nominal > 0 ? Math.round(nominal / frictionCoefficient) : 0;
+                                            const reduction = nominal - adjusted;
+                                            return (
+                                                <div className="grid grid-cols-3 gap-3 p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                                                    <div className="text-center">
+                                                        <div className="text-xs text-slate-500 mb-1 uppercase tracking-wider">Nominal Baseline (B&#x2099;)</div>
+                                                        <div className="text-2xl font-mono font-bold text-slate-200">{nominal}</div>
+                                                        <div className="text-xs text-slate-500">slots</div>
+                                                    </div>
+                                                    <div className="text-center flex flex-col items-center justify-center">
+                                                        <div className="text-lg text-amber-500 font-mono">÷ {frictionCoefficient.toFixed(2)}</div>
+                                                        <div className="text-xs text-slate-500">F&#x2098;</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-xs text-amber-500/80 mb-1 uppercase tracking-wider">Adjusted Baseline (B&#x2090;)</div>
+                                                        <div className="text-2xl font-mono font-bold text-amber-300">{adjusted}</div>
+                                                        <div className="text-xs text-slate-500">slots</div>
+                                                    </div>
+                                                    {reduction > 0 && (
+                                                        <div className="col-span-3 mt-2 pt-2 border-t border-slate-800 text-center">
+                                                            <span className="text-xs text-amber-600/80">{reduction} slot{reduction !== 1 ? 's' : ''} absorbed by systemic friction — unavailable for programme delivery.</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

@@ -25,6 +25,7 @@ export const AuditReviewPage: React.FC = () => {
     // Calibration state
     const [calibrationLargeSteerable, setCalibrationLargeSteerable] = useState<string>('');
     const [calibrationHistoricalAvg, setCalibrationHistoricalAvg] = useState<string>('');
+    const [frictionCoefficient, setFrictionCoefficient] = useState<string>('1.00');
     const [calibrationSaving, setCalibrationSaving] = useState(false);
 
     useEffect(() => {
@@ -43,6 +44,11 @@ export const AuditReviewPage: React.FC = () => {
                 (selectedLead as any).calibration_historical_avg != null
                     ? String((selectedLead as any).calibration_historical_avg)
                     : ''
+            );
+            setFrictionCoefficient(
+                (selectedLead as any).friction_coefficient != null
+                    ? String((selectedLead as any).friction_coefficient)
+                    : '1.00'
             );
             const savedDraftData = localStorage.getItem(`draftData_${selectedLead.id}`);
             const savedDraftAnalysis = localStorage.getItem(`draftAnalysis_${selectedLead.id}`);
@@ -63,44 +69,52 @@ export const AuditReviewPage: React.FC = () => {
     }, [selectedLead]);
 
     const fetchLeads = async () => {
-        const { data, error } = await supabase
-            .from('leads')
-            .select('*')
-            .in('audit_status', ['data_uploaded', 'draft_generated', 'report_delivered', 'data_received', 'report_generated'])
-            .order('created_at', { ascending: false });
-
-        if (!error) {
-            setLeads(data || []);
-        } else {
-            console.error('Error fetching leads:', error);
-        }
+            const { data, error } = await supabase
+                .from('leads')
+                .select('*')
+                .in('audit_status', ['data_uploaded', 'draft_generated', 'report_delivered', 'data_received', 'report_generated'])
+                .order('created_at', { ascending: true });
+            console.log('Fetched leads:', data);
+            if (!error) {
+                setLeads(data || []);
+            } else {
+                console.error('Error fetching leads:', error);
+                showToast('Failed to load audit queue.', 'error');
+            }
         setInitialLoading(false);
     };
 
     // Derived calibration values
     const largeSteerable = parseInt(calibrationLargeSteerable, 10);
     const historicalAvg = parseInt(calibrationHistoricalAvg, 10);
-    const isCalibrationValid = !isNaN(largeSteerable) && largeSteerable > 0 && !isNaN(historicalAvg) && historicalAvg > 0;
-    const calculatedBaseline = isCalibrationValid
+    const frictionVal = parseFloat(frictionCoefficient);
+    const isCalibrationValid = !isNaN(largeSteerable) && largeSteerable > 0 && !isNaN(historicalAvg) && historicalAvg > 0 && !isNaN(frictionVal) && frictionVal >= 1.0 && frictionVal <= 2.5;
+    const nominalBaseline = isCalibrationValid
         ? (largeSteerable * 5) + (Math.max(0, historicalAvg - largeSteerable) * 3)
+        : 0;
+    const calculatedBaseline = isCalibrationValid && frictionVal > 0 
+        ? Math.round(nominalBaseline / frictionVal) 
         : 0;
 
     const handleSaveCalibration = async () => {
         if (!selectedLead || !isCalibrationValid) return;
         setCalibrationSaving(true);
+        // Clamp Fm to [1.00, 2.50] before writing — matches DB CHECK constraint
+        const clampedFm = Math.min(2.50, Math.max(1.00, frictionVal));
         try {
             const { error } = await supabase
                 .from('leads')
                 .update({
                     calibration_large_steerable: largeSteerable,
                     calibration_historical_avg: historicalAvg,
+                    friction_coefficient: clampedFm,
                 } as any)
                 .eq('id', selectedLead.id);
 
             if (error) throw error;
 
             // Update local state
-            const updatedLead = { ...selectedLead, calibration_large_steerable: largeSteerable, calibration_historical_avg: historicalAvg } as any;
+            const updatedLead = { ...selectedLead, calibration_large_steerable: largeSteerable, calibration_historical_avg: historicalAvg, friction_coefficient: clampedFm } as any;
             setSelectedLead(updatedLead);
             setLeads(prev => prev.map(l => l.id === selectedLead.id ? updatedLead : l));
             showToast('Calibration saved.', 'success');
@@ -133,6 +147,8 @@ export const AuditReviewPage: React.FC = () => {
                     email: selectedLead.email,
                     calibration_large_steerable: largeSteerable,
                     calibration_historical_avg: historicalAvg,
+                    friction_coefficient: frictionVal,
+                    primary_pain_point: (selectedLead as any).primary_pain_point || null,
                 })
             });
 
@@ -181,6 +197,7 @@ export const AuditReviewPage: React.FC = () => {
                     analysis: draftAnalysis,
                     calibration_large_steerable: largeSteerable,
                     calibration_historical_avg: historicalAvg,
+                    friction_coefficient: frictionVal,
                     capacity_baseline: calculatedBaseline,
                 })
             });
@@ -241,10 +258,16 @@ export const AuditReviewPage: React.FC = () => {
                         ) : leads.length === 0 ? (
                             <p className="text-slate-500 text-sm">No recent uploads pending review.</p>
                         ) : null}
-                        {leads.map(lead => (
+                        {leads.map(lead => {
+                            const submitDate = lead.created_at ? new Date(lead.created_at) : new Date();
+                            const isOld = (new Date().getTime() - submitDate.getTime()) > (3 * 24 * 60 * 60 * 1000);
+                            const isPending = (lead as any).audit_status === 'data_uploaded' || (lead as any).audit_status === 'data_received';
+                            const isOverdue = isPending && isOld;
+
+                            return (
                             <div
                                 key={lead.id}
-                                className={`p-4 border rounded-xl cursor-pointer transition-colors ${selectedLead?.id === lead.id ? 'border-action-blue bg-blue-50' : 'border-slate-200 hover:border-slate-400'}`}
+                                className={`p-4 border rounded-xl cursor-pointer transition-colors ${selectedLead?.id === lead.id ? 'border-action-blue bg-blue-50' : isOverdue ? 'border-red-400 bg-red-50 hover:bg-red-100' : 'border-slate-200 bg-white hover:border-slate-400'}`}
                                 onClick={() => {
                                     if (selectedLead?.id !== lead.id) {
                                         setSelectedLead(lead);
@@ -252,7 +275,11 @@ export const AuditReviewPage: React.FC = () => {
                                 }}
                             >
                                 <h3 className="font-bold text-slate-800">{(lead as any).organization_name || 'Unknown Org'}</h3>
-                                <p className="text-xs text-slate-500 mb-2 truncate">{lead.email}</p>
+                                <p className="text-xs text-slate-500 mb-1 truncate">{lead.email}</p>
+                                <p className={`text-xs font-medium mb-3 ${isOverdue ? 'text-red-600' : 'text-slate-500'}`}>
+                                    Submitted: {submitDate.toLocaleDateString()}
+                                    {isOverdue && ' (Overdue)'}
+                                </p>
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${(lead as any).audit_status === 'data_uploaded' || (lead as any).audit_status === 'data_received' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
                                         {(lead as any).audit_status === 'data_uploaded' || (lead as any).audit_status === 'data_received' ? 'Needs Review' : 'Published'}
@@ -291,7 +318,8 @@ export const AuditReviewPage: React.FC = () => {
                                     )}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -310,43 +338,67 @@ export const AuditReviewPage: React.FC = () => {
                                     <h2 className="text-lg font-bold text-slate-800">{(selectedLead as any).organization_name || 'Unknown Org'}</h2>
                                     <p className="text-xs text-slate-500 truncate">{selectedLead.email}{(selectedLead as any).portfolio_context_count ? ` · ~${(selectedLead as any).portfolio_context_count} initiatives` : ''}</p>
                                 </div>
+                                {(selectedLead as any).primary_pain_point && (
+                                    <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wider mb-0.5">Primary Governance Pain Point</p>
+                                        <p className="text-xs text-amber-900 leading-snug">{(selectedLead as any).primary_pain_point}</p>
+                                    </div>
+                                )}
 
                                 <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                                     <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-2">
                                         <Calculator size={14} className="text-action-blue" />
-                                        Capacity Calibration — Slot-Sync Session
+                                        Capacity Calibration - Slot-Sync Session
                                         {calibrationSaving && <Loader2 size={13} className="ml-auto animate-spin text-slate-400" />}
                                         {!calibrationSaving && isCalibrationValid && (selectedLead as any).calibration_large_steerable && <CheckCircle2 size={13} className="ml-auto text-green-500" />}
                                     </h3>
-
-                                    <div className="grid grid-cols-2 gap-3 mb-3">
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-600 mb-1">Executive Steering Capacity</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-action-blue focus:border-action-blue outline-none"
-                                                placeholder="e.g. 3"
-                                                value={calibrationLargeSteerable}
-                                                onChange={e => setCalibrationLargeSteerable(e.target.value)}
-                                                onBlur={handleSaveCalibration}
-                                            />
-                                            <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">Large/Strategic (Tier 1) initiatives the exec team can steer at once</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-600 mb-1">Historical Active Portfolio</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-action-blue focus:border-action-blue outline-none"
-                                                placeholder="e.g. 12"
-                                                value={calibrationHistoricalAvg}
-                                                onChange={e => setCalibrationHistoricalAvg(e.target.value)}
-                                                onBlur={handleSaveCalibration}
-                                            />
-                                            <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">Avg active projects in their best delivery year</p>
-                                        </div>
-                                    </div>
+                                    <div className="grid grid-cols-3 gap-3 mb-3">
+                                          <div>
+                                              <label className="block text-xs font-bold text-slate-500 mb-1">Large/Steerable</label>
+                                              <input
+                                                  type="number"
+                                                  min="1"
+                                                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-action-blue focus:border-action-blue outline-none"
+                                                  placeholder="e.g. 3"
+                                                  value={calibrationLargeSteerable}
+                                                  onChange={e => setCalibrationLargeSteerable(e.target.value)}
+                                                  onBlur={handleSaveCalibration}
+                                              />
+                                              <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">Tier 1 limit</p>
+                                          </div>
+                                          <div>
+                                              <label className="block text-xs font-bold text-slate-500 mb-1">Historical Avg</label>
+                                              <input
+                                                  type="number"
+                                                  min="1"
+                                                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-action-blue focus:border-action-blue outline-none"
+                                                  placeholder="e.g. 12"
+                                                  value={calibrationHistoricalAvg}
+                                                  onChange={e => setCalibrationHistoricalAvg(e.target.value)}
+                                                  onBlur={handleSaveCalibration}
+                                              />
+                                              <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">Best year</p>
+                                          </div>
+                                          <div>
+                                              <label className="block text-xs font-bold text-slate-500 mb-1">Friction (Fm) <span className="font-normal text-slate-400">(1.0–2.5)</span></label>
+                                              <input
+                                                  type="number"
+                                                  step="0.05"
+                                                  min="1.0"
+                                                  max="2.5"
+                                                  className={`w-full px-3 py-1.5 border rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-action-blue focus:border-action-blue outline-none ${
+                                                      !isNaN(frictionVal) && (frictionVal < 1.0 || frictionVal > 2.5)
+                                                          ? 'border-red-400 bg-red-50'
+                                                          : 'border-slate-300'
+                                                  }`}
+                                                  placeholder="e.g. 1.00"
+                                                  value={frictionCoefficient}
+                                                  onChange={e => setFrictionCoefficient(e.target.value)}
+                                                  onBlur={handleSaveCalibration}
+                                              />
+                                              <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">Admin. drag · 1.0 = none, 2.5 = max</p>
+                                          </div>
+                                      </div>
 
                                     {isCalibrationValid && (
                                         <div className="flex items-center gap-4 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">

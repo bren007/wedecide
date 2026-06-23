@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowRight, Lock, CheckCircle, ShieldCheck, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -7,6 +7,13 @@ const STEPS = ['Scoping', 'Security_Trust', 'What_Youre_Commissioning', 'Payment
 export const AuditFunnelPage: React.FC = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [loading, setLoading] = useState(false);
+
+    // IDEMPOTENCY LOCK: Once a Stripe session is initiated, this ref is permanently
+    // set to `true` for the lifetime of this component mount. This ensures that
+    // tab-switches, visibility changes, or any lifecycle re-runs CANNOT trigger
+    // a second `create-checkout` call. Only an explicit button click can start it,
+    // and only if the lock has not yet been acquired.
+    const checkoutInFlightRef = useRef(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -63,6 +70,16 @@ export const AuditFunnelPage: React.FC = () => {
     };
 
     const handleStripePayment = async () => {
+        // GUARD: If a checkout is already in flight (e.g. user returned from tab switch
+        // after clicking, or component re-rendered), do nothing. The lock is permanent
+        // for this mount — only a full page reload resets it.
+        if (checkoutInFlightRef.current) {
+            console.warn('⚠️ Checkout already in flight. Ignoring duplicate trigger.');
+            return;
+        }
+        // Acquire the lock BEFORE any async work.
+        checkoutInFlightRef.current = true;
+
         console.log('💳 Initiating Stripe Payment Flow...');
         console.log('User Email:', formData.email);
         
@@ -78,6 +95,8 @@ export const AuditFunnelPage: React.FC = () => {
 
             if (error) {
                 console.error('❌ Supabase Function Error:', error);
+                // Release lock on error so user can retry via explicit click.
+                checkoutInFlightRef.current = false;
                 throw error;
             }
             
@@ -85,9 +104,12 @@ export const AuditFunnelPage: React.FC = () => {
 
             if (data?.url) {
                 console.log('🚀 Redirecting to Stripe Checkout:', data.url);
+                // Lock remains true — we are navigating away. Any re-mount after
+                // browser back-button will hit a fresh component instance.
                 window.location.href = data.url;
             } else {
                 console.error('❌ No URL returned from checkout session');
+                checkoutInFlightRef.current = false;
                 throw new Error("Failed to create Checkout session");
             }
         } catch (err: any) {
@@ -341,10 +363,10 @@ export const AuditFunnelPage: React.FC = () => {
 
                                     <button
                                         onClick={handleStripePayment}
-                                        disabled={loading}
+                                        disabled={loading || checkoutInFlightRef.current}
                                         className="w-full bg-action-blue text-white font-bold py-4 px-4 rounded-xl shadow-lg shadow-blue-500/20 hover:bg-blue-600 hover:-translate-y-0.5 active:translate-y-0 transition-all flex justify-center items-center gap-2 disabled:opacity-50"
                                     >
-                                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <><Lock size={18} /> Complete Secure Checkout</>}
+                                        {loading || checkoutInFlightRef.current ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <><Lock size={18} /> Complete Secure Checkout</>}
                                     </button>
                                     
                                     <div className="flex items-center justify-center gap-4 mt-6 grayscale opacity-50">

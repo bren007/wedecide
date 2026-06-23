@@ -12,7 +12,7 @@
     "db:sync": "node scripts/db/sync_db.js",
     "db:push": "prisma db push",
     "test": "vitest run",
-    "test:unit": "vitest run auth_singleton auth_resilience auth_timeout regression_fixes performance csv_validation capacity_load",
+    "test:unit": "vitest run auth_singleton auth_resilience auth_timeout regression_fixes performance csv_validation capacity_load strategic_audit_agent_pipeline",
     "test:int": "vitest run auth_integration rls_regression admin_functionality invite_system rbac_isolation",
     "test:watch": "vitest",
     "server": "tsx server/index.ts",

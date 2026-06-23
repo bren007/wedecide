@@ -75,7 +75,7 @@ serve(async (req: Request) => {
         // Look up the audit record by token
         const { data: auditRecord, error: auditError } = await supabaseAdmin
             .from("leads")
-            .select("id, audit_token_status, audit_parsed_json, audit_completed_at, licence_org_id, calibration_large_steerable, calibration_historical_avg, capacity_baseline")
+            .select("id, audit_token_status, audit_parsed_json, audit_completed_at, licence_org_id, calibration_large_steerable, calibration_historical_avg, capacity_baseline, friction_coefficient")
             .eq("audit_token", audit_token)
             .single();
 
@@ -243,8 +243,14 @@ serve(async (req: Request) => {
 
             // Pre-populate capacity_settings from audit calibration
             if (auditRecord.calibration_large_steerable && auditRecord.calibration_historical_avg) {
-                const baseline = auditRecord.capacity_baseline || 
+                const nominalBaseline = auditRecord.capacity_baseline || 
                     (auditRecord.calibration_large_steerable * 5) + (Math.max(0, auditRecord.calibration_historical_avg - auditRecord.calibration_large_steerable) * 3);
+
+                // Apply friction coefficient from the audit record (default 1.00)
+                const fm = auditRecord.friction_coefficient != null
+                    ? Math.min(2.50, Math.max(1.00, Number(auditRecord.friction_coefficient)))
+                    : 1.00;
+                const adjustedBaseline = Math.round(nominalBaseline / fm);
 
                 // Check if capacity_settings exists for this org
                 const { data: existingSettings } = await supabaseAdmin
@@ -259,11 +265,12 @@ serve(async (req: Request) => {
                         .update({
                             calibration_large_steerable: auditRecord.calibration_large_steerable,
                             calibration_historical_avg: auditRecord.calibration_historical_avg,
-                            total_focus_slots: baseline,
+                            total_focus_slots: adjustedBaseline, // Fm-adjusted limit
+                            friction_coefficient: fm,
                         })
                         .eq("id", existingSettings.id);
                     if (capUpdateError) console.error("[IMPORT] Failed to update capacity_settings:", capUpdateError);
-                    else console.log(`[IMPORT] Updated capacity_settings: baseline=${baseline}`);
+                    else console.log(`[IMPORT] Updated capacity_settings: nominalBaseline=${nominalBaseline}, Fm=${fm}, adjustedBaseline=${adjustedBaseline}`);
                 } else {
                     const { error: capInsertError } = await supabaseAdmin
                         .from("capacity_settings")
@@ -271,12 +278,13 @@ serve(async (req: Request) => {
                             org_id: orgId,
                             calibration_large_steerable: auditRecord.calibration_large_steerable,
                             calibration_historical_avg: auditRecord.calibration_historical_avg,
-                            total_focus_slots: baseline,
+                            total_focus_slots: adjustedBaseline,  // Fm-adjusted limit
+                            friction_coefficient: fm,
                             total_capex_limit: 0,
                             total_opex_limit: 0,
                         });
                     if (capInsertError) console.error("[IMPORT] Failed to insert capacity_settings:", capInsertError);
-                    else console.log(`[IMPORT] Created capacity_settings: baseline=${baseline}`);
+                    else console.log(`[IMPORT] Created capacity_settings: nominalBaseline=${nominalBaseline}, Fm=${fm}, adjustedBaseline=${adjustedBaseline}`);
                 }
             }
 

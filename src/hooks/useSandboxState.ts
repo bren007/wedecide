@@ -7,6 +7,9 @@ export interface CapacitySettings {
     total_capex_limit: number;
     total_opex_limit: number;
     fiscal_drag_threshold?: number | null;
+    friction_coefficient?: number | null;
+    calibration_large_steerable?: number | null;
+    calibration_historical_avg?: number | null;
 }
 
 export interface Initiative {
@@ -254,15 +257,29 @@ export function useSandboxState() {
         const fiscalDragThreshold = settings.fiscal_drag_threshold != null ? Number(settings.fiscal_drag_threshold) : null;
         const isOverFiscalDrag = fiscalDragThreshold != null && fiscalDrag > fiscalDragThreshold;
 
+        // Friction Coefficient
+        const frictionCoefficient = settings.friction_coefficient != null ? Number(settings.friction_coefficient) : 1.00;
+        const clampedFm = Math.min(2.50, Math.max(1.00, frictionCoefficient));
+
+        // Nominal baseline (from calibration inputs if available, else fall back to stored total_focus_slots)
+        const nominalFocusSlots = (settings.calibration_large_steerable && settings.calibration_historical_avg)
+            ? (settings.calibration_large_steerable * 5) + Math.max(0, settings.calibration_historical_avg - settings.calibration_large_steerable) * 3
+            : Math.round(settings.total_focus_slots * clampedFm); // reverse-derive if no calibration data
+
+        // Adjusted baseline = Bn / Fm  (this matches total_focus_slots already stored on save)
+        const adjustedFocusLimit = Math.round(nominalFocusSlots / clampedFm);
+
         return {
             currentFocusLoad,
             currentCapexLoad,
             currentOpexLoad,
             currentFutureOpexLoad,
-            focusLimit: settings.total_focus_slots,
+            focusLimit: adjustedFocusLimit, // Command Centre enforces the friction-adjusted limit
+            nominalFocusSlots,              // Exposed for diagnostics / reporting
+            frictionCoefficient: clampedFm, // Exposed for display
             capexLimit: Number(settings.total_capex_limit),
             opexLimit: Number(settings.total_opex_limit),
-            isOverFocus: currentFocusLoad > settings.total_focus_slots,
+            isOverFocus: currentFocusLoad > adjustedFocusLimit,
             isOverCapex: currentCapexLoad > settings.total_capex_limit,
             isOverOpex: currentOpexLoad > settings.total_opex_limit,
             fiscalDrag,

@@ -428,7 +428,7 @@ serve(async (req: Request) => {
     }
 
     try {
-        const { email, data, analysis, calibration_large_steerable, calibration_historical_avg, capacity_baseline } = await req.json();
+        const { email, data, analysis, calibration_large_steerable, calibration_historical_avg, capacity_baseline, friction_coefficient } = await req.json();
         if (!email || !data || !analysis) {
             return new Response(
                 JSON.stringify({ error: "Email, data, and edited analysis are required" }),
@@ -510,6 +510,10 @@ serve(async (req: Request) => {
                 calibration_large_steerable: calibration_large_steerable || null,
                 calibration_historical_avg: calibration_historical_avg || null,
                 capacity_baseline: capacity_baseline || null,
+                // Persist friction coefficient if provided (clamp to valid range)
+                friction_coefficient: friction_coefficient != null
+                    ? Math.min(2.50, Math.max(1.00, parseFloat(friction_coefficient) || 1.00))
+                    : 1.00,
             })
             .eq("id", lead.id);
 

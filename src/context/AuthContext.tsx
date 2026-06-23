@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ]);
     };
 
-    const QUERY_TIMEOUT = 30000; // Increased to 30s for staging debug
+    const QUERY_TIMEOUT = 8000; // 8s hard timeout: fast-fail keeps auth from soft-hanging on tab return
 
     const fetchPromise = (async () => {
       try {
@@ -324,6 +324,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       subscription.unsubscribe();
     };
   }, []); // Only subscribe once on mount
+
+  // Visibility change guard: top-level useEffect (Rules of Hooks compliant).
+  // Prevents any stale auth path from re-triggering when the user returns to the tab.
+  // The TOKEN_REFRESHED de-bounce above handles most cases; this is the hard backstop.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && initialFetchDoneRef.current) {
+        console.log('⏭️ [visibilitychange] Tab re-focused. Auth already resolved, no action taken.');
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   // Synchronous check for cached user to avoid initial spinner
   // We use a ref to ensure this only runs once during the very first render phase

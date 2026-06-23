@@ -149,23 +149,26 @@ ${JSON.stringify(agent1Analysis, null, 2)}
 
 <portfolio_summary>
 Organisation: ${payload.organisation_name}
-Capacity Baseline: ${payload.calculated_capacity_baseline} Focus Slots (derived from executive steering capacity of ${payload.calibration.large_steerable} large initiatives and historical throughput of ${payload.calibration.historical_avg} active projects)
+${payload.primary_pain_point ? `Primary Governance Pain Point (stated by client): "${payload.primary_pain_point}"\n` : ''}Nominal Capacity Baseline (Bₙ): ${payload.nominal_capacity_baseline} Focus Slots (derived from executive steering capacity of ${payload.calibration.large_steerable} large initiatives and historical throughput of ${payload.calibration.historical_avg} active projects)
+Organisational Friction Coefficient (Fₘ): ${payload.friction_coefficient} — Systemic drag factor applied to account for administrative overhead, compliance load, and bureaucratic friction.
+Adjusted Capacity Baseline (Bₐ = Bₙ / Fₘ): ${payload.calculated_capacity_baseline} Focus Slots — the effective delivery ceiling after friction is applied.
 Total Current Load: ${payload.total_current_load} Focus Slots
-Overcommitment: ${payload.overcommitment_pct}% (${payload.absolute_slot_deficit > 0 ? `deficit of ${payload.absolute_slot_deficit} slots` : 'within limits'})
+Overcommitment: ${payload.overcommitment_pct}% (${payload.absolute_slot_deficit > 0 ? `deficit of ${payload.absolute_slot_deficit} slots against the friction-adjusted baseline` : 'within adjusted limits'})
 Fiscal Drag: $${payload.fiscal_drag.toLocaleString()}
 Total Initiatives: ${payload.portfolio.length}
 </portfolio_summary>
 
 <verified_mathematical_findings>
 CRITICAL DIRECTIVE: These are verified geometric facts. You MUST use these exact numbers. If the raw analysis proposes different mathematics, the raw analysis is WRONG and you must overwrite it with these figures:
-- Maximum Capacity Baseline: ${payload.calculated_capacity_baseline} Focus Slots
+- Nominal Capacity Baseline (Bₙ): ${payload.nominal_capacity_baseline} Focus Slots
+- Organisational Friction Coefficient (Fₘ): ${payload.friction_coefficient}
+- Adjusted Capacity Baseline (Bₐ): ${payload.calculated_capacity_baseline} Focus Slots
 - Total Portfolio Load: ${payload.total_current_load} Focus Slots
-- Overcommitment: ${payload.overcommitment_pct}% of structural capacity
+- Overcommitment: ${payload.overcommitment_pct}% of adjusted structural capacity
 - Absolute Slot Deficit: ${payload.absolute_slot_deficit}
 - Fiscal Drag: $${payload.fiscal_drag.toLocaleString()}
 ${payload.total_current_load > payload.calculated_capacity_baseline ? `\nCRITICAL FINDING (inject verbatim at end of Section 3 opening paragraph): "At this load, fiscal drag is structurally guaranteed, and Tier 1 mandated programmes are mathematically at risk of failure through resource starvation."` : ''}
 </verified_mathematical_findings>`;
-
     console.log("[AGENT 2] Calling Claude for editorial rewrite...");
     const claudeRespText = await callClaude(anthropicApiKey, systemPrompt, userPrompt);
     console.log("[AGENT 2] Claude response received.");
@@ -196,7 +199,7 @@ ${payload.total_current_load > payload.calculated_capacity_baseline ? `\nCRITICA
 
 // ── Portfolio Parser ──────────────────────────────────────────────────
 
-function parsePortfolio(csvString: string, lead: any, calibration: { large_steerable: number, historical_avg: number }) {
+function parsePortfolio(csvString: string, lead: any, calibration: { large_steerable: number, historical_avg: number }, frictionCoefficient: number) {
     const parsed = Papa.parse(csvString, { header: true, skipEmptyLines: true });
     const rows = parsed.data;
 
@@ -266,16 +269,22 @@ function parsePortfolio(csvString: string, lead: any, calibration: { large_steer
     const totalLoad = initiatives.reduce((sum: number, init: any) => sum + init.calculated_focus_slots, 0);
 
     // Capacity Baseline from Slot-Sync calibration (unified formula)
-    const capacityBaseline = (calibration.large_steerable * 5) + (Math.max(0, calibration.historical_avg - calibration.large_steerable) * 3);
+    const nominalCapacityBaseline = (calibration.large_steerable * 5) + (Math.max(0, calibration.historical_avg - calibration.large_steerable) * 3);
+
+    // Clamp Fm and compute the friction-adjusted baseline  Ba = Bn / Fm
+    const clampedFm = Math.min(2.50, Math.max(1.00, frictionCoefficient));
+    const adjustedCapacityBaseline = Math.round(nominalCapacityBaseline / clampedFm);
 
     // Pre-calculated hard facts (injected into AI prompts, not for AI to derive)
-    const rawOverPct = capacityBaseline > 0 ? Math.round(((totalLoad - capacityBaseline) / capacityBaseline) * 100) : 0;
+    const rawOverPct = adjustedCapacityBaseline > 0 ? Math.round(((totalLoad - adjustedCapacityBaseline) / adjustedCapacityBaseline) * 100) : 0;
     const overcommitmentPct = Math.max(0, rawOverPct);
-    const absoluteSlotDeficit = Math.max(0, totalLoad - capacityBaseline);
+    const absoluteSlotDeficit = Math.max(0, totalLoad - adjustedCapacityBaseline);
 
     return {
         organisation_name: lead.organization_name || "Public Sector Organisation",
-        calculated_capacity_baseline: capacityBaseline,
+        nominal_capacity_baseline: nominalCapacityBaseline,
+        calculated_capacity_baseline: adjustedCapacityBaseline, // Fm-adjusted — used by AI agents
+        friction_coefficient: clampedFm,
         total_current_load: totalLoad,
         overcommitment_pct: overcommitmentPct,
         absolute_slot_deficit: absoluteSlotDeficit,
@@ -297,7 +306,7 @@ serve(async (req: Request) => {
     }
 
     try {
-        const { email, calibration_large_steerable, calibration_historical_avg } = await req.json();
+        const { email, calibration_large_steerable, calibration_historical_avg, friction_coefficient, primary_pain_point } = await req.json();
         if (!email) {
             return new Response(JSON.stringify({ error: "Email is required" }), {
                 status: 400,
@@ -310,6 +319,9 @@ serve(async (req: Request) => {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
+
+        // Parse and clamp Fm (default to 1.00 = no friction)
+        const fm = Math.min(2.50, Math.max(1.00, parseFloat(friction_coefficient) || 1.00));
 
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -351,8 +363,14 @@ serve(async (req: Request) => {
             large_steerable: parseInt(calibration_large_steerable, 10),
             historical_avg: parseInt(calibration_historical_avg, 10),
         };
-        const payload = parsePortfolio(csvString, lead, calibration);
-        console.log(`[DRAFT] Parsed ${payload.portfolio.length} initiatives, ${payload.total_current_load} total slots, baseline: ${payload.calculated_capacity_baseline}`);
+        const payload = parsePortfolio(csvString, lead, calibration, fm);
+        // Attach primary pain point from the audit funnel (Step 1) for AI context
+        if (primary_pain_point) {
+            payload.primary_pain_point = primary_pain_point;
+        } else if (lead.primary_pain_point) {
+            payload.primary_pain_point = lead.primary_pain_point;
+        }
+        console.log(`[DRAFT] Parsed ${payload.portfolio.length} initiatives, ${payload.total_current_load} total slots, nominal baseline: ${payload.nominal_capacity_baseline}, Fm: ${payload.friction_coefficient}, adjusted baseline: ${payload.calculated_capacity_baseline}`);
 
         // 4. Agent 1: Gemini structured analysis
         const agent1Analysis = await runAgent1(geminiKey, payload);

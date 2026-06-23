@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
   // Unauthenticated Topbar
   if (!isAuthenticated) {
     return (
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950 border-b border-slate-800 py-4">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0b0f19] border-b border-[#222c3f] py-4">
         <div className="container mx-auto px-6 flex items-center justify-between">
           <Link to="/" className="flex items-center no-underline">
             <Layers className="text-blue-500 inline-block mr-2" size={24} />
@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* Mobile Header ( visible only on small screens ) */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950 border-b border-slate-800 z-[110] flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0b0f19] border-b border-[#222c3f] z-[110] flex items-center justify-between px-4">
         <Link to="/command-center" className="flex items-center no-underline">
           <Layers className="text-blue-500 inline-block mr-2" size={24} />
           <span className="text-xl font-bold text-white tracking-tight">AlturaGov</span>
@@ -75,9 +75,9 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Sidebar Navigation */}
-      <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-slate-950 border-r border-slate-800 flex flex-col z-[100] transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0 pt-16' : '-translate-x-full pt-16'} lg:translate-x-0 lg:pt-0`}>
+      <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-[#0b0f19] border-r border-[#222c3f] flex flex-col z-[100] transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0 pt-16' : '-translate-x-full pt-16'} lg:translate-x-0 lg:pt-0`}>
         {/* Brand (Desktop only) */}
-        <div className="hidden lg:flex h-16 items-center px-6 border-b border-slate-800 flex-shrink-0">
+        <div className="hidden lg:flex h-16 items-center px-6 border-b border-[#222c3f] flex-shrink-0">
           <Link to="/command-center" className="flex items-center no-underline">
             <Layers className="text-blue-500 inline-block mr-2" size={24} />
             <span className="text-xl font-bold text-white tracking-tight hover:text-blue-400 transition-colors">AlturaGov</span>
@@ -94,9 +94,9 @@ export const Navbar: React.FC = () => {
               <Link
                 to="/command-center"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center px-3 py-2.5 rounded-lg font-medium transition-colors ${isActive('/command-center')
-                    ? 'bg-blue-500/10 text-blue-400 font-bold'
-                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                className={`flex items-center px-3 py-2.5 rounded-lg font-medium transition-all ${isActive('/command-center')
+                    ? 'bg-[#1b2332] text-blue-400 font-semibold border-l-2 border-blue-500 rounded-l-none'
+                    : 'text-slate-300 hover:bg-[#131924] hover:text-white'
                   }`}
               >
                 <LayoutDashboard size={18} className="mr-3 flex-shrink-0" />
@@ -120,9 +120,9 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/propose-initiative"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/propose-initiative')
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive('/propose-initiative')
+                      ? 'bg-[#1b2332] text-slate-100 border-l-2 border-blue-500 rounded-l-none pl-2.5'
+                      : 'text-slate-400 hover:bg-[#131924] hover:text-slate-200'
                     }`}
                 >
                   <PlusSquare size={16} className="mr-3 flex-shrink-0" />
@@ -131,9 +131,9 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/strategic-ingestion"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/strategic-ingestion')
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive('/strategic-ingestion')
+                      ? 'bg-[#1b2332] text-slate-100 border-l-2 border-blue-500 rounded-l-none pl-2.5'
+                      : 'text-slate-400 hover:bg-[#131924] hover:text-slate-200'
                     }`}
                 >
                   <UploadCloud size={16} className="mr-3 flex-shrink-0" />
@@ -158,9 +158,9 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/meetings"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname.startsWith('/meetings')
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${location.pathname.startsWith('/meetings')
+                      ? 'bg-[#1b2332] text-slate-100 border-l-2 border-blue-500 rounded-l-none pl-2.5'
+                      : 'text-slate-400 hover:bg-[#131924] hover:text-slate-200'
                     }`}
                 >
                   <Calendar size={16} className="mr-3 flex-shrink-0" />
@@ -169,9 +169,9 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/strategic-ledger"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/strategic-ledger')
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive('/strategic-ledger')
+                      ? 'bg-[#1b2332] text-slate-100 border-l-2 border-blue-500 rounded-l-none pl-2.5'
+                      : 'text-slate-400 hover:bg-[#131924] hover:text-slate-200'
                     }`}
                 >
                   <ScrollText size={16} className="mr-3 flex-shrink-0" />
@@ -192,9 +192,9 @@ export const Navbar: React.FC = () => {
                     <Link
                       to="/settings"
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/settings')
-                        ? 'bg-blue-500/10 text-blue-400'
-                        : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive('/settings')
+                        ? 'bg-[#1b2332] text-blue-400 border-l-2 border-blue-500 rounded-l-none pl-2.5'
+                        : 'text-slate-400 hover:bg-[#131924] hover:text-slate-200'
                         }`}
                     >
                       <Users size={16} className="mr-3 flex-shrink-0" />
@@ -205,17 +205,30 @@ export const Navbar: React.FC = () => {
 
                 {/* Global Admin Links */}
                 {isGlobalAdmin && (
-                  <Link
-                    to="/admin/pulse"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/pulse')
-                      ? 'bg-red-500/10 text-red-400'
-                      : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
-                      }`}
-                  >
-                    <Activity size={16} className="mr-3 flex-shrink-0" />
-                    System Pulse
-                  </Link>
+                  <>
+                    <Link
+                      to="/admin/pulse"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive('/admin/pulse')
+                        ? 'bg-rose-500/8 text-rose-400 border-l-2 border-rose-500 rounded-l-none pl-2.5'
+                        : 'text-slate-500 hover:bg-[#131924] hover:text-slate-300'
+                        }`}
+                    >
+                      <Activity size={16} className="mr-3 flex-shrink-0" />
+                      System Pulse
+                    </Link>
+                    <Link
+                      to="/admin/audit-review"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive('/admin/audit-review')
+                        ? 'bg-rose-500/8 text-rose-400 border-l-2 border-rose-500 rounded-l-none pl-2.5'
+                        : 'text-slate-500 hover:bg-[#131924] hover:text-slate-300'
+                        }`}
+                    >
+                      <Activity size={16} className="mr-3 flex-shrink-0" />
+                      Audit Review
+                    </Link>
+                  </>
                 )}
               </div>
             </div>
@@ -224,13 +237,13 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Profile Dropdown Bottom */}
-        <div className="p-4 border-t border-slate-800 relative">
+        <div className="p-4 border-t border-[#222c3f] relative">
           <button
             onClick={() => setProfileOpen(!profileOpen)}
-            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-900 transition-colors focus:outline-none ring-1 ring-slate-800"
+            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-[#131924] transition-colors focus:outline-none ring-1 ring-[#222c3f]"
           >
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#1b2332] flex items-center justify-center flex-shrink-0">
                 <User size={16} className="text-slate-400" />
               </div>
               <div className="flex flex-col items-start truncate text-left">
@@ -250,19 +263,19 @@ export const Navbar: React.FC = () => {
             <>
               {/* Invisible overlay to catch clicks outside dropdown */}
               <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)}></div>
-              <div className="absolute bottom-[calc(100%+8px)] left-4 right-4 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden z-[120]">
+              <div className="absolute bottom-[calc(100%+8px)] left-4 right-4 bg-[#131924] border border-[#222c3f] rounded-lg shadow-xl overflow-hidden z-[120]">
                 <Link
                   to="/settings"
                   onClick={() => { setProfileOpen(false); setMobileMenuOpen(false); }}
-                  className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                  className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-[#1b2332] hover:text-white transition-colors"
                 >
                   <Settings size={16} className="mr-3" />
                   Settings
                 </Link>
-                <div className="h-px bg-slate-800"></div>
+                <div className="h-px bg-[#222c3f]"></div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="w-full flex items-center px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors"
                 >
                   <LogOut size={16} className="mr-3" />
                   Log out
@@ -276,7 +289,7 @@ export const Navbar: React.FC = () => {
       {/* Mobile Overlay Darken Background */}
       {mobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[90]"
+          className="lg:hidden fixed inset-0 bg-[#0b0f19]/80 backdrop-blur-sm z-[90]"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}

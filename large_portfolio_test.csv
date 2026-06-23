@@ -1,0 +1,34 @@
+initiative_name,strategic_pillar,approval_mandate,relative_priority,complexity_stakeholders_1_to_3,complexity_novelty_1_to_3,complexity_dependency_1_to_3,current_fy_budget,lifecycle_stage,target_delivery_quarter,next_milestone_date,dependency_blockers
+National Identity System v2,Digital Public Services,Cabinet Approved,Tier 1,3,2,3,45000000,Active,Q2 FY27,2026-09-15,"Central API Gateway, Legacy Data Migration Service"
+Central API Gateway,Core Infrastructure,Board/Delegated,Tier 2,2,1,2,15000000,Active,Q4 FY26,2026-06-30,None
+Legacy Data Migration Service,Core Infrastructure,Board/Delegated,Tier 3,2,2,1,8000000,Planning,Q1 FY27,2026-08-01,None
+Inter-Agency Cyber Defense Shield,Cyber Security & Trust,Cabinet Approved,Tier 1,3,3,2,65000000,Active,Q3 FY27,2026-10-15,Cloud Security Baseline
+Cloud Security Baseline,Cyber Security & Trust,Ministerial Approved,Tier 2,2,1,1,12000000,Active,Q2 FY26,2026-05-30,None
+Integrated Health Record Platform,Healthcare Modernisation,Cabinet Approved,Tier 1,3,3,3,85000000,Active,Q4 FY27,2026-12-01,"Federated Query Broker, NHS Consent Manager"
+Federated Query Broker,Digital Public Services,Board/Delegated,Tier 3,2,2,2,9000000,Planning,Q1 FY27,2026-07-20,None
+NHS Consent Manager,Healthcare Modernisation,Ministerial Approved,Tier 2,2,2,2,18000000,Active,Q3 FY26,2026-08-10,None
+National Smart Transit Card Rollout,Core Infrastructure,Cabinet Approved,Tier 1,3,2,3,55000000,Active,Q2 FY27,2026-11-15,"Contactless Payment Core, Regional Fare Engine"
+Contactless Payment Core,Core Infrastructure,Ministerial Approved,Tier 2,2,2,2,22000000,Active,Q1 FY27,2026-08-30,None
+Regional Fare Engine,Core Infrastructure,Board/Delegated,Tier 3,2,1,2,7500000,Planning,Q2 FY27,2026-10-05,None
+Unified Tax Filing Portal,Digital Public Services,Ministerial Approved,Tier 1,3,2,2,32000000,Active,Q3 FY27,2026-09-01,Secure Payment Gateway v2
+Secure Payment Gateway v2,Cyber Security & Trust,Board/Delegated,Tier 2,1,1,2,14000000,Active,Q4 FY26,2026-06-15,None
+Emergency Services Comms Network,Core Infrastructure,Cabinet Approved,Tier 1,3,3,2,48000000,Active,Q4 FY27,2026-12-15,Spectrum Allocator Module
+Spectrum Allocator Module,Core Infrastructure,Pre-Approval,Tier 3,1,2,1,4500000,Planning,Q1 FY27,2026-07-10,None
+Secondary Schools Digital Infrastructure,Education & Skills,Ministerial Approved,Tier 2,3,1,2,28000000,Active,Q1 FY27,2026-08-01,Rural Fibre Backhaul
+Rural Fibre Backhaul,Core Infrastructure,Cabinet Approved,Tier 1,3,2,3,40000000,Active,Q4 FY26,2026-06-30,None
+Border Biometrics & Entry Control,Cyber Security & Trust,Cabinet Approved,Tier 1,3,3,3,35000000,Active,Q2 FY27,2026-10-01,Passport API Integration
+Passport API Integration,Digital Public Services,Board/Delegated,Tier 2,2,1,2,11000000,Active,Q4 FY26,2026-05-15,None
+Environmental Grants Portal,Economic Enablement,Ministerial Approved,Tier 2,2,1,1,15000000,Active,Q2 FY27,2026-09-01,None
+Agricultural Subsidies System,Economic Enablement,Cabinet Approved,Tier 1,3,2,2,26000000,Planning,Q3 FY27,2026-11-01,Farmer Registry Consolidation
+Farmer Registry Consolidation,Economic Enablement,Board/Delegated,Tier 3,2,1,1,6500000,Planning,Q2 FY27,2026-08-15,None
+Social Housing Management Platform,Digital Public Services,Cabinet Approved,Tier 2,3,1,2,24000000,Active,Q1 FY27,2026-07-01,None
+Court Scheduling Modernisation,Digital Public Services,Ministerial Approved,Tier 1,3,2,2,19000000,Active,Q2 FY27,2026-09-15,Justice Video link Infrastructure
+Justice Video link Infrastructure,Core Infrastructure,Board/Delegated,Tier 3,2,1,2,8500000,Planning,Q1 FY27,2026-07-30,None
+National Geospatial Database,Core Infrastructure,Ministerial Approved,Tier 2,2,2,2,16500000,Active,Q3 FY26,2026-08-01,None
+AI Translation Service for Citizens,Digital Public Services,Pre-Approval,Tier 3,2,3,1,5000000,Planning,Q2 FY27,2026-10-15,None
+Open Data Portal Upgrade,Digital Public Services,Pre-Approval,Tier 3,1,1,1,3000000,Active,Q4 FY26,2026-05-15,None
+Mental Health Mobile Support Portal,Healthcare Modernisation,Ministerial Approved,Tier 2,2,2,1,12500000,Active,Q3 FY26,2026-07-15,None
+Primary School Coding Curriculum,Education & Skills,Board/Delegated,Tier 2,2,1,1,9500000,Active,Q1 FY27,2026-06-30,None
+Customs Single Window Interface,Cyber Security & Trust,Cabinet Approved,Tier 1,3,2,3,38000000,Planning,Q4 FY27,2026-11-30,Port Logistics Engine
+Port Logistics Engine,Economic Enablement,Board/Delegated,Tier 3,2,2,2,10500000,Planning,Q2 FY27,2026-08-01,None
+Biosecurity Scanning Tech Upgrade,Cyber Security & Trust,Ministerial Approved,Tier 1,2,3,2,21000000,Active,Q3 FY27,2026-09-01,None

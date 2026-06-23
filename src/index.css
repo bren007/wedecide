@@ -8,42 +8,42 @@
   /* Typography */
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Color Palette - AlturaGov Command Center Dark Theme */
-  --color-bg-primary: #020617;
-  /* slate-950 */
-  --color-bg-secondary: #0a0f1c;
-  /* Command center base */
-  --color-bg-tertiary: #0f172a;
-  /* slate-900 */
+  /* Color Palette - AlturaGov Executive Dark Theme */
+  --color-bg-primary: #0b0f19;
+  /* Soft matte primary dark background */
+  --color-bg-secondary: #131924;
+  /* Softer card/column background */
+  --color-bg-tertiary: #1b2332;
+  /* Accent surface/hover background */
 
-  /* Accent Colors */
+  /* Accent Colors (Muted for trust & governance) */
   --color-primary: #3b82f6;
   /* Action Blue */
   --color-primary-hover: #2563eb;
   --color-primary-light: #60a5fa;
   --color-secondary: #0ea5e9;
   /* Sky Blue */
-  --color-accent: #fbbf24;
-  /* Strategic Gold */
+  --color-accent: #eab308;
+  /* Matte Strategic Gold */
 
   /* Text Colors */
-  --color-text-primary: #f8fafc;
+  --color-text-primary: #f1f5f9;
+  /* Softer white to reduce eye strain */
   --color-text-secondary: #94a3b8;
-  /* slate-400 */
+  /* Slate-400 */
   --color-text-muted: #64748b;
 
   /* Border & Divider */
-  --color-border: #1e293b;
-  /* slate-800 */
-  --color-border-hover: #334155;
-  /* slate-700 */
+  --color-border: #222c3f;
+  /* Clean slate-like border */
+  --color-border-hover: #313f57;
 
   /* Glassmorphism */
-  --glass-bg: rgba(26, 32, 53, 0.7);
-  --glass-border: rgba(148, 163, 184, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-bg: rgba(19, 25, 36, 0.75);
+  --glass-border: rgba(148, 163, 184, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 
-  /* Spacing */
+  /* Spacing (Generous layout spacing) */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -62,27 +62,27 @@
   --transition-base: 250ms ease-in-out;
   --transition-slow: 350ms ease-in-out;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  /* Shadows (Soften all elevation elements) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.08);
+  /* Muted glow */
 
   /* Surface & Semantic Colors */
   --color-surface: var(--color-bg-secondary);
-  --color-surface-card: #0a0f1c;
-  /* Matches bento-card */
-  --color-surface-hover: rgba(30, 41, 59, 0.5);
-  /* subtle Slate hover */
-  --color-error: #ef4444;
-  --color-bg-error: rgba(239, 68, 68, 0.1);
+  --color-surface-card: var(--color-bg-secondary);
+  --color-surface-hover: rgba(36, 47, 65, 0.4);
+  --color-error: #f43f5e;
+  /* Rose red instead of vibrant pure red */
+  --color-bg-error: rgba(244, 63, 94, 0.08);
   --color-success: #10b981;
-  --color-bg-success: rgba(16, 185, 129, 0.1);
+  --color-bg-success: rgba(16, 185, 129, 0.08);
 
   /* Subtle Highlighting */
-  --glass-highlight: rgba(255, 255, 255, 0.03);
-  --shadow-glow-muted: 0 0 40px rgba(99, 102, 241, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.02);
+  --shadow-glow-muted: none;
 }
 
 /* Reset & Base Styles */

@@ -23,7 +23,11 @@ export const useMeetingState = () => {
         setLoading(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("No user");
+            // Not authenticated yet — expected during auth boot, return silently
+            if (!user) {
+                setCurrentMeeting(null);
+                return;
+            }
 
             // Get org_id (helper func or query)
             // Simplified: fetch user's org

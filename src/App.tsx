@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import DashboardRedirect from './components/DashboardRedirect';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ToastContainer } from './components/ui/Toast';
@@ -97,11 +98,13 @@ function AppContent() {
             <Route
               path="/admin/audit-review"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute adminOnly>
                   <AuditReviewPage />
                 </ProtectedRoute>
               }
             />
+            {/* Dashboard fallback */}
+            <Route path="/dashboard" element={<DashboardRedirect />} />
             <Route
               path="/admin/pulse"
               element={

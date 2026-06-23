@@ -71,16 +71,7 @@ const formatK = (val: number) => {
     return `$${val}`;
 };
 
-const FocusPill = ({ slots }: { slots: number }) => (
-    <div className="flex gap-1 items-center" title={`Cognitive Load: ${slots}/10`}>
-        {[...Array(10)].map((_, i) => (
-            <div
-                key={i}
-                className={`w-1.5 h-4 rounded-full transition-all duration-300 ${i < slots ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'bg-slate-700/30'}`}
-            />
-        ))}
-    </div>
-);
+
 
 // --- MAIN PAGE ---
 
@@ -262,10 +253,10 @@ export const CommandCenterPage = () => {
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-950 pt-16 lg:pt-0">
 
             {/* --- TOP HEADER --- */}
-            <header className="shrink-0 bg-slate-900/80 border-b border-slate-800 px-6 py-4 flex flex-col xl:flex-row justify-between items-center gap-4 z-10 backdrop-blur-md shadow-lg">...
+            <header className="shrink-0 bg-[#131924]/85 border-b border-[#222c3f] px-8 py-5 flex flex-col xl:flex-row justify-between items-center gap-6 z-10 backdrop-blur-md">
 
                 {/* METRICS GAUGES */}
-                <div className="flex items-center bg-slate-950/50 rounded-xl border border-slate-800/80 p-2 shadow-inner">
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
                     <Gauge
                         label="Peak Focus Load"
                         value={currentFocusLoad}
@@ -274,7 +265,7 @@ export const CommandCenterPage = () => {
                         tooltip="Focus Slots: A calculated measure of the senior leadership attention required to govern an initiative through to delivery. Derived from stakeholder breadth, novelty, and dependency depth."
                         limitTooltip="Capacity Baseline: The maximum Focus Slots your organisation can sustain simultaneously before structural delivery failure becomes inevitable."
                     />
-                    <div className="w-px h-10 bg-slate-800 mx-2"></div>
+                    <div className="w-px h-8 bg-slate-800/40 hidden md:block"></div>
                     <Gauge
                         label="Fiscal Drag"
                         value={fiscalDrag}
@@ -284,7 +275,7 @@ export const CommandCenterPage = () => {
                         noLimit={fiscalDragThreshold == null}
                         tooltip="Current-year budget committed to Tier 2 and Tier 3 initiatives — the budget unavailable to your Tier 1 priorities."
                     />
-                    <div className="w-px h-10 bg-slate-800 mx-2"></div>
+                    <div className="w-px h-8 bg-slate-800/40 hidden md:block"></div>
                     <Gauge
                         label="Active Capex"
                         value={currentCapexLoad}
@@ -292,7 +283,7 @@ export const CommandCenterPage = () => {
                         isOver={isOverCapex}
                         format={formatK}
                     />
-                    <div className="w-px h-10 bg-slate-800 mx-2"></div>
+                    <div className="w-px h-8 bg-slate-800/40 hidden md:block"></div>
                     <Gauge
                         label="Active Opex"
                         value={currentOpexLoad}
@@ -304,7 +295,7 @@ export const CommandCenterPage = () => {
                 </div>
 
                 {/* MEETING CONTROLS & COMMIT */}
-                <div className="flex items-center gap-4 border-l border-slate-800 pl-4">
+                <div className="flex items-center gap-6 border-t xl:border-t-0 xl:border-l border-slate-800/40 pt-4 xl:pt-0 xl:pl-6 w-full xl:w-auto justify-between xl:justify-start">
                     <MeetingControls
                         meeting={currentMeeting}
                         loading={meetingLoading}
@@ -315,7 +306,7 @@ export const CommandCenterPage = () => {
                         variant={hasChanges ? (currentMeeting ? 'primary' : 'danger') : 'secondary'}
                         onClick={handleCommit}
                         disabled={!hasChanges || saving}
-                        className={hasChanges ? (currentMeeting ? 'animate-pulse bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]' : 'bg-red-600 hover:bg-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] text-white font-bold') : ''}
+                        className={hasChanges ? (currentMeeting ? 'bg-blue-600 hover:bg-blue-500 shadow-md font-bold' : 'bg-rose-600 hover:bg-rose-500 shadow-md text-white font-bold') : ''}
                     >
                         {saving ? (
                             <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
@@ -326,7 +317,7 @@ export const CommandCenterPage = () => {
                     </Button>
                 </div>
                 {showSuccess && (
-                    <div className="flex items-center gap-2 text-green-400 text-sm font-bold animate-in fade-in slide-in-from-right-4 duration-300 px-2">
+                    <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold animate-in fade-in slide-in-from-right-4 duration-300 px-2">
                         <Check size={16} /> Saved!
                     </div>
                 )}
@@ -506,28 +497,28 @@ export const CommandCenterPage = () => {
 
 const Gauge = ({ label, value, limit, isOver, format, ghostValue, tooltip, limitTooltip, noLimit }: any) => {
     const percent = limit ? Math.min((value / limit) * 100, 100) : 0;
-    const colorClass = isOver ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]' : percent > 90 ? 'text-yellow-400' : 'text-slate-100';
+    const colorClass = isOver ? 'text-rose-400' : percent > 90 ? 'text-amber-400' : 'text-slate-200';
 
     return (
-        <div className={`flex flex-col items-center min-w-[100px] ${isOver ? 'animate-pulse' : ''}`}>
-            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 flex items-center gap-1">
+        <div className="flex flex-col items-start min-w-[120px] transition-all duration-200">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1 flex items-center gap-1.5">
                 {label}
                 {tooltip && <InfoTooltip content={tooltip} />}
                 {ghostValue > 0 && (
-                    <span title={`+ ${format ? format(ghostValue) : ghostValue} Future Recurring`} className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_5px_rgba(168,85,247,0.8)]"></span>
+                    <span title={`+ ${format ? format(ghostValue) : ghostValue} Future Recurring`} className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-sm animate-pulse"></span>
                 )}
             </span>
-            <div className={`font-mono text-xl font-bold leading-none flex items-center gap-1 ${colorClass}`}>
+            <div className={`font-mono text-lg font-bold leading-none flex items-baseline gap-1.5 ${colorClass}`}>
                 <span>{format ? format(value) : value}</span>
                 {!noLimit && limit != null && (
                     <div className="flex items-center gap-1">
-                        <span className="text-slate-600 text-xs font-medium">/ {format ? format(limit) : limit}</span>
+                        <span className="text-slate-500 text-xs font-medium">/ {format ? format(limit) : limit}</span>
                         {limitTooltip && <InfoTooltip content={limitTooltip} />}
                     </div>
                 )}
             </div>
             {ghostValue > 0 && (
-                <div className="text-[9px] font-mono text-purple-400 uppercase tracking-widest mt-1">
+                <div className="text-[9px] font-mono text-purple-400 tracking-wide mt-1 opacity-90">
                     +{format ? format(ghostValue) : ghostValue} Tail
                 </div>
             )}
@@ -541,21 +532,21 @@ const Column = ({ id, title, count, color, children, headerAction, isOverLimit }
     return (
         <div
             ref={setNodeRef}
-            className={`flex flex-col h-full rounded-2xl border overflow-hidden shadow-2xl backdrop-blur-sm transition-colors duration-200
-            ${isOverLimit ? 'bg-slate-900/50 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.15)]' : 'bg-slate-900/40 border-slate-800'}
-            ${isOver ? 'ring-2 ring-blue-500/50 bg-slate-800/60' : ''}
+            className={`flex flex-col h-full rounded-xl border overflow-hidden shadow-sm backdrop-blur-sm transition-all duration-200
+            ${isOverLimit ? 'bg-[#221217]/50 border-rose-500/25 shadow-sm' : 'bg-[#131924]/40 border-[#222c3f]'}
+            ${isOver ? 'ring-1 ring-blue-500/30 bg-slate-800/40' : ''}
         `}>
-            <div className="px-5 py-4 border-b border-slate-800/80 flex justify-between items-center bg-slate-900/80">
+            <div className="px-5 py-4 border-b border-[#222c3f] flex justify-between items-center bg-[#131924]/60">
                 <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ring-4 ring-opacity-20 ${color === 'green' ? 'bg-green-500 ring-green-500' : 'bg-blue-500 ring-blue-500'}`}></div>
-                    <h2 className="font-bold text-slate-100 tracking-tight text-lg shadow-black drop-shadow-sm">{title}</h2>
-                    <span className={`text-xs font-mono px-2 py-0.5 rounded-full font-bold border ${color === 'green' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                    <div className={`w-2.5 h-2.5 rounded-full ${color === 'green' ? 'bg-emerald-500' : 'bg-blue-500'}`}></div>
+                    <h2 className="font-semibold text-slate-200 tracking-tight text-base">{title}</h2>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${color === 'green' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
                         {count}
                     </span>
                 </div>
                 {headerAction}
             </div>
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-950/20 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-950/10 space-y-3.5">
                 {children}
             </div>
         </div>
@@ -569,7 +560,7 @@ const DraggableInitiativeCard = (props: any) => {
 
     const style = {
         transform: CSS.Translate.toString(transform),
-        opacity: isDragging ? 0.4 : 1,
+        opacity: isDragging ? 0.35 : 1,
     };
 
     return (
@@ -587,26 +578,27 @@ const InitiativeCard = ({ data, pillarName, onMove, onEdit, actionIcon: Icon, ac
         (data.relative_priority === 'Tier 2' || data.relative_priority === 'Tier 3')
     );
 
-    const priorityColor = data.relative_priority === 'Tier 1' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-        : data.relative_priority === 'Tier 2' ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
-            : data.relative_priority === 'Tier 3' ? 'text-orange-400 bg-orange-500/10 border-orange-500/20'
-                : 'text-slate-400 bg-slate-800 border-slate-700';
+    const priorityColor = data.relative_priority === 'Tier 1' ? 'text-emerald-400 bg-emerald-950/30 border-emerald-900/30'
+        : data.relative_priority === 'Tier 2' ? 'text-amber-400 bg-amber-950/30 border-amber-900/30'
+            : data.relative_priority === 'Tier 3' ? 'text-rose-400 bg-rose-950/30 border-rose-900/30'
+                : 'text-slate-400 bg-[#131924] border-[#222c3f]';
 
     return (
-        <div className={`group relative bg-[#182030] border rounded-xl p-5 shadow-lg transition-all duration-200 
-            ${hasMandateTension ? 'border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.15)] animate-[mandate-pulse_3s_ease-in-out_infinite]' : 'border-slate-700/60 hover:border-slate-500'}
-            ${isOverlay ? 'shadow-2xl scale-105 ring-2 ring-blue-500/50' : 'hover:-translate-y-1 hover:shadow-2xl hover:bg-[#1e273b]'}
+        <div className={`group relative bg-[#131924] border rounded-xl p-4.5 shadow-sm transition-all duration-200 
+            ${hasMandateTension ? 'border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.06)]' : 'border-[#222c3f] hover:border-slate-700/60'}
+            ${isOverlay ? 'shadow-lg scale-102 ring-1 ring-blue-500/30 bg-[#1b2332]' : 'hover:shadow-md hover:bg-[#182030]'}
             `}>
-            <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-r-full transition-colors duration-300 ${isProposed ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+            {/* Color Accent Indicator Strip */}
+            <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-md transition-colors duration-300 ${isProposed ? 'bg-blue-500/70' : 'bg-emerald-500/70'}`}></div>
 
-            <div className="pl-5 pointer-events-none"> {/* Disable pointer events on children so drag handle works everywhere */}
-                <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-slate-100 text-base leading-snug pr-4 tracking-tight">{data.title}</h3>
-                    <div className="flex gap-2 shrink-0">
+            <div className="pl-3.5 pointer-events-none"> {/* Disable pointer events on children so drag handle works everywhere */}
+                <div className="flex justify-between items-start mb-2.5">
+                    <h3 className="font-semibold text-slate-200 text-sm leading-snug pr-4 tracking-tight">{data.title}</h3>
+                    <div className="flex gap-1.5 shrink-0">
                         {hasMandateTension && (
                             <div className="relative group/tension pointer-events-auto flex items-center">
-                                <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold bg-red-500/15 text-red-400 border border-red-500/30">
-                                    <AlertTriangle size={12} /> Mandate Tension
+                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-950/40 text-rose-400 border border-rose-900/40">
+                                    <AlertTriangle size={10} /> Misaligned
                                 </div>
                                 <div className="ml-1">
                                     <InfoTooltip content={`This initiative carries a ${data.approval_mandate} mandate but is currently classified as ${data.relative_priority} priority. This misalignment carries governance and reporting risk.`} />
@@ -614,48 +606,53 @@ const InitiativeCard = ({ data, pillarName, onMove, onEdit, actionIcon: Icon, ac
                             </div>
                         )}
                         {data.is_multi_year && (
-                            <div className="shrink-0 text-purple-400 bg-purple-500/10 p-1.5 rounded-md border border-purple-500/20">
-                                <Zap size={14} className="fill-purple-400/20" />
+                            <div className="shrink-0 text-purple-400 bg-purple-950/30 p-1 rounded border border-purple-900/30" title="Multi-Year Plan">
+                                <Zap size={11} className="fill-purple-400/20" />
                             </div>
                         )}
                         {data.short_term_win && (
-                            <div className="shrink-0 text-green-400 bg-green-500/10 p-1.5 rounded-md border border-green-500/20" title="Short Term Win">
-                                <Clock size={14} />
+                            <div className="shrink-0 text-emerald-400 bg-emerald-950/30 p-1 rounded border border-emerald-900/30" title="Short Term Win">
+                                <Clock size={11} />
                             </div>
                         )}
                         {onEdit && (
-                            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="shrink-0 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 p-1.5 rounded-md border border-transparent hover:border-slate-600 transition-colors cursor-pointer pointer-events-auto shadow-sm" title="Edit Initiative Stats">
-                                <Settings size={14} />
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+                                className="shrink-0 text-slate-500 hover:text-white bg-slate-800/40 hover:bg-slate-700/60 p-1 rounded border border-transparent hover:border-[#313f57] transition-all cursor-pointer pointer-events-auto opacity-0 group-hover:opacity-100 shadow-sm" 
+                                title="Edit Initiative Stats"
+                            >
+                                <Settings size={11} />
                             </button>
                         )}
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-y-2 gap-x-2 mb-5">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                {/* Badges and slots */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-slate-900 text-slate-400 border border-[#222c3f]">
                         {pillarName}
                     </span>
                     {data.approval_mandate && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium tracking-wide bg-blue-950/30 text-blue-300 border border-blue-900/30">
                             {data.approval_mandate}
                         </span>
                     )}
                     {data.relative_priority && (
-                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold tracking-wider border ${priorityColor}`}>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold tracking-wide border ${priorityColor}`}>
                             {data.relative_priority}
                         </span>
                     )}
-                    <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-800 rounded-md border border-slate-700">
-                        <Zap size={12} className={isProposed ? "text-blue-400" : "text-green-400"} />
-                        <FocusPill slots={data.focus_slots} />
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-slate-900 rounded text-[9px] font-semibold text-slate-400 border border-[#222c3f]">
+                        <Zap size={10} className={`${isProposed ? "text-blue-400/80" : "text-emerald-400/80"}`} />
+                        <span>{data.focus_slots} focus slots</span>
                     </div>
                 </div>
 
-                <div className="flex justify-between items-end border-t border-slate-700/50 pt-4 mt-2 h-[42px]">
-                    <div className="flex gap-6 text-xs font-mono text-slate-500">
+                <div className="flex justify-between items-end border-t border-[#222c3f]/50 pt-3 mt-1.5 h-[36px]">
+                    <div className="flex gap-4 text-xs font-mono text-slate-500">
                         <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold text-slate-600 mb-0.5">Budget</span>
-                            <span className="text-slate-300 font-bold text-sm">{formatK((data.capex_current_fy || 0) + (data.opex_current_fy || 0))}</span>
+                            <span className="text-[9px] uppercase font-semibold text-slate-500 mb-0.5">Budget</span>
+                            <span className="text-slate-300 font-bold text-xs">{formatK((data.capex_current_fy || 0) + (data.opex_current_fy || 0))}</span>
                         </div>
                     </div>
 
@@ -665,14 +662,14 @@ const InitiativeCard = ({ data, pillarName, onMove, onEdit, actionIcon: Icon, ac
                             onPointerDown={e => e.stopPropagation()}
                             onClick={(e) => { e.stopPropagation(); onMove(); }}
                             className={`
-                                pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md group-hover:scale-105 active:scale-95 z-10
+                                pointer-events-auto flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all shadow-sm active:scale-97 z-10
                                 ${isProposed
-                                    ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/30'
-                                    : 'bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500'}
+                                    ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm'
+                                    : 'bg-rose-500/10 text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-500/10 hover:border-rose-600'}
                             `}
                         >
                             {actionLabel}
-                            {Icon && <Icon size={14} />}
+                            {Icon && <Icon size={11} />}
                         </button>
                     )}
                 </div>
