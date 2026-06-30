@@ -8,8 +8,14 @@ export interface Meeting {
     title: string;
     started_at: string | null;
     ended_at: string | null;
-    snapshot_start?: any;
-    snapshot_end?: any;
+export interface Meeting {
+    id: string;
+    organization_id: string;
+    title: string;
+    started_at: string | null;
+    ended_at: string | null;
+    snapshot_start?: unknown;
+    snapshot_end?: unknown;
     status?: string;
 }
 
@@ -52,9 +58,10 @@ export const useMeetingState = () => {
             } else {
                 setCurrentMeeting(null);
             }
-        } catch (err: any) {
+        } catch (err) {
+            const errorObj = err as { code?: string; message?: string };
             // PGRST116 means no rows, which is fine
-            if (err.code !== 'PGRST116') {
+            if (errorObj.code !== 'PGRST116') {
                 console.error("Error fetching meeting:", err);
             }
             setCurrentMeeting(null);
@@ -82,7 +89,7 @@ export const useMeetingState = () => {
             const { data: capacity } = await supabase.from('capacity_settings').select('*').eq('org_id', orgId).single();
 
             // 2. Create Meeting
-            const { data: meeting, error } = await supabase.from('meetings').insert({
+            const { data: meeting, error: startError } = await supabase.from('meetings').insert({
                 organization_id: orgId,
                 title,
                 status: 'in_progress' as const,
@@ -90,13 +97,14 @@ export const useMeetingState = () => {
                 snapshot_start: { initiatives, capacity }
             }).select().single();
 
-            if (error) throw error;
+            if (startError) throw startError;
             setCurrentMeeting(meeting as unknown as Meeting);
             return meeting;
 
-        } catch (err: any) {
-            console.error("Start Meeting Failed:", err);
-            setError(err.message);
+        } catch (err) {
+            const errorObj = err as Error;
+            console.error("Start Meeting Failed:", errorObj);
+            setError(errorObj.message);
         } finally {
             setLoading(false);
         }
@@ -117,18 +125,19 @@ export const useMeetingState = () => {
             const { data: capacity } = await supabase.from('capacity_settings').select('*').eq('org_id', orgId).single();
 
             // 2. Update Meeting
-            const { error } = await supabase.from('meetings').update({
+            const { error: endError } = await supabase.from('meetings').update({
                 ended_at: new Date().toISOString(),
                 status: 'completed',
                 snapshot_end: { initiatives, capacity }
             }).eq('id', currentMeeting.id);
 
-            if (error) throw error;
+            if (endError) throw endError;
             setCurrentMeeting(null);
 
-        } catch (err: any) {
-            console.error("End Meeting Failed:", err);
-            setError(err.message);
+        } catch (err) {
+            const errorObj = err as Error;
+            console.error("End Meeting Failed:", errorObj);
+            setError(errorObj.message);
         } finally {
             setLoading(false);
         }

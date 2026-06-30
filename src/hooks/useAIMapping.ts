@@ -32,8 +32,9 @@ export const useAIMapping = () => {
                     const model = genAI.getGenerativeModel({ model: modelName });
                     const result = await model.generateContent(prompt);
                     return result.response.text();
-                } catch (e: any) {
-                    const msg = e.message || "";
+                } catch (e) {
+                    const err = e as Error;
+                    const msg = err.message || "";
                     const is429 = msg.includes("429") || msg.includes("Quota") || msg.includes("rate limit");
 
                     if (is429) {
@@ -81,7 +82,7 @@ export const useAIMapping = () => {
         if (OPENAI_API_KEY) {
             try {
                 return await callOpenAI(prompt);
-            } catch (e: any) {
+            } catch (e) {
                 console.warn("OpenAI failed, falling back to Gemini", e);
             }
         }
@@ -94,7 +95,7 @@ export const useAIMapping = () => {
         throw new Error("No valid AI API keys found (OpenAI or Gemini).");
     };
 
-    const mapHeaders = async (csvHeaders: string[], samples: any[]) => {
+    const mapHeaders = async (csvHeaders: string[], samples: Record<string, unknown>[]) => {
         if (!GEMINI_API_KEY && !OPENAI_API_KEY) {
             console.warn("No AI Keys. Using heuristic mapping.");
             return null;
@@ -133,11 +134,12 @@ export const useAIMapping = () => {
 
             const text = await runAI(prompt);
             const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            return JSON.parse(jsonStr);
+            return JSON.parse(jsonStr) as Record<string, string>;
 
-        } catch (err: any) {
-            console.error("AI Mapping Error:", err);
-            setError(err.message);
+        } catch (err) {
+            const errorObj = err as Error;
+            console.error("AI Mapping Error:", errorObj);
+            setError(errorObj.message);
             return null;
         } finally {
             setIsProcessing(false);
@@ -181,9 +183,15 @@ export const useAIMapping = () => {
                 try {
                     const text = await runAI(prompt);
                     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const inferredData = JSON.parse(jsonStr);
+                    const inferredData = JSON.parse(jsonStr) as Array<{
+                        id: string;
+                        complexity_stakeholder: number;
+                        complexity_tech: number;
+                        complexity_dependency: number;
+                        strategic_pillar_id: string | null;
+                    }>;
 
-                    inferredData.forEach((inf: any) => {
+                    inferredData.forEach((inf) => {
                         const idx = results.findIndex(r => r.id === inf.id);
                         if (idx !== -1) {
                             results[idx] = {
@@ -206,9 +214,10 @@ export const useAIMapping = () => {
 
             return results;
 
-        } catch (err: any) {
-            console.error("AI Inference Error:", err);
-            setError(err.message);
+        } catch (err) {
+            const errorObj = err as Error;
+            console.error("AI Inference Error:", errorObj);
+            setError(errorObj.message);
             return initiatives;
         } finally {
             setIsProcessing(false);

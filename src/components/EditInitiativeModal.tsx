@@ -51,7 +51,7 @@ export const EditInitiativeModal: React.FC<EditInitiativeModalProps> = ({ isOpen
         try {
             await onSave(initiative.id, {
                 title: title,
-                strategic_pillar_id: pillarId || null as any,
+                strategic_pillar_id: pillarId || undefined,
                 complexity_stakeholder: Number(stakeholder),
                 complexity_tech: Number(tech),
                 complexity_dependency: Number(dependency),
@@ -60,7 +60,7 @@ export const EditInitiativeModal: React.FC<EditInitiativeModalProps> = ({ isOpen
                 future_annual_opex: Number(futureOpex),
                 total_initiative_cost: Number(totalCost),
                 is_multi_year: isMultiYear,
-                target_delivery_quarter: quarter || null as any
+                target_delivery_quarter: quarter || undefined
             });
             onClose();
         } catch (err) {

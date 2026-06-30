@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, SUPABASE_URL, SUPABASE_ANON_KEY } from './helpers/setup';

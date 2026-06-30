@@ -11,16 +11,8 @@ interface CommitModalProps {
     initialRationale?: string;
 }
 
-export const CommitModal: React.FC<CommitModalProps> = ({ isOpen, onClose, onCommit, saving, isSevere = false, initialRationale = '' }) => {
-    const [rationale, setRationale] = useState('');
-
-    useEffect(() => {
-        if (isOpen) {
-            setRationale(initialRationale);
-        }
-    }, [isOpen, initialRationale]);
-
-    if (!isOpen) return null;
+const CommitModalInner: React.FC<CommitModalProps> = ({ onClose, onCommit, saving, isSevere = false, initialRationale = '' }) => {
+    const [rationale, setRationale] = useState(initialRationale);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
@@ -75,4 +67,9 @@ export const CommitModal: React.FC<CommitModalProps> = ({ isOpen, onClose, onCom
             </div>
         </div>
     );
+};
+
+export const CommitModal: React.FC<CommitModalProps> = (props) => {
+    if (!props.isOpen) return null;
+    return <CommitModalInner {...props} />;
 };

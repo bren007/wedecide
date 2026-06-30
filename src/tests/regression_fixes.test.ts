@@ -30,7 +30,7 @@ function processStakeholdersOnSubmit(
     selectedUserId: string,
     users: any[]
 ) {
-    let finalPeople = [...currentPeople];
+    const finalPeople = [...currentPeople];
 
     // Logic from DecisionForm.tsx handleSubmit
     if (isExternal ? manualName.trim() : selectedUserId) {

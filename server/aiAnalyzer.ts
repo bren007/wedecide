@@ -4,7 +4,12 @@ import Anthropic from '@anthropic-ai/sdk';
 export async function generateAnalysis(
     geminiApiKey: string,
     anthropicApiKey: string,
-    payload: any
+    payload: {
+        total_current_load: number;
+        calculated_capacity_baseline: number;
+        fiscal_drag: number;
+        portfolio: Array<{ initiative_name: string }>;
+    }
 ) {
     // Step 1: The Raw Draft (Gemini 3.1 Pro -> we'll use 2.5 pro as per existing code since 3.1 may not be available yet, but prompt asks for 3.1, so we'll use "gemini-2.5-pro" as a fallback or "gemini-1.5-pro" if you prefer. We'll use gemini-2.5-pro as requested in the old code, but updated).
     const genAI = new GoogleGenerativeAI(geminiApiKey);
@@ -66,7 +71,7 @@ ${jsonString}
 
     // Step 2: Context Filtering
     // Extract names of specific initiatives mentioned in Gemini's draft
-    const mentionedInitiatives = payload.portfolio.filter((init: any) =>
+    const mentionedInitiatives = payload.portfolio.filter((init: { initiative_name: string }) =>
         rawDraft.includes(init.initiative_name)
     );
 
@@ -125,7 +130,7 @@ ${rawDraft}
                 {
                     type: "text",
                     text: "You are an expert Lead Editor. Format your response strictly as valid JSON.",
-                    // @ts-ignore
+                    // @ts-expect-error
                     cache_control: { type: "ephemeral" }
                 }
             ],
@@ -137,13 +142,14 @@ ${rawDraft}
             ]
         });
 
-        const claudeRespText = (claudeMsg.content[0] as any).text;
+        const textContent = claudeMsg.content[0]?.type === 'text' ? claudeMsg.content[0].text : '';
+        const claudeRespText = textContent;
 
         let cleanedJsonStr = claudeRespText;
-        if (claudeRespText.includes('\`\`\`json')) {
-            cleanedJsonStr = claudeRespText.split('\`\`\`json')[1].split('\`\`\`')[0].trim();
-        } else if (claudeRespText.includes('\`\`\`')) {
-            cleanedJsonStr = claudeRespText.split('\`\`\`')[1].split('\`\`\`')[0].trim();
+        if (claudeRespText.includes('```json')) {
+            cleanedJsonStr = claudeRespText.split('```json')[1].split('```')[0].trim();
+        } else if (claudeRespText.includes('```')) {
+            cleanedJsonStr = claudeRespText.split('```')[1].split('```')[0].trim();
         }
 
         const parsed = JSON.parse(cleanedJsonStr);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, createAuthenticatedClient } from './helpers/setup';
 
@@ -10,7 +11,7 @@ describe('Admin Functionality', () => {
     let adminId: string;
     let orgId: string;
     let memberEmail: string;
-    let supabase: any;
+    let supabase: unknown;
     let pgClient: any = null;
 
     beforeAll(async () => {

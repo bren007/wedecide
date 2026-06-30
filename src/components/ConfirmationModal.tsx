@@ -50,11 +50,11 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
     // Helper to map Modal variant to Button variant
     // Button only supports: 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'danger'
-    const getButtonVariant = () => {
+    const getButtonVariant = (): 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'danger' => {
         if (variant === 'info') return 'primary';
         if (variant === 'warning') return 'danger'; // Map warning to danger as fallback
         if (variant === 'success') return 'success';
-        return variant as any;
+        return 'danger';
     };
 
     return (

@@ -21,7 +21,38 @@ const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY!;
 const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY!;
 const ANTHROPIC_API_KEY = process.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || GEMINI_API_KEY; // fallback so it doesn't crash if not provided during testing
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+interface Initiative {
+    initiative_name: string;
+    alignment_pillar: string;
+    calculated_focus_slots: number;
+    fiscal_tail_impact: number;
+    priority_tier: string;
+    blockers: string[];
+    lifecycle_stage: string;
+    start_date?: string;
+}
+
+interface PortfolioPayload {
+    organisation_name: string;
+    calculated_capacity_baseline: number;
+    total_current_load: number;
+    overcommitment_pct: number;
+    absolute_slot_deficit: number;
+    fiscal_drag: number;
+    dependency_risk_list: Array<{
+        high_priority_initiative: string;
+        blocked_by: string;
+        blocker_priority: string;
+    }>;
+    zombie_projects: string[];
+    portfolio: Initiative[];
+    calibration: {
+        large_steerable: number;
+        historical_avg: number;
+    };
+}
 
 // Helper to structure the portfolio
 const parseAndStructurePortfolio = async (email: string, token: string) => {
@@ -57,13 +88,13 @@ const parseAndStructurePortfolio = async (email: string, token: string) => {
     }
 
     const csvString = await fileData.text();
-    const parsedCsv = Papa.parse(csvString, { header: true, skipEmptyLines: true });
+    const parsedCsv = Papa.parse<Record<string, string>>(csvString, { header: true, skipEmptyLines: true });
 
     // Parse initiatives
     let fiscalDrag = 0;
-    const initiativeMap = new Map<string, any>();
+    const initiativeMap = new Map<string, Initiative>();
 
-    const initiatives = parsedCsv.data.map((row: any, index: number) => {
+    const initiatives = parsedCsv.data.map((row, index: number) => {
         const name = row['initiative_name'] || row['Name'] || row['Project'] || `Initiative ${index + 1}`;
         const stake = parseInt(row['complexity_stakeholders_1_to_3'] || '1', 10);
         const tech = parseInt(row['complexity_novelty_1_to_3'] || '1', 10);
@@ -88,7 +119,7 @@ const parseAndStructurePortfolio = async (email: string, token: string) => {
         const blockersStr = row['dependency_blockers'] || '';
         const blockers = blockersStr.split(',').map((b: string) => b.trim()).filter(Boolean);
 
-        const initObj = {
+        const initObj: Initiative = {
             initiative_name: name,
             alignment_pillar: row['strategic_pillar'] || 'Uncategorised',
             calculated_focus_slots: cost,
@@ -103,7 +134,11 @@ const parseAndStructurePortfolio = async (email: string, token: string) => {
     });
 
     // 2nd pass: Dependencies and Zombies
-    const dependencyRiskList: any[] = [];
+    const dependencyRiskList: Array<{
+        high_priority_initiative: string;
+        blocked_by: string;
+        blocker_priority: string;
+    }> = [];
     const zombieProjects: string[] = [];
     const now = new Date();
 
@@ -158,12 +193,12 @@ const parseAndStructurePortfolio = async (email: string, token: string) => {
                 large_steerable: largeSteerable,
                 historical_avg: historicalAvg,
             },
-        }
+        } as PortfolioPayload
     };
 };
 
 // ENDPOINT 1: Create a draft (Human-in-the-loop review)
-app.post('/api/generate-draft', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/generate-draft', async (req: Request, res: Response): Promise<unknown> => {
     try {
         const { email } = req.body;
         if (!email) {
@@ -184,20 +219,21 @@ app.post('/api/generate-draft', async (req: Request, res: Response): Promise<any
         console.log(`[DRAFT GENERATOR] Running LLM inference`);
         const analysisTokens = await generateAnalysis(GEMINI_API_KEY, ANTHROPIC_API_KEY, payload);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: payload,
             analysis: analysisTokens
         });
 
-    } catch (error: any) {
-        console.error('[DRAFT GENERATOR SYSTEM ERROR]', error.stack || error.message || error);
-        res.status(500).json({ error: error.message, stack: error.stack });
+    } catch (error) {
+        const err = error as Error;
+        console.error('[DRAFT GENERATOR SYSTEM ERROR]', err.stack || err.message || err);
+        return res.status(500).json({ error: err.message, stack: err.stack });
     }
 });
 
 // ENDPOINT 2: Publish the final edited report
-app.post('/api/publish-report', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/publish-report', async (req: Request, res: Response): Promise<unknown> => {
     try {
         const { email, data, analysis } = req.body;
         if (!email || !data || !analysis) {
@@ -209,7 +245,7 @@ app.post('/api/publish-report', async (req: Request, res: Response): Promise<any
 
         // Re-map portfolio schema slightly for the react-pdf generator since it expects { name, cost, id, priority }
         // We'll map the payload back into the structure `pdfGenerator` expects
-        const mappedInitiatives = data.portfolio.map((i: any, idx: number) => ({
+        const mappedInitiatives = data.portfolio.map((i: Initiative, idx: number) => ({
             id: idx,
             name: i.initiative_name,
             cost: i.calculated_focus_slots,
@@ -254,15 +290,16 @@ app.post('/api/publish-report', async (req: Request, res: Response): Promise<any
 
         console.log(`[PUBLISHER] Report published successfully: ${reportFileName}`);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: 'Report published successfully',
             reportUrl: reportFileName
         });
 
-    } catch (error: any) {
-        console.error('[PUBLISHER ERROR]', error);
-        res.status(500).json({ error: error.message });
+    } catch (error) {
+        const err = error as Error;
+        console.error('[PUBLISHER ERROR]', err);
+        return res.status(500).json({ error: err.message });
     }
 });
 

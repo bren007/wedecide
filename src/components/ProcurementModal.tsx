@@ -54,8 +54,9 @@ export const ProcurementModal: React.FC<ProcurementModalProps> = ({ isOpen, onCl
       }
 
       setSubmitState('success');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'An unexpected error occurred.');
+    } catch (err) {
+      const error = err as Error;
+      setErrorMsg(error.message || 'An unexpected error occurred.');
       setSubmitState('error');
     }
   };

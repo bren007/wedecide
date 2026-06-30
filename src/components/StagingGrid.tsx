@@ -55,8 +55,8 @@ const InputCell = ({
     className,
     placeholder
 }: {
-    value: any,
-    onChange: (val: any) => void,
+    value: string | number | null | undefined,
+    onChange: (val: string | number | null) => void,
     type?: string,
     max?: number,
     min?: number,
@@ -64,7 +64,7 @@ const InputCell = ({
     className?: string,
     placeholder?: string
 }) => {
-    const isError = required && (value === null || value === '' || (type === 'number' && isNaN(value)));
+    const isError = required && (value === null || value === '' || value === undefined || (type === 'number' && isNaN(value as number)));
 
     return (
         <div className={clsx("relative h-full w-full", isError ? "ring-2 ring-red-500 ring-inset bg-red-900/20" : "")}>
@@ -129,7 +129,7 @@ const SelectCell = ({
 
 export const StagingGrid: React.FC<StagingGridProps> = ({ data, pillars = [], onDataChange }) => {
 
-    const updateRow = (index: number, field: keyof StagingInitiative, value: any) => {
+    const updateRow = <K extends keyof StagingInitiative>(index: number, field: K, value: StagingInitiative[K]) => {
         const newData = [...data];
         newData[index] = { ...newData[index], [field]: value };
         onDataChange(newData);

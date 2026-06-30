@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font, renderToBuffer } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, renderToBuffer } from '@react-pdf/renderer';
 
 // Constants
 const Colors = {
@@ -179,11 +179,11 @@ const Footer = ({ orgName, date }: { orgName: string; date: string }) => (
     <View style={styles.footerContainer} fixed>
         <Text style={styles.footerText}>{orgName} — Strategic Capacity Assessment</Text>
         <Text style={styles.footerText}>{date}</Text>
-        <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (`Page ${pageNumber}`)} />
+        <Text style={styles.footerText} render={({ pageNumber }) => (`Page ${pageNumber}`)} />
     </View>
 );
 
-const AuditDocument = ({ data }: { data: ReportData }) => {
+export const AuditDocument = ({ data }: { data: ReportData }) => {
     const { organizationName, dateStr, baselineSlots, totalLoad, fiscalDrag, initiatives, analysis } = data;
     const utilizationPct = Math.round((totalLoad / baselineSlots) * 100);
     const inDeficit = totalLoad > baselineSlots;
@@ -331,7 +331,7 @@ const AuditDocument = ({ data }: { data: ReportData }) => {
                     <Text style={[styles.subHeader, { fontSize: 11, marginBottom: 15 }]}>Initiative Breakdown Table (Sorted by Highest Priority)</Text>
 
                     {sortedInitiatives.map((init, idx) => {
-                        let pct = (init.cost / maxBarValue) * 100;
+                        const pct = (init.cost / maxBarValue) * 100;
                         let barColor = Colors.Navy;
                         if (init.cost >= 5) barColor = Colors.Red;
                         else if (init.cost >= 3) barColor = Colors.Amber;

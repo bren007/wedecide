@@ -59,8 +59,9 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
                 setErrorMessage('Audit Reference not recognised. Please check your Strategic Capacity Assessment PDF or contact AlturaGov.');
                 setStep('error');
             }
-        } catch (err: any) {
-            setErrorMessage(err.message || 'Validation failed. Please try again.');
+        } catch (err) {
+            const error = err as Error;
+            setErrorMessage(error.message || 'Validation failed. Please try again.');
             setStep('error');
         } finally {
             setValidating(false);
@@ -84,8 +85,9 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
             }
 
             setStep('imported');
-        } catch (err: any) {
-            setErrorMessage(err.message || 'Import failed. Please try again.');
+        } catch (err) {
+            const error = err as Error;
+            setErrorMessage(error.message || 'Import failed. Please try again.');
             setStep('error');
         }
     };

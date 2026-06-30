@@ -139,7 +139,7 @@ export const PulseDashboardPage: React.FC = () => {
         const isPaidButNotUploaded = l.audit_status === 'payment_secured';
         if (!isPaidButNotUploaded) return false;
 
-        let paymentDateStr = l.payment_at || l.created_at; // Fallback to created_at if payment_at not set yet
+        const paymentDateStr = l.payment_at || l.created_at; // Fallback to created_at if payment_at not set yet
         const paymentDate = new Date(paymentDateStr);
         const diffHours = (now.getTime() - paymentDate.getTime()) / (1000 * 3600);
         return diffHours > 48;

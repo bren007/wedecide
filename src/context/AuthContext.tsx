@@ -1,36 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { PerformanceMarkers, markPerformance, measurePerformance } from '../utils/performance';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  organization_id: string;
-  is_global_admin: boolean;
-  roles: string[];
-}
+import { AuthContext } from '../types/auth';
+import type { User } from '../types/auth';
 
 const PROFILE_CACHE_KEY = 'wedecide_profile_cache_v2';
-
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, token?: string) => Promise<void>;
-  logout: () => Promise<void>;
-  hasRole: (role: string) => boolean;
-  isChair: boolean;
-  isAdmin: boolean;
-  isGlobalAdmin: boolean;
-}
-
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -55,7 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isSigningUpRef = React.useRef(false);
 
   // Fetch user profile from users table with optional retries
-  const fetchUserProfile = async (
+  const fetchUserProfile = useCallback(async (
     supabaseUser: SupabaseUser,
     retryCount = 0
   ): Promise<User | null | 'NETWORK_ERROR'> => {
@@ -91,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log(`📡 [fetchUserProfile] Querying DB (${retryCount + 1}/${maxRetries + 1}) for: ${userId}`);
         const { data: profile, error: profileError } = await withTimeout(
           Promise.resolve(
-            supabase.rpc('get_user_profile' as any, { p_user_id: userId }).single()
+            supabase.rpc('get_user_profile', { p_user_id: userId }).single()
           ),
           QUERY_TIMEOUT,
           `users rpc (ID: ${userId})`
@@ -108,6 +84,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           throw profileError;
         }
 
+        const profileObj = profile as Record<string, unknown> | null;
+        if (!profileObj) throw new Error('Profile object is null');
+
         // Fetch roles
         const { data: roles, error: rolesError } = await withTimeout(
           Promise.resolve(
@@ -115,7 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .from('user_roles')
               .select('role')
               .eq('user_id', userId)
-              .eq('organization_id', (profile as any).organization_id)
+              .eq('organization_id', String(profileObj.organization_id))
           ),
           QUERY_TIMEOUT,
           'user_roles query'
@@ -128,7 +107,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         measurePerformance('Profile Fetch Duration', PerformanceMarkers.PROFILE_FETCH_START, PerformanceMarkers.PROFILE_FETCH_SUCCESS);
 
         const profileData: User = {
-          ...(profile as any),
+          id: String(profileObj.id),
+          email: String(profileObj.email),
+          name: String(profileObj.name),
+          organization_id: String(profileObj.organization_id),
+          is_global_admin: Boolean(profileObj.is_global_admin),
           roles: roles!.map((r: { role: string }) => r.role)
         };
 
@@ -137,8 +120,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         return profileData;
 
-      } catch (error: any) {
-        console.warn(`⚠️ [fetchUserProfile] Error (attempt ${retryCount + 1}):`, error.message);
+      } catch (error) {
+        const err = error as Error;
+        console.warn(`⚠️ [fetchUserProfile] Error (attempt ${retryCount + 1}):`, err.message);
 
         if (retryCount < maxRetries) {
           const delay = 300; // Short retry delay
@@ -148,13 +132,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Return a special error/marker to distinguish between "not found" and "network error"
         if (
-          error.message?.includes('fetch') ||
-          error.message?.includes('Network') ||
-          error.message?.includes('Failed to fetch') ||
-          error.message?.includes('Timeout')
+          err.message?.includes('fetch') ||
+          err.message?.includes('Network') ||
+          err.message?.includes('Failed to fetch') ||
+          err.message?.includes('Timeout')
         ) {
           console.warn('📡 [fetchUserProfile] Soft failure due to network/timeout issue');
-          return 'NETWORK_ERROR' as any;
+          return 'NETWORK_ERROR';
         }
 
         return null; // Hard failure (e.g. user deleted from DB)
@@ -173,7 +157,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       profileFetchRef.current = trackedPromise;
     }
     return trackedPromise;
-  };
+  }, []);
 
   // Initialize auth state on mount
   useEffect(() => {
@@ -323,7 +307,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Only subscribe once on mount
+  }, [fetchUserProfile, user]); // Only subscribe once on mount, re-subscribing safely if dependencies change
 
   // Visibility change guard: top-level useEffect (Rules of Hooks compliant).
   // Prevents any stale auth path from re-triggering when the user returns to the tab.

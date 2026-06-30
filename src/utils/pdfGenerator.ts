@@ -380,7 +380,7 @@ export const exportStrategicLedgerToPDF = async (
             doc.setTextColor(...hexToRgb(badgeTextCol));
             doc.text(badgeText, margin + 3, y + 4.2);
 
-            let offsetX = margin + badgeWidth + 5;
+            const offsetX = margin + badgeWidth + 5;
 
             // Mandate Flag
             const m = entry.initiatives?.approval_mandate;
