@@ -22,7 +22,8 @@
     "deploy:staging:compare": "node scripts/deploy.js --env staging --compare",
     "deploy:production": "node scripts/deploy.js --env production --confirm",
     "test:staging": "node scripts/validate-staging.js",
-    "staging:ship": "npm run lint && npx tsc --noEmit && npm run test:unit && npm run deploy:staging"
+    "ship:staging": "node scripts/orchestrate-deploy.js --env staging",
+    "ship:production": "node scripts/orchestrate-deploy.js --env production"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

@@ -16,8 +16,10 @@ dotenv.config({ path: '.env.local' });
 // Environment variables
 export const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
 export const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
-// Use DATABASE_URL (transaction mode, port 6543) since DIRECT_URL (session mode) password is stale
+// Transaction mode (port 6543, PgBouncer) — good for general queries but does NOT persist session state.
 export const DB_CONNECTION_STRING = process.env.DATABASE_URL || process.env.DIRECT_URL || '';
+// Session mode (port 5432, direct) — required for SET ROLE / set_config() / statement_timeout tests.
+export const DB_SESSION_CONNECTION_STRING = process.env.DIRECT_URL || process.env.DATABASE_URL || '';
 
 /**
  * Create a fresh Supabase client (no session persistence).
