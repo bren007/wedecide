@@ -52,7 +52,7 @@ export const SecureDropPage: React.FC = () => {
 
                 const errors: string[] = [];
                 for (let i = 0; i < results.data.length; i++) {
-                    const row: any = results.data[i];
+                    const row: unknown = results.data[i];
                     const initName = row.initiative_name || `(Row ${i + 1})`;
 
                     if (!row.initiative_name) {
@@ -148,7 +148,7 @@ export const SecureDropPage: React.FC = () => {
 
 
             setSubmitted(true);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error securely transferring data:', err);
             setError(err.message || 'An error occurred during secure transfer. Please try again.');
         } finally {
