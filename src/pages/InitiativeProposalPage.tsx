@@ -43,7 +43,7 @@ export const InitiativeProposalPage: React.FC = () => {
     useEffect(() => {
         const fetchPillars = async () => {
             const { data, error } = await supabase
-                .from('strategic_pillars' as any)
+                .from('strategic_pillars' as unknown)
                 .select('id, title');
 
             if (!error && data) {
@@ -70,17 +70,17 @@ export const InitiativeProposalPage: React.FC = () => {
 
             // Let's quickly fetch the user's org_id
             const { data: userData, error: userError } = await supabase
-                .from('users' as any)
+                .from('users' as unknown)
                 .select('organization_id')
                 .eq('id', user.id)
                 .single();
 
             if (userError || !userData) throw new Error('Could not fetch user organization');
 
-            const orgId = (userData as any).organization_id;
+            const orgId = (userData as unknown).organization_id;
 
             const { error: insertError } = await supabase
-                .from('initiatives' as any)
+                .from('initiatives' as unknown)
                 .insert({
                     org_id: orgId,
                     owner_id: user.id,
@@ -106,7 +106,7 @@ export const InitiativeProposalPage: React.FC = () => {
             if (insertError) throw insertError;
 
             navigate('/command-center');
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error proposing initiative:', err);
             setError(err.message);
         } finally {

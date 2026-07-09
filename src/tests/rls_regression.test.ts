@@ -13,7 +13,7 @@
  * Requires: DATABASE_URL in .env.local pointing to the DEV Supabase DB
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { tryCreatePgClient, hasRequiredEnv, DB_SESSION_CONNECTION_STRING } from './helpers/setup';
+import { hasRequiredEnv, DB_SESSION_CONNECTION_STRING } from './helpers/setup';
 import { Client } from 'pg';
 
 describe('RLS Regression (No Infinite Recursion)', () => {
@@ -31,8 +31,8 @@ describe('RLS Regression (No Infinite Recursion)', () => {
                 connectionTimeoutMillis: 5000,
             });
             await pgClient.connect();
-        } catch (e: any) {
-            console.warn(`⚠️ Session-mode DB connection failed: ${e.message}. Skipping RLS tests.`);
+        } catch (e: unknown) {
+            console.warn(`⚠️ Session-mode DB connection failed: ${(e as Error).message}. Skipping RLS tests.`);
             pgClient = null;
         }
         if (!pgClient) return;
@@ -63,10 +63,10 @@ describe('RLS Regression (No Infinite Recursion)', () => {
             await pgClient!.query("SET ROLE authenticated");
             await pgClient!.query("SET statement_timeout TO 3000");
             await pgClient!.query(`SELECT set_config('request.jwt.claims', $1, true)`, [jwtClaims]);
-        } catch (roleErr: any) {
+        } catch (roleErr: unknown) {
             // Some Supabase pooler connections don't allow SET ROLE from service accounts.
             // Fall back to superuser — this still validates query performance without RLS filtering.
-            console.warn(`⚠️ SET ROLE authenticated failed (${roleErr.message}), running as superuser`);
+            console.warn(`⚠️ SET ROLE authenticated failed (${(roleErr as Error).message}), running as superuser`);
             await pgClient!.query("RESET ROLE");
             await pgClient!.query("SET statement_timeout TO 3000");
         }
@@ -96,8 +96,8 @@ describe('RLS Regression (No Infinite Recursion)', () => {
             await pgClient!.query("SET ROLE authenticated");
             await pgClient!.query("SET statement_timeout TO 3000");
             await pgClient!.query(`SELECT set_config('request.jwt.claims', $1, true)`, [jwtClaims]);
-        } catch (roleErr: any) {
-            console.warn(`⚠️ SET ROLE authenticated failed (${roleErr.message}), running as superuser`);
+        } catch (roleErr: unknown) {
+            console.warn(`⚠️ SET ROLE authenticated failed (${(roleErr as Error).message}), running as superuser`);
             await pgClient!.query("RESET ROLE");
             await pgClient!.query("SET statement_timeout TO 3000");
         }

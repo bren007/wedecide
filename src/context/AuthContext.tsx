@@ -6,8 +6,9 @@ import { PerformanceMarkers, markPerformance, measurePerformance } from '../util
 import { AuthContext } from '../types/auth';
 import type { User } from '../types/auth';
 
-const PROFILE_CACHE_KEY = 'wedecide_profile_cache_v2';
+import { PROFILE_CACHE_KEY } from '../utils/contextHelpers';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

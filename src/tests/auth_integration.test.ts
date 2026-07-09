@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
+import { Client } from 'pg';
 import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, SUPABASE_URL, SUPABASE_ANON_KEY } from './helpers/setup';
 
 const TEST_EMAIL = `auto-test-${Date.now()}@test.alturagov.com`;
@@ -9,7 +9,7 @@ const TEST_ORG_NAME = 'Automated Test Org';
 const TEST_ORG_SLUG = `auto-org-${Date.now()}`;
 
 describe('Auth & Signup Integration Flow', () => {
-    let pgClient: any = null;
+    let pgClient: Client | null = null;
     const supabase = createTestSupabaseClient();
 
     beforeAll(async () => {
@@ -23,20 +23,20 @@ describe('Auth & Signup Integration Flow', () => {
             console.log('🧹 Cleaning up integration test data...');
 
             // 1. Find the organization ID
-            const res = await pgClient.query("SELECT organization_id FROM users WHERE email = $1", [TEST_EMAIL]);
+            const res = await pgClient!.query("SELECT organization_id FROM users WHERE email = $1", [TEST_EMAIL]);
             const orgId = res.rows[0]?.organization_id;
 
             if (orgId) {
                 // Delete in order to satisfy FK constraints
-                await pgClient.query("DELETE FROM user_roles WHERE organization_id = $1", [orgId]);
-                await pgClient.query("DELETE FROM decisions WHERE organization_id = $1", [orgId]);
-                await pgClient.query("DELETE FROM meetings WHERE organization_id = $1", [orgId]);
-                await pgClient.query("DELETE FROM users WHERE organization_id = $1", [orgId]);
-                await pgClient.query("DELETE FROM organizations WHERE id = $1", [orgId]);
+                await pgClient!.query("DELETE FROM user_roles WHERE organization_id = $1", [orgId]);
+                await pgClient!.query("DELETE FROM decisions WHERE organization_id = $1", [orgId]);
+                await pgClient!.query("DELETE FROM meetings WHERE organization_id = $1", [orgId]);
+                await pgClient!.query("DELETE FROM users WHERE organization_id = $1", [orgId]);
+                await pgClient!.query("DELETE FROM organizations WHERE id = $1", [orgId]);
             }
 
             // 2. Delete from auth.users
-            await pgClient.query("DELETE FROM auth.users WHERE email = $1", [TEST_EMAIL]);
+            await pgClient!.query("DELETE FROM auth.users WHERE email = $1", [TEST_EMAIL]);
 
             console.log('✅ Cleanup complete.');
         } catch (e) {
@@ -77,10 +77,8 @@ describe('Auth & Signup Integration Flow', () => {
         }
         expect(rpcError).toBeNull();
         expect(rpcData).toBeDefined();
-        // @ts-ignore
-        expect(rpcData.success).toBe(true);
-        // @ts-ignore
-        expect(rpcData.organization_id).toBeDefined();
+        expect((rpcData as { success: boolean }).success).toBe(true);
+        expect((rpcData as { organization_id: string }).organization_id).toBeDefined();
 
         console.log('✅ RPC Execution Successful.');
     }, 15000);

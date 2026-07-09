@@ -6,8 +6,7 @@ describe('Performance Monitoring Utility', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // Reset performance marks/entries if possible, or just mock them
-        // @ts-ignore
-        global.performance = {
+        (global as unknown as { performance: unknown }).performance = {
             mark: vi.fn(),
             measure: vi.fn(),
             getEntriesByName: vi.fn().mockReturnValue([{ duration: 123.45 }])
@@ -35,8 +34,7 @@ describe('Performance Monitoring Utility', () => {
     });
 
     it('should handle missing marks gracefully', () => {
-        // @ts-ignore
-        performance.getEntriesByName = vi.fn().mockReturnValue([]);
+        (performance as unknown as { getEntriesByName: unknown }).getEntriesByName = vi.fn().mockReturnValue([]);
 
         const duration = measurePerformance(
             'Test Measure',

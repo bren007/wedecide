@@ -166,7 +166,7 @@ export const exportStrategicLedgerToPDF = async (
         doc.setFontSize(10);
         // Using strict framing from spec
         const osText = `${outOfSession} decision(s) in this period were committed outside a formal governance session. These entries are individually identified in the Decision Register below.`;
-        const lines = doc.splitTextToSize(osText, pageWidth - (margin * 2));
+        const lines = doc.splitTextToSize(osText, pageWidth - (margin * 2)) as string[];
         doc.text(lines, margin, y);
         y += (lines.length * 5) + 5;
     }
@@ -244,7 +244,7 @@ export const exportStrategicLedgerToPDF = async (
                 doc.setFont("helvetica", "normal");
             }
 
-            const titleStr = doc.splitTextToSize(e.initiatives?.title || 'Unknown', 45);
+            const titleStr = doc.splitTextToSize(e.initiatives?.title || 'Unknown', 45) as string[];
             doc.text(titleStr, c1, y);
             doc.text(e.initiatives?.approval_mandate || '', c2, y);
             doc.text(e.initiatives?.relative_priority || '', c3, y);
@@ -257,7 +257,7 @@ export const exportStrategicLedgerToPDF = async (
         doc.setFont("helvetica", "italic");
         doc.setFontSize(9);
         const tensionContext = "Mandate tensions represent initiatives carrying formal political or governance sanction that are currently classified below Tier 1 delivery priority. Each item in this register requires a documented governance decision.";
-        const lines = doc.splitTextToSize(tensionContext, pageWidth - (margin * 2));
+        const lines = doc.splitTextToSize(tensionContext, pageWidth - (margin * 2)) as string[];
         doc.text(lines, margin, y);
         y += (lines.length * 4) + 10;
     }
@@ -333,7 +333,7 @@ export const exportStrategicLedgerToPDF = async (
             doc.setFont("helvetica", "italic");
             doc.setFontSize(9);
             const rationaleText = entry.rationale ? entry.rationale : "No rationale recorded at time of commitment.";
-            const rationaleLines = doc.splitTextToSize(rationaleText, pageWidth - (margin * 2) - 10);
+            const rationaleLines = doc.splitTextToSize(rationaleText, pageWidth - (margin * 2) - 10) as string[];
 
             // Estimated height
             const estHeight = 5 + 8 + 8 + (rationaleLines.length * 5) + 8;
@@ -430,14 +430,14 @@ export const exportStrategicLedgerToPDF = async (
     doc.setFontSize(9);
     doc.setTextColor(...hexToRgb(COLORS.primaryText));
     const integrityText = "Entries in the AlturaGov Strategic Ledger are written as append-only records. No entry can be modified or deleted after creation. Row-level security policies enforce this constraint at the database layer. This document represents a complete and unaltered extract of all ledger entries for the specified reporting period. The export timestamp and generating user identity are system-verified at the moment of generation.";
-    const integrityLines = doc.splitTextToSize(integrityText, pageWidth - (margin * 2));
+    const integrityLines = doc.splitTextToSize(integrityText, pageWidth - (margin * 2)) as string[];
     doc.text(integrityLines, margin, y);
     y += (integrityLines.length * 5) + 15;
 
     // Signatures
     doc.setFont("helvetica", "italic");
     const signContext = "This document has been generated from the AlturaGov Strategic Ledger and represents the complete record of governance decisions for the period specified above.";
-    const signLines = doc.splitTextToSize(signContext, pageWidth - (margin * 2));
+    const signLines = doc.splitTextToSize(signContext, pageWidth - (margin * 2)) as string[];
     doc.text(signLines, margin, y);
     y += 20;
 

@@ -8,15 +8,6 @@ export interface Meeting {
     title: string;
     started_at: string | null;
     ended_at: string | null;
-export interface Meeting {
-    id: string;
-    organization_id: string;
-    title: string;
-    started_at: string | null;
-    ended_at: string | null;
-    snapshot_start?: unknown;
-    snapshot_end?: unknown;
-    status?: string;
 }
 
 export const useMeetingState = () => {

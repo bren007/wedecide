@@ -37,7 +37,7 @@ export const useStrategicLedger = () => {
 
             if (error) throw error;
             setEntries(data as unknown as LedgerEntry[]);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error fetching ledger:", err);
             setError(err.message);
         } finally {

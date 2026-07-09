@@ -25,22 +25,40 @@ export function calculateFocusSlot(stake: number, tech: number, dep: number): nu
     return Math.max(1, Math.min(6, rawCost));
 }
 
+interface AuditCsvRow {
+    complexity_stakeholders_1_to_3?: string | number;
+    complexity_novelty_1_to_3?: string | number;
+    complexity_dependency_1_to_3?: string | number;
+    current_fy_budget?: string | number;
+    relative_priority?: string;
+    approval_mandate?: string;
+    initiative_name: string;
+    dependency_blockers?: string;
+}
+
+interface InitiativeDetail {
+    name: string;
+    priority: string | undefined;
+    mandate: string | undefined;
+    blockers: string[];
+}
+
 // 2. Parser Logic
 export function parseAndCalibrate(csvContent: string, cal: Calibration): ParserResults {
     const parsed = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
-    const rows = parsed.data as any[];
+    const rows = parsed.data as AuditCsvRow[];
 
     let totalLoad = 0;
     let fiscalDrag = 0;
-    const initiativeMap = new Map<string, any>();
+    const initiativeMap = new Map<string, InitiativeDetail>();
     const dependencyRisks: { highPriority: string; blockedBy: string }[] = [];
     const mandateTensions: string[] = [];
 
     // Parse individual initiatives
     const initiatives = rows.map((row) => {
-        const stake = parseInt(row.complexity_stakeholders_1_to_3, 10) || 1;
-        const tech = parseInt(row.complexity_novelty_1_to_3, 10) || 1;
-        const dep = parseInt(row.complexity_dependency_1_to_3, 10) || 1;
+        const stake = parseInt(String(row.complexity_stakeholders_1_to_3), 10) || 1;
+        const tech = parseInt(String(row.complexity_novelty_1_to_3), 10) || 1;
+        const dep = parseInt(String(row.complexity_dependency_1_to_3), 10) || 1;
         const cost = calculateFocusSlot(stake, tech, dep);
         
         totalLoad += cost;
@@ -68,7 +86,7 @@ export function parseAndCalibrate(csvContent: string, cal: Calibration): ParserR
     // Detect Dependency Risks
     initiatives.forEach((init) => {
         if (init.priority === 'Tier 1' || init.mandate === 'Cabinet Approved') {
-            init.blockers.forEach((blockerName) => {
+            init.blockers.forEach((blockerName: string) => {
                 const blocker = initiativeMap.get(blockerName);
                 if (blocker && (blocker.priority === 'Tier 2' || blocker.priority === 'Tier 3')) {
                     dependencyRisks.push({

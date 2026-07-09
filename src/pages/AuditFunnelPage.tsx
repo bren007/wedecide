@@ -112,7 +112,7 @@ export const AuditFunnelPage: React.FC = () => {
                 checkoutInFlightRef.current = false;
                 throw new Error("Failed to create Checkout session");
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('🔥 Stripe Payment Error:', err);
             alert('Failed to initiate checkout: ' + err.message);
         } finally {

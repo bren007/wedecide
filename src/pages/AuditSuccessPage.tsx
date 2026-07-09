@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { InlineWidget } from 'react-calendly';
@@ -21,9 +21,9 @@ export const AuditSuccessPage: React.FC = () => {
             setError("Missing session_id");
             setLoading(false);
         }
-    }, [sessionId]);
+    }, [sessionId, fetchSessionDetails]);
 
-    const fetchSessionDetails = async () => {
+    const fetchSessionDetails = useCallback(async () => {
         console.log('🔍 Validating Stripe Session:', sessionId);
         try {
             console.log('Invoking get-session-details Edge Function...');
@@ -38,13 +38,13 @@ export const AuditSuccessPage: React.FC = () => {
             
             console.log('Session Data Received:', data);
             setCustomerData(data);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("🔥 Error fetching session details:", err);
-            setError(err.message);
+            setError((err as Error).message);
         } finally {
             setLoading(false);
         }
-    };
+    }, [sessionId]);
 
     if (loading) {
         return (

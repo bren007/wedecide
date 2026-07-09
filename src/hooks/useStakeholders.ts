@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,9 +22,9 @@ export function useConsultation(decisionId: string | undefined) {
         if (decisionId && user?.organization_id) {
             fetchMembers();
         }
-    }, [decisionId, user?.organization_id]);
+    }, [decisionId, user?.organization_id, fetchMembers]);
 
-    async function fetchMembers() {
+    const fetchMembers = useCallback(async function () {
         if (!decisionId) return;
         try {
             setLoading(true);
@@ -40,43 +40,35 @@ export function useConsultation(decisionId: string | undefined) {
         } finally {
             setLoading(false);
         }
-    }
+    }, [decisionId]);
 
     async function addMember(userId: string | undefined, name: string, email: string) {
 
         if (!decisionId) return;
-        try {
-            const { data, error } = await supabase
-                .from('stakeholders')
-                .insert({
-                    decision_id: decisionId,
-                    user_id: userId,
-                    name: name,
-                    email: email
-                })
-                .select()
-                .single();
+        const { data, error } = await supabase
+            .from('stakeholders')
+            .insert({
+                decision_id: decisionId,
+                user_id: userId,
+                name: name,
+                email: email
+            })
+            .select()
+            .single();
 
-            if (error) throw error;
-            setMembers([...members, data]);
-            return data;
-        } catch (e) {
-            throw e;
-        }
+        if (error) throw error;
+        setMembers([...members, data]);
+        return data;
     }
 
     async function removeMember(memberId: string) {
-        try {
-            const { error } = await supabase
-                .from('stakeholders')
-                .delete()
-                .eq('id', memberId);
+        const { error } = await supabase
+            .from('stakeholders')
+            .delete()
+            .eq('id', memberId);
 
-            if (error) throw error;
-            setMembers(members.filter(m => m.id !== memberId));
-        } catch (e) {
-            throw e;
-        }
+        if (error) throw error;
+        setMembers(members.filter(m => m.id !== memberId));
     }
 
     return {

@@ -16,19 +16,31 @@ function isValidUrl(url: string) {
     try {
         new URL(url);
         return true;
-    } catch (_) {
+    } catch {
         return false;
     }
 }
 
+interface Stakeholder {
+    userId?: string;
+    name?: string;
+    email?: string;
+}
+
+interface UserSummary {
+    id: string;
+    name: string;
+    email: string;
+}
+
 // Simulating the stakeholder capture logic from DecisionForm.tsx
 function processStakeholdersOnSubmit(
-    currentPeople: any[],
+    currentPeople: Stakeholder[],
     isExternal: boolean,
     manualName: string,
     manualEmail: string,
     selectedUserId: string,
-    users: any[]
+    users: UserSummary[]
 ) {
     const finalPeople = [...currentPeople];
 
@@ -74,7 +86,7 @@ describe('Regression Tests: Bug Fixes', () => {
         ];
 
         it('should include manual external stakeholder if not yet added to list', () => {
-            const currentPeople: any[] = [];
+            const currentPeople: Stakeholder[] = [];
             const result = processStakeholdersOnSubmit(
                 currentPeople,
                 true, // isExternal
@@ -89,7 +101,7 @@ describe('Regression Tests: Bug Fixes', () => {
         });
 
         it('should include selected team member if not yet added to list', () => {
-            const currentPeople: any[] = [];
+            const currentPeople: Stakeholder[] = [];
             const result = processStakeholdersOnSubmit(
                 currentPeople,
                 false, // isExternal
@@ -105,7 +117,7 @@ describe('Regression Tests: Bug Fixes', () => {
         });
 
         it('should not add duplicate team members if already in list', () => {
-            const currentPeople = [{ userId: 'u1', name: 'Alice', email: 'alice@test.com' }];
+            const currentPeople: Stakeholder[] = [{ userId: 'u1', name: 'Alice', email: 'alice@test.com' }];
             const result = processStakeholdersOnSubmit(
                 currentPeople,
                 false, // isExternal

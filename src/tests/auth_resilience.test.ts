@@ -3,21 +3,21 @@ import { describe, it, expect } from 'vitest';
 describe('Auth Resilience Logic (SWR)', () => {
     it('should return NETWORK_ERROR on timeout instead of null', async () => {
         let fetchCount = 0;
-        const profileFetchRef = { current: null as any };
+        const profileFetchRef = { current: null as unknown };
 
-        const fetchUserProfile = async (userId: string, retryCount = 0): Promise<any> => {
+        const fetchUserProfile = async (userId: string, retryCount = 0): Promise< unknown > => {
             if (profileFetchRef.current && retryCount === 0) return profileFetchRef.current;
 
             const fetchPromise = (async () => {
                 fetchCount++;
                 // Simulate timeout error
                 throw new Error('Profile fetch timeout');
-            })().catch(async (err) => {
+            })().catch(async (err: unknown) => {
                 if (retryCount < 1) { // 1 retry for test speed
                     return fetchUserProfile(userId, retryCount + 1);
                 }
                 // The new behavior:
-                if (err.message.includes('timeout')) return 'NETWORK_ERROR';
+                if (err instanceof Error && err.message.includes('timeout')) return 'NETWORK_ERROR';
                 return null;
             }).finally(() => {
                 if (profileFetchRef.current === trackedPromise) profileFetchRef.current = null;
@@ -35,9 +35,9 @@ describe('Auth Resilience Logic (SWR)', () => {
 
     it('should share result between parallel calls during retry chain', async () => {
         let fetchCount = 0;
-        const profileFetchRef = { current: null as any };
+        const profileFetchRef = { current: null as unknown };
 
-        const fetchUserProfile = async (userId: string, retryCount = 0): Promise<any> => {
+        const fetchUserProfile = async (userId: string, retryCount = 0): Promise< unknown > => {
             if (profileFetchRef.current && retryCount === 0) return profileFetchRef.current;
 
             const fetchPromise = (async () => {
@@ -62,7 +62,7 @@ describe('Auth Resilience Logic (SWR)', () => {
         ]);
 
         expect(fetchCount).toBe(2);
-        expect(res1.name).toBe('Success');
+        expect((res1 as { name: string }).name).toBe('Success');
         expect(res1).toBe(res2);
     });
 });

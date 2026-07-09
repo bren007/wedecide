@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/Card';
@@ -90,9 +90,9 @@ export const OrganizationSettingsPage: React.FC = () => {
         if (user) {
             fetchOrganization();
         }
-    }, [user]);
+    }, [user, fetchOrganization]);
 
-    const fetchOrganization = async () => {
+    const fetchOrganization = useCallback(async () => {
         try {
             if (!user) return;
 
@@ -176,7 +176,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
                 // 5. Governance: Capacity Settings
                 const { data: capData } = await supabase
-                    .from('capacity_settings' as any)
+                    .from('capacity_settings' as unknown)
                     .select('*')
                     .eq('org_id', orgId)
                     .maybeSingle();
@@ -184,7 +184,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                 if (capData) {
                     setCapacitySettings(capData as unknown as CapacitySettings);
                     // Sync local Fm slider state from DB value
-                    const fm = Number((capData as any).friction_coefficient);
+                    const fm = Number((capData as unknown).friction_coefficient);
                     if (fm >= 1.0 && fm <= 2.5) setFrictionCoefficient(fm);
                 } else {
                     // Initialize empty state if needed, or rely on null
@@ -203,7 +203,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
                 // 6. Governance: Strategic Pillars
                 const { data: pillarsData } = await supabase
-                    .from('strategic_pillars' as any)
+                    .from('strategic_pillars' as unknown)
                     .select('*')
                     .eq('org_id', orgId)
                     .order('target_weight', { ascending: false });
@@ -216,13 +216,13 @@ export const OrganizationSettingsPage: React.FC = () => {
                 // Only count initiatives that are actively drawing from capacity balance
                 try {
                     const { data: initiatives } = await supabase
-                        .from('initiatives' as any)
+                        .from('initiatives' as unknown)
                         .select('focus_slots_required')
                         .eq('org_id', orgId)
                         .in('status', ['active', 'approved', 'on_hold', 'delayed']);
 
                     if (initiatives) {
-                        const totalTokens = (initiatives as any[]).reduce((sum, init) => sum + (Number(init.focus_slots_required) || 0), 0);
+                        const totalTokens = (initiatives as unknown[]).reduce((sum, init) => sum + (Number(init.focus_slots_required) || 0), 0);
                         setCurrentLoad(totalTokens);
                     }
                 } catch (loadErr) {
@@ -235,7 +235,7 @@ export const OrganizationSettingsPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
 
     const handleUpdateName = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -282,7 +282,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                 setMeetingGroups([...meetingGroups, data]);
                 setMessage({ type: 'success', text: 'Meeting group created!' });
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error creating group:', error);
             setMessage({ type: 'error', text: 'Failed to create group.' });
         }
@@ -299,7 +299,7 @@ export const OrganizationSettingsPage: React.FC = () => {
             if (error) throw error;
             setMeetingGroups(meetingGroups.filter(g => g.id !== id));
             setMessage({ type: 'success', text: 'Meeting group deleted!' });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error deleting group:', error);
             setMessage({ type: 'error', text: 'Failed to delete group.' });
         }
@@ -319,7 +319,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                 m.user_id === userId ? { ...m, role: newRole } : m
             ));
             setMessage({ type: 'success', text: 'User role updated!' });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error updating role:', error);
             setMessage({ type: 'error', text: 'Failed to update role.' });
         }
@@ -341,7 +341,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
             setMembers(members.filter(m => m.user_id !== userId));
             setMessage({ type: 'success', text: 'Member removed.' });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error removing member:', error);
             setMessage({ type: 'error', text: 'Failed to remove member.' });
         }
@@ -366,7 +366,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
             if (capacitySettings.id) {
                 const { error } = await supabase
-                    .from('capacity_settings' as any)
+                    .from('capacity_settings' as unknown)
                     .update({
                         total_focus_slots: adjustedSlots, // friction-adjusted limit used by Command Centre
                         total_capex_limit: capacitySettings.total_capex_limit,
@@ -382,7 +382,7 @@ export const OrganizationSettingsPage: React.FC = () => {
             } else {
                 // Insert new
                 const { data, error } = await supabase
-                    .from('capacity_settings' as any)
+                    .from('capacity_settings' as unknown)
                     .insert({
                         org_id: org.id,
                         total_focus_slots: adjustedSlots,
@@ -400,7 +400,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                 setCapacitySettings(data as unknown as CapacitySettings);
             }
             setMessage({ type: 'success', text: 'Capacity settings saved.' });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error saving capacity:', err);
             setMessage({ type: 'error', text: 'Failed to save settings.' });
         } finally {
@@ -420,7 +420,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
         try {
             const { data, error } = await supabase
-                .from('strategic_pillars' as any)
+                .from('strategic_pillars' as unknown)
                 .insert({
                     org_id: org.id,
                     title: newPillarTitle,
@@ -435,7 +435,7 @@ export const OrganizationSettingsPage: React.FC = () => {
             setNewPillarTitle('');
             setNewPillarWeight(0);
             setMessage({ type: 'success', text: 'Strategic Pillar added.' });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error adding pillar:', err);
             setMessage({ type: 'error', text: 'Failed to add pillar.' });
         }
@@ -463,7 +463,7 @@ export const OrganizationSettingsPage: React.FC = () => {
             } else {
                 throw new Error('Failed to generate invite');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Invite error:', err);
             setMessage({ type: 'error', text: err.message || 'Failed to send invite' });
         } finally {
@@ -483,7 +483,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
             setPendingInvites(pendingInvites.filter(i => i.id !== inviteId));
             setMessage({ type: 'success', text: 'Invitation revoked.' });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Revoke error:', err);
             setMessage({ type: 'error', text: 'Failed to revoke invitation.' });
         }
@@ -515,7 +515,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
         try {
             const { error } = await supabase
-                .from('strategic_pillars' as any)
+                .from('strategic_pillars' as unknown)
                 .update({ target_weight: newWeight })
                 .eq('id', id);
 
@@ -523,7 +523,7 @@ export const OrganizationSettingsPage: React.FC = () => {
 
             setPillars(pillars.map(p => p.id === id ? { ...p, target_weight: newWeight } : p));
             setMessage({ type: 'success', text: 'Pillar weight updated.' });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error updating pillar weight:', err);
             setMessage({ type: 'error', text: 'Failed to update pillar weight.' });
         }
@@ -533,14 +533,14 @@ export const OrganizationSettingsPage: React.FC = () => {
         if (!window.confirm('Delete this strategic pillar?')) return;
         try {
             const { error } = await supabase
-                .from('strategic_pillars' as any)
+                .from('strategic_pillars' as unknown)
                 .delete()
                 .eq('id', id);
 
             if (error) throw error;
             setPillars(pillars.filter(p => p.id !== id));
             setMessage({ type: 'success', text: 'Pillar deleted.' });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error deleting pillar:', err);
             setMessage({ type: 'error', text: 'Failed to delete pillar.' });
         }

@@ -3,12 +3,29 @@ import { Activity, AlertTriangle, ArrowRight, CheckCircle, Database, ShieldCheck
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
-type Lead = any; // simplified for dashboard
+interface Lead {
+    id: string;
+    audit_status: string;
+    payment_at?: string | null;
+    created_at: string;
+    organization_name?: string | null;
+    email: string;
+}
+
+interface InvoiceRequest {
+    id: string;
+    agency: string;
+    selected_tier: string;
+    full_name: string;
+    work_email: string;
+    po_number?: string | null;
+    status: string;
+}
 
 export const PulseDashboardPage: React.FC = () => {
     const { isGlobalAdmin } = useAuth();
     const [leads, setLeads] = useState<Lead[]>([]);
-    const [invoiceRequests, setInvoiceRequests] = useState<any[]>([]);
+    const [invoiceRequests, setInvoiceRequests] = useState<InvoiceRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -28,7 +45,7 @@ export const PulseDashboardPage: React.FC = () => {
         }
 
         const { data: invData, error: invError } = await supabase
-            .from('invoice_requests' as any)
+            .from('invoice_requests' as unknown)
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -41,7 +58,7 @@ export const PulseDashboardPage: React.FC = () => {
     const handleActivateLicence = async (requestId: string) => {
         setActionLoading(requestId);
         try {
-            const { error, data } = await (supabase.rpc as any)('activate_invoice_request', {
+            const { error, data } = await (supabase.rpc as unknown)('activate_invoice_request', {
                 p_request_id: requestId
             });
 
@@ -65,8 +82,8 @@ export const PulseDashboardPage: React.FC = () => {
 
                 fetchTelemtry(); // refresh
             }
-        } catch (err: any) {
-            alert(`Unexpected error: ${err.message}`);
+        } catch (err: unknown) {
+            alert(`Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
         } finally {
             setActionLoading(null);
         }

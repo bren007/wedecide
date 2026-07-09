@@ -29,7 +29,7 @@ export const measurePerformance = (measureName: string, startMark: string, endMa
                 console.log(`⏱️ Performance [${measureName}]: ${lastEntry.duration.toFixed(2)}ms`);
             }
             return lastEntry.duration;
-        } catch (e) {
+        } catch {
             // Silently fail if marks are missing
         }
     }

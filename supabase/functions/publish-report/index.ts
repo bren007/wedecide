@@ -10,7 +10,7 @@ const corsHeaders = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function generatePdf(data: any): Uint8Array {
+function generatePdf(data: unknown): Uint8Array {
     // ── PDF Generator ─────────────────────────────────────────────────────
 
     const {
@@ -234,14 +234,14 @@ function generatePdf(data: any): Uint8Array {
         return 0;
     };
 
-    const sorted = [...initiatives].sort((a: any, b: any) => {
+    const sorted = [...initiatives].sort((a: unknown, b: unknown) => {
         const wa = getTierWeight(a.priority);
         const wb = getTierWeight(b.priority);
         if (wa !== wb) return wb - wa;
         return b.cost - a.cost;
     });
 
-    const maxBarVal = Math.max(baselineSlots, totalLoad, ...initiatives.map((i: any) => i.cost)) * 1.1;
+    const maxBarVal = Math.max(baselineSlots, totalLoad, ...initiatives.map((i: unknown) => i.cost)) * 1.1;
 
     for (const init of sorted) {
         if (y > 265) { doc.addPage(); addFooter(); y = 25; }
@@ -455,7 +455,7 @@ serve(async (req: Request) => {
         const lead = leads[0];
 
         // 2. Map initiatives for PDF
-        const mappedInitiatives = data.portfolio.map((i: any, idx: number) => ({
+        const mappedInitiatives = data.portfolio.map((i: unknown, idx: number) => ({
             id: idx,
             name: i.initiative_name || i.title || "Untitled",
             cost: i.calculated_focus_slots || 0,
@@ -528,7 +528,7 @@ serve(async (req: Request) => {
             JSON.stringify({ success: true, message: "Report published", reportUrl: reportFileName }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[PUBLISHER ERROR]", error.message);
         return new Response(
             JSON.stringify({ error: error.message }),

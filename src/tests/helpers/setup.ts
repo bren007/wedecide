@@ -63,8 +63,8 @@ export async function createPgClient(): Promise<Client> {
 export async function tryCreatePgClient(): Promise<Client | null> {
     try {
         return await createPgClient();
-    } catch (_e: any) {
-        console.warn(`⚠️ DB connection failed: ${_e.message}. Integration tests will be skipped.`);
+    } catch (_e: unknown) {
+        console.warn(`⚠️ DB connection failed: ${(_e as Error).message}. Integration tests will be skipped.`);
         return null;
     }
 }
@@ -95,10 +95,10 @@ export async function cleanupTestOrg(pgClient: Client, orgId: string): Promise<v
         await pgClient.query("DELETE FROM user_roles WHERE organization_id = $1", [orgId]);
         await pgClient.query("DELETE FROM users WHERE organization_id = $1", [orgId]);
         await pgClient.query("DELETE FROM organizations WHERE id = $1", [orgId]);
-    } catch (_e: any) {
+    } catch (_e: unknown) {
         // Some tables may not exist - that's fine
-        if (!_e.message.includes('does not exist')) {
-            console.warn('⚠️ Partial cleanup error:', _e.message);
+        if (!(_e as Error).message.includes('does not exist')) {
+            console.warn('⚠️ Partial cleanup error:', (_e as Error).message);
         }
     }
 }
@@ -109,7 +109,7 @@ export async function cleanupTestOrg(pgClient: Client, orgId: string): Promise<v
 export async function cleanupAuthUser(pgClient: Client, email: string): Promise<void> {
     try {
         await pgClient.query("DELETE FROM auth.users WHERE email = $1", [email]);
-    } catch (_e: any) {
-        console.warn('⚠️ Auth user cleanup failed:', _e.message);
+    } catch (_e: unknown) {
+        console.warn('⚠️ Auth user cleanup failed:', (_e as Error).message);
     }
 }

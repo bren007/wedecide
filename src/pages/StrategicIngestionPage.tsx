@@ -30,22 +30,22 @@ export const StrategicIngestionPage: React.FC = () => {
 
             // Get user's org
             const { data: userData } = await supabase
-                .from('users' as any)
+                .from('users' as unknown)
                 .select('organization_id')
                 .eq('id', user.id)
                 .single();
-            const orgId = (userData as any)?.organization_id;
+            const orgId = (userData as unknown)?.organization_id;
 
             if (orgId) {
                 const { count } = await supabase
-                    .from('initiatives' as any)
+                    .from('initiatives' as unknown)
                     .select('*', { count: 'exact', head: true })
                     .eq('org_id', orgId);
                 setExistingCount(count);
             }
 
-            const { data } = await supabase.from('strategic_pillars' as any).select('id, title');
-            if (data) setPillars(data as any);
+            const { data } = await supabase.from('strategic_pillars' as unknown).select('id, title');
+            if (data) setPillars(data as unknown);
         };
         fetchInitialData();
     }, []);
@@ -62,7 +62,7 @@ export const StrategicIngestionPage: React.FC = () => {
             header: true,
             skipEmptyLines: true,
             complete: async (results) => {
-                const resultsData = results.data as any[];
+                const resultsData = results.data as unknown[];
                 if (resultsData.length === 0) return;
 
                 const csvHeaders = Object.keys(resultsData[0]);
@@ -80,7 +80,7 @@ export const StrategicIngestionPage: React.FC = () => {
                     console.warn("AI Mapping failed, using heuristic", e);
                 }
 
-                const parsed: StagingInitiative[] = resultsData.map((row: any, index: number) => {
+                const parsed: StagingInitiative[] = resultsData.map((row: unknown, index: number) => {
                     // Helper to get value via Map or Heuristic
                     const getValue = (targetField: string, heuristicKeys: string[]) => {
                         // 1. Try AI Map
@@ -195,16 +195,16 @@ export const StrategicIngestionPage: React.FC = () => {
 
             // Get user's org
             const { data: userData } = await supabase
-                .from('users' as any)
+                .from('users' as unknown)
                 .select('organization_id')
                 .eq('id', user.id)
                 .single();
-            const orgId = (userData as any)?.organization_id;
+            const orgId = (userData as unknown)?.organization_id;
 
             if (shouldOverwrite) {
                 setLogs(prev => [...prev, '⚠️ Overwrite mode active: Clearing existing ledger...']);
                 const { error: deleteError } = await supabase
-                    .from('initiatives' as any)
+                    .from('initiatives' as unknown)
                     .delete()
                     .eq('org_id', orgId);
                 if (deleteError) throw new Error(`Could not clear ledger: ${deleteError.message}`);
@@ -218,7 +218,7 @@ export const StrategicIngestionPage: React.FC = () => {
                 const score = (item.complexity_stakeholder || 0) + (item.complexity_tech || 0) + (item.complexity_dependency || 0);
                 const computedSlots = score <= 5 ? 1 : score <= 10 ? 3 : 5;
 
-                const { error } = await supabase.from('initiatives' as any).insert({
+                const { error } = await supabase.from('initiatives' as unknown).insert({
                     org_id: orgId,
                     owner_id: user.id,
                     title: item.title,
@@ -255,7 +255,7 @@ export const StrategicIngestionPage: React.FC = () => {
                 setTimeout(() => navigate('/command-center'), 1500);
             }
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             setLogs(prev => [...prev, `❌ Error: ${err.message}`]);
         } finally {
             setUploading(false);
@@ -269,7 +269,7 @@ export const StrategicIngestionPage: React.FC = () => {
             const enhanced = await inferSlotsAndNovelty(stagingData, pillars);
             setStagingData(enhanced);
             setLogs(prev => [...prev, `✅ AI Analysis Complete. Suggestions highlighted in Gold.`]);
-        } catch (e: any) {
+        } catch (e: unknown) {
             setLogs(prev => [...prev, `❌ AI Inference failed: ${e.message}`]);
         }
     };

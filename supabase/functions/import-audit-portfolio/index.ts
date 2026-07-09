@@ -143,7 +143,7 @@ serve(async (req: Request) => {
             }
 
             // 1. Resolve Pillars (String Name -> UUID)
-            const pillarNames = [...new Set(parsedJson.map((i: any) => i.alignment_pillar).filter(Boolean))];
+            const pillarNames = [...new Set(parsedJson.map((i: unknown) => i.alignment_pillar).filter(Boolean))];
             const pillarMap: Record<string, string> = {};
 
             for (const name of pillarNames) {

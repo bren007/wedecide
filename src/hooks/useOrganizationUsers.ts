@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,9 +19,9 @@ export function useOrganizationUsers() {
         if (user?.organization_id) {
             fetchUsers();
         }
-    }, [user?.organization_id]);
+    }, [user?.organization_id, fetchUsers]);
 
-    async function fetchUsers() {
+    const fetchUsers = useCallback(async function () {
         try {
             if (!user?.organization_id) return;
             setLoading(true);
@@ -45,7 +45,7 @@ export function useOrganizationUsers() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [user?.organization_id]);
 
     return {
         users,

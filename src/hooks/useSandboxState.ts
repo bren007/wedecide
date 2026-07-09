@@ -56,7 +56,7 @@ export function useSandboxState() {
 
             // Fetch Settings
             const { data: settingsData, error: settingsError } = await supabase
-                .from('capacity_settings' as any)
+                .from('capacity_settings' as unknown)
                 .select('*')
                 .maybeSingle();
 
@@ -65,7 +65,7 @@ export function useSandboxState() {
 
             // Fetch Initiatives (all relevant statuses)
             const { data: initiativesData, error: initiativesError } = await supabase
-                .from('initiatives' as any)
+                .from('initiatives' as unknown)
                 .select('*')
                 .in('status', ['approved', 'active', 'proposed', 'paused']);
 
@@ -73,18 +73,18 @@ export function useSandboxState() {
 
             // Fetch Pillars
             const { data: pillarsData, error: pillarsError } = await supabase
-                .from('strategic_pillars' as any)
+                .from('strategic_pillars' as unknown)
                 .select('id, title');
 
             if (pillarsError) {
                 console.warn('Error fetching pillars (might be none yet):', pillarsError);
             } else {
                 const pMap: Record<string, string> = {};
-                (pillarsData as any[] || []).forEach(p => pMap[p.id] = p.title);
+                (pillarsData as unknown[] || []).forEach(p => pMap[p.id] = p.title);
                 setPillarsMap(pMap);
             }
 
-            const rawInits = (initiativesData as any[]) || [];
+            const rawInits = (initiativesData as unknown[]) || [];
             const inits: Initiative[] = rawInits.map(raw => ({
                 ...raw,
                 // Primary mapping: Use DB names (required) for frontend display (current_fy)
@@ -99,7 +99,7 @@ export function useSandboxState() {
             setDbInitiatives(inits);
             setLocalInitiatives(inits); 
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error fetching sandbox state:', err);
             setError(err.message);
         } finally {
@@ -143,7 +143,7 @@ export function useSandboxState() {
             for (const { local, original, statusChanged, quarterChanged } of changes) {
                 // 1. Update Initiative Status and Quarter
                 const { error: updateError } = await supabase
-                    .from('initiatives' as any)
+                    .from('initiatives' as unknown)
                     .update({
                         status: local.status,
                         target_delivery_quarter: local.target_delivery_quarter
@@ -183,7 +183,7 @@ export function useSandboxState() {
                     }
 
                     const { error: ledgerError } = await supabase
-                        .from('strategic_ledger' as any)
+                        .from('strategic_ledger' as unknown)
                         .insert({
                             org_id: (await supabase.from('users').select('organization_id').eq('id', user.id).single()).data?.organization_id, // Fetch org_id fresh
                             initiative_id: local.id,
@@ -199,7 +199,7 @@ export function useSandboxState() {
 
             // Refresh data from DB to confirm and reset
             await fetchData();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error committing changes:', err);
             setError('Failed to commit changes.');
         } finally {
@@ -304,9 +304,9 @@ export function useSandboxState() {
 
             if (original) {
                 // Determine if complexity changed and recalculate focus_slots
-                const newStakeholder = updates.complexity_stakeholder ?? (original as any).complexity_stakeholder ?? 0;
-                const newTech = updates.complexity_tech ?? (original as any).complexity_tech ?? 0;
-                const newDependency = updates.complexity_dependency ?? (original as any).complexity_dependency ?? 0;
+                const newStakeholder = updates.complexity_stakeholder ?? (original as unknown).complexity_stakeholder ?? 0;
+                const newTech = updates.complexity_tech ?? (original as unknown).complexity_tech ?? 0;
+                const newDependency = updates.complexity_dependency ?? (original as unknown).complexity_dependency ?? 0;
 
                 const score = newStakeholder + newTech + newDependency;
                 const computedSlots = score <= 5 ? 1 : score <= 10 ? 3 : 5;
@@ -317,7 +317,7 @@ export function useSandboxState() {
             }
 
             const { error: updateError } = await supabase
-                .from('initiatives' as any)
+                .from('initiatives' as unknown)
                 .update(updates)
                 .eq('id', id);
 
@@ -337,7 +337,7 @@ export function useSandboxState() {
                 if (updates.target_delivery_quarter !== undefined && updates.target_delivery_quarter !== original.target_delivery_quarter) changes.push(`Sequenced to ${updates.target_delivery_quarter}`);
 
                 if (changes.length > 0) {
-                    const { error: ledgerError } = await supabase.from('strategic_ledger' as any).insert({
+                    const { error: ledgerError } = await supabase.from('strategic_ledger' as unknown).insert({
                         org_id: orgId,
                         initiative_id: id,
                         chair_id: user.id,
@@ -352,7 +352,7 @@ export function useSandboxState() {
             // Update both states so it doesn't trigger 'hasChanges'
             setDbInitiatives(prev => prev.map(init => init.id === id ? { ...init, ...updates } : init));
             setLocalInitiatives(prev => prev.map(init => init.id === id ? { ...init, ...updates } : init));
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Failed to update initiative details:', err);
             throw err;
         }

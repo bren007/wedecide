@@ -3,17 +3,28 @@ import { createTestSupabaseClient } from './helpers/setup';
 
 const supabase = createTestSupabaseClient();
 
+interface TestUser {
+    id: string;
+    email: string;
+    organization_id: string;
+    is_global_admin?: boolean;
+    user_roles?: {
+        role: string;
+    }[];
+}
+
 describe('Invitation System (invite_user RPC)', () => {
-    let orgChair: any;
-    let orgMember: any;
+    let orgChair: TestUser | undefined;
+    let orgMember: TestUser | undefined;
 
     beforeAll(async () => {
         // Find existing users from your standard test seed data
         const { data: users } = await supabase.from('users').select('*, user_roles(*)');
         
         // Setup identifiers to run realistic tests
-        orgChair = (users as any[])?.find((u: any) => u.user_roles?.some((r: any) => r.role === 'chair' || r.role === 'admin') && !u.is_global_admin);
-        orgMember = (users as any[])?.find((u: any) => u.user_roles?.some((r: any) => r.role === 'member') && !u.is_global_admin);
+        const usersCast = users as TestUser[];
+        orgChair = usersCast?.find((u) => u.user_roles?.some((r) => r.role === 'chair' || r.role === 'admin') && !u.is_global_admin);
+        orgMember = usersCast?.find((u) => u.user_roles?.some((r) => r.role === 'member') && !u.is_global_admin);
     });
 
     it('should allow an org Chair to generate an invite for their own organization', async () => {

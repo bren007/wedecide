@@ -130,7 +130,7 @@ ${rawDraft}
                 {
                     type: "text",
                     text: "You are an expert Lead Editor. Format your response strictly as valid JSON.",
-                    // @ts-expect-error
+                    // @ts-expect-error – cache_control is not typed
                     cache_control: { type: "ephemeral" }
                 }
             ],

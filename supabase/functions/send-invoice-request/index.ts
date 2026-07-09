@@ -102,7 +102,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, id: row.id }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('send-invoice-request error:', err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,

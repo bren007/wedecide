@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,9 +22,9 @@ export function useDocuments(decisionId: string | undefined) {
         if (decisionId && user?.organization_id) {
             fetchDocuments();
         }
-    }, [decisionId, user?.organization_id]);
+    }, [decisionId, user?.organization_id, fetchDocuments]);
 
-    async function fetchDocuments() {
+    const fetchDocuments = useCallback(async function () {
         if (!decisionId) return;
         try {
             setLoading(true);
@@ -41,45 +41,37 @@ export function useDocuments(decisionId: string | undefined) {
         } finally {
             setLoading(false);
         }
-    }
+    }, [decisionId]);
 
     async function addDocument(name: string, url: string, type: string) {
         if (!decisionId || !user?.organization_id) return;
-        try {
-            const { data, error } = await supabase
-                .from('documents')
-                .insert({
-                    decision_id: decisionId,
-                    organization_id: user.organization_id,
-                    uploaded_by: user.id,
-                    name,
-                    url,
-                    type,
-                    is_part_of_meeting_pack: false
-                })
-                .select()
-                .single();
+        const { data, error } = await supabase
+            .from('documents')
+            .insert({
+                decision_id: decisionId,
+                organization_id: user.organization_id,
+                uploaded_by: user.id,
+                name,
+                url,
+                type,
+                is_part_of_meeting_pack: false
+            })
+            .select()
+            .single();
 
-            if (error) throw error;
-            setDocuments([data, ...documents]);
-            return data;
-        } catch (e) {
-            throw e;
-        }
+        if (error) throw error;
+        setDocuments([data, ...documents]);
+        return data;
     }
 
     async function deleteDocument(id: string) {
-        try {
-            const { error } = await supabase
-                .from('documents')
-                .delete()
-                .eq('id', id);
+        const { error } = await supabase
+            .from('documents')
+            .delete()
+            .eq('id', id);
 
-            if (error) throw error;
-            setDocuments(documents.filter(d => d.id !== id));
-        } catch (e) {
-            throw e;
-        }
+        if (error) throw error;
+        setDocuments(documents.filter(d => d.id !== id));
     }
 
     return {

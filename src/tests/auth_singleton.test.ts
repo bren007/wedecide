@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 describe('Auth Singleton Logic', () => {
     it('should only fire one network request when multiple fetches happen in parallel', async () => {
         let fetchCount = 0;
-        const profileFetchRef = { current: null as any };
+        const profileFetchRef = { current: null as Promise<{ id: string; name: string }> | null };
 
         const fetchUserProfile = async (userId: string) => {
             if (profileFetchRef.current) {
@@ -41,7 +41,7 @@ describe('Auth Singleton Logic', () => {
 
     it('should allow a new request after the previous one finishes', async () => {
         let fetchCount = 0;
-        const profileFetchRef = { current: null as any };
+        const profileFetchRef = { current: null as Promise<{ id: string }> | null };
 
         const fetchUserProfile = async (userId: string) => {
             if (profileFetchRef.current) return profileFetchRef.current;

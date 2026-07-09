@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment */
+ 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createTestSupabaseClient, tryCreatePgClient, hasRequiredEnv, createAuthenticatedClient } from './helpers/setup';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Client } from 'pg';
 
 // Test Data
 const TEST_ORG_NAME = 'Admin Test Org ' + Date.now();
@@ -11,8 +13,8 @@ describe('Admin Functionality', () => {
     let adminId: string;
     let orgId: string;
     let memberEmail: string;
-    let supabase: unknown;
-    let pgClient: any = null;
+    let supabase: SupabaseClient;
+    let pgClient: Client | null = null;
 
     beforeAll(async () => {
         if (!hasRequiredEnv()) return;
@@ -156,7 +158,7 @@ describe('Admin Functionality', () => {
 
         expect(error).toBeNull();
         expect(data!.length).toBeGreaterThan(0);
-        expect(data!.find((g: any) => g.name === BOARD_GROUP_NAME)).toBeDefined();
+        expect(data!.find((g: unknown) => g.name === BOARD_GROUP_NAME)).toBeDefined();
     });
 
     it('should delete a meeting group', async () => {

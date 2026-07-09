@@ -54,7 +54,7 @@ describe('Auth Timeout Logic', () => {
             const maxRetries = 1;
 
             // Simulate the fetchUserProfile logic with a hung query
-            const fetchUserProfile = async (retryCount = 0): Promise<any> => {
+            const fetchUserProfile = async (retryCount = 0): Promise< unknown > => {
                 try {
                     // Simulate a query that hangs (exceeds timeout)
                     await withTimeout(
@@ -63,11 +63,11 @@ describe('Auth Timeout Logic', () => {
                         'users query'
                     );
                     return { id: 'test-user' };
-                } catch (error: any) {
+                } catch (error: unknown) {
                     if (retryCount < maxRetries) {
                         return fetchUserProfile(retryCount + 1);
                     }
-                    if (error.message?.includes('Timeout')) {
+                    if (error instanceof Error && error.message.includes('Timeout')) {
                         return 'NETWORK_ERROR';
                     }
                     return null;
@@ -81,7 +81,7 @@ describe('Auth Timeout Logic', () => {
         it('should succeed on retry after first timeout', async () => {
             let attempt = 0;
 
-            const fetchUserProfile = async (retryCount = 0): Promise<any> => {
+            const fetchUserProfile = async (retryCount = 0): Promise< unknown > => {
                 try {
                     attempt++;
                     if (attempt === 1) {
@@ -94,7 +94,7 @@ describe('Auth Timeout Logic', () => {
                     }
                     // Second attempt: success
                     return { id: 'user-123', name: 'Test User', roles: ['admin'] };
-                } catch (error: any) {
+                } catch {
                     if (retryCount < 1) {
                         return fetchUserProfile(retryCount + 1);
                     }
@@ -109,7 +109,7 @@ describe('Auth Timeout Logic', () => {
 
         it('should handle stale session gracefully (user not in DB)', async () => {
             // Simulate: auth session exists but user was deleted from public.users
-            const fetchUserProfile = async (): Promise<any> => {
+            const fetchUserProfile = async (): Promise< unknown > => {
                 // Supabase would return PGRST116 (no rows)
                 const profileError = { code: 'PGRST116', message: 'No rows found' };
                 if (profileError.code === 'PGRST116') return null;
@@ -146,7 +146,7 @@ describe('Auth Timeout Logic', () => {
         it('should NOT override state if fetch completed before fallback', async () => {
             let isLoading = true;
             let initialFetchDone = false;
-            let user = null as any;
+            let user = null as unknown;
 
             // Simulate fast fetch completing before fallback
             await new Promise<void>(resolve => {

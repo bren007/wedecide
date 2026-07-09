@@ -49,7 +49,7 @@ async function callClaude(apiKey: string, systemPrompt: string, userPrompt: stri
 
 // ── Agent 1: Gemini — Structured Analytical Brief ─────────────────────
 
-async function runAgent1(geminiApiKey: string, payload: any): Promise<any> {
+async function runAgent1(geminiApiKey: string, payload: unknown): Promise< unknown > {
     const jsonString = JSON.stringify(payload, null, 2);
 
     const prompt = `You are a quantitative portfolio analyst. Your task is to analyse the provided portfolio data and produce a structured analytical brief for Section 3 and Section 4 of a Strategic Capacity Assessment. You do not write the final report — you produce the factual and mathematical foundation that the report editor will work from.
@@ -116,7 +116,7 @@ ${jsonString}
 
 // ── Agent 2: Claude — Editor-in-Chief ─────────────────────────────────
 
-async function runAgent2(anthropicApiKey: string, agent1Analysis: any, payload: any): Promise<any> {
+async function runAgent2(anthropicApiKey: string, agent1Analysis: unknown, payload: unknown): Promise< unknown > {
     const systemPrompt = `You are an expert Lead Editor at AlturaGov. You translate structured analytical findings into authoritative executive prose. Format your response strictly as valid JSON.`;
 
     const userPrompt = `**Role:**
@@ -199,14 +199,14 @@ ${payload.total_current_load > payload.calculated_capacity_baseline ? `\nCRITICA
 
 // ── Portfolio Parser ──────────────────────────────────────────────────
 
-function parsePortfolio(csvString: string, lead: any, calibration: { large_steerable: number, historical_avg: number }, frictionCoefficient: number) {
+function parsePortfolio(csvString: string, lead: unknown, calibration: { large_steerable: number, historical_avg: number }, frictionCoefficient: number) {
     const parsed = Papa.parse(csvString, { header: true, skipEmptyLines: true });
     const rows = parsed.data;
 
     let fiscalDrag = 0;
     const initiativeMap = new Map<string, any>();
 
-    const initiatives = rows.map((row: any, index: number) => {
+    const initiatives = rows.map((row: unknown, index: number) => {
         const name = row["initiative_name"] || `Initiative ${index + 1}`;
         const stake = parseInt(row["complexity_stakeholders_1_to_3"] || "1", 10);
         const tech = parseInt(row["complexity_novelty_1_to_3"] || "1", 10);
@@ -250,8 +250,8 @@ function parsePortfolio(csvString: string, lead: any, calibration: { large_steer
     });
 
     // Dependency risks
-    const dependencyRiskList: any[] = [];
-    initiatives.forEach((init: any) => {
+    const dependencyRiskList: unknown[] = [];
+    initiatives.forEach((init: unknown) => {
         if (init.approval_mandate === "Cabinet Approved" || init.approval_mandate === "Ministerial Approved" || init.relative_priority === "Tier 1") {
             init.blockers.forEach((b: string) => {
                 const blockerInit = initiativeMap.get(b);
@@ -266,7 +266,7 @@ function parsePortfolio(csvString: string, lead: any, calibration: { large_steer
         }
     });
 
-    const totalLoad = initiatives.reduce((sum: number, init: any) => sum + init.calculated_focus_slots, 0);
+    const totalLoad = initiatives.reduce((sum: number, init: unknown) => sum + init.calculated_focus_slots, 0);
 
     // Capacity Baseline from Slot-Sync calibration (unified formula)
     const nominalCapacityBaseline = (calibration.large_steerable * 5) + (Math.max(0, calibration.historical_avg - calibration.large_steerable) * 3);
@@ -385,7 +385,7 @@ serve(async (req: Request) => {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[DRAFT ERROR]", error.message);
         return new Response(
             JSON.stringify({ error: error.message }),

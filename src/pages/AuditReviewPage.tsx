@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/supabase';
 import { ShieldCheck, FileText, Loader2, Send, Download, AlertTriangle, Calculator, CheckCircle2 } from 'lucide-react';
@@ -17,7 +17,7 @@ export const AuditReviewPage: React.FC = () => {
     const [initialLoading, setInitialLoading] = useState(true);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [loading, setLoading] = useState(false);
-    const [draftData, setDraftData] = useState<any>(null);
+    const [draftData, setDraftData] = useState< unknown >(null);
     const [draftAnalysis, setDraftAnalysis] = useState<{ section3: string, section4: string, internal_critique?: string } | null>(null);
     const [publishing, setPublishing] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
@@ -30,24 +30,24 @@ export const AuditReviewPage: React.FC = () => {
 
     useEffect(() => {
         fetchLeads();
-    }, []);
+    }, [fetchLeads]);
 
     // When lead is selected, populate calibration fields from DB
     useEffect(() => {
         if (selectedLead) {
             setCalibrationLargeSteerable(
-                (selectedLead as any).calibration_large_steerable != null
-                    ? String((selectedLead as any).calibration_large_steerable)
+                (selectedLead as unknown).calibration_large_steerable != null
+                    ? String((selectedLead as unknown).calibration_large_steerable)
                     : ''
             );
             setCalibrationHistoricalAvg(
-                (selectedLead as any).calibration_historical_avg != null
-                    ? String((selectedLead as any).calibration_historical_avg)
+                (selectedLead as unknown).calibration_historical_avg != null
+                    ? String((selectedLead as unknown).calibration_historical_avg)
                     : ''
             );
             setFrictionCoefficient(
-                (selectedLead as any).friction_coefficient != null
-                    ? String((selectedLead as any).friction_coefficient)
+                (selectedLead as unknown).friction_coefficient != null
+                    ? String((selectedLead as unknown).friction_coefficient)
                     : '1.00'
             );
             const savedDraftData = localStorage.getItem(`draftData_${selectedLead.id}`);
@@ -56,7 +56,7 @@ export const AuditReviewPage: React.FC = () => {
                 try {
                     setDraftData(JSON.parse(savedDraftData));
                     setDraftAnalysis(JSON.parse(savedDraftAnalysis));
-                } catch (e) {
+                } catch {
                     setDraftData(null);
                     setDraftAnalysis(null);
                 }
@@ -68,7 +68,7 @@ export const AuditReviewPage: React.FC = () => {
         }
     }, [selectedLead]);
 
-    const fetchLeads = async () => {
+    const fetchLeads = useCallback(async () => {
             const { data, error } = await supabase
                 .from('leads')
                 .select('*')
@@ -82,7 +82,7 @@ export const AuditReviewPage: React.FC = () => {
                 showToast('Failed to load audit queue.', 'error');
             }
         setInitialLoading(false);
-    };
+    }, [showToast]);
 
     // Derived calibration values
     const largeSteerable = parseInt(calibrationLargeSteerable, 10);
@@ -108,17 +108,17 @@ export const AuditReviewPage: React.FC = () => {
                     calibration_large_steerable: largeSteerable,
                     calibration_historical_avg: historicalAvg,
                     friction_coefficient: clampedFm,
-                } as any)
+                } as unknown)
                 .eq('id', selectedLead.id);
 
             if (error) throw error;
 
             // Update local state
-            const updatedLead = { ...selectedLead, calibration_large_steerable: largeSteerable, calibration_historical_avg: historicalAvg, friction_coefficient: clampedFm } as any;
+            const updatedLead = { ...selectedLead, calibration_large_steerable: largeSteerable, calibration_historical_avg: historicalAvg, friction_coefficient: clampedFm } as unknown;
             setSelectedLead(updatedLead);
             setLeads(prev => prev.map(l => l.id === selectedLead.id ? updatedLead : l));
             showToast('Calibration saved.', 'success');
-        } catch (e: any) {
+        } catch (e: unknown) {
             showToast('Failed to save calibration: ' + e.message, 'error');
         } finally {
             setCalibrationSaving(false);
@@ -148,7 +148,7 @@ export const AuditReviewPage: React.FC = () => {
                     calibration_large_steerable: largeSteerable,
                     calibration_historical_avg: historicalAvg,
                     friction_coefficient: frictionVal,
-                    primary_pain_point: (selectedLead as any).primary_pain_point || null,
+                    primary_pain_point: (selectedLead as unknown).primary_pain_point || null,
                 })
             });
 
@@ -161,7 +161,7 @@ export const AuditReviewPage: React.FC = () => {
             setDraftAnalysis(json.analysis);
             localStorage.setItem(`draftData_${selectedLead.id}`, JSON.stringify(json.data));
             localStorage.setItem(`draftAnalysis_${selectedLead.id}`, JSON.stringify(json.analysis));
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error('Draft generation error:', e);
             showToast(e.message || 'Failed to generate draft. Check Edge Function logs.', 'error');
         } finally {
@@ -209,7 +209,7 @@ export const AuditReviewPage: React.FC = () => {
             fetchLeads();
 
             setLeads(prev => prev.map(l => l.id === selectedLead.id ? { ...l, audit_status: 'report_delivered', report_url: json.reportUrl } : l));
-            setSelectedLead(prev => prev ? { ...prev, audit_status: 'report_delivered', report_url: json.reportUrl } as any : null);
+            setSelectedLead(prev => prev ? { ...prev, audit_status: 'report_delivered', report_url: json.reportUrl } as unknown : null);
             localStorage.removeItem(`draftData_${selectedLead.id}`);
             localStorage.removeItem(`draftAnalysis_${selectedLead.id}`);
             showToast('Report generated successfully!', 'success');
@@ -230,7 +230,7 @@ export const AuditReviewPage: React.FC = () => {
             } else if (pdfWindow) {
                 pdfWindow.document.write('<div style="color: red;">Failed to generate viewer link.</div>');
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error('Publish error:', e);
             if (pdfWindow) {
                 pdfWindow.document.write(`<div style="color: red;">Failed to publish: ${e.message}</div>`);
@@ -261,7 +261,7 @@ export const AuditReviewPage: React.FC = () => {
                         {leads.map(lead => {
                             const submitDate = lead.created_at ? new Date(lead.created_at) : new Date();
                             const isOld = (new Date().getTime() - submitDate.getTime()) > (3 * 24 * 60 * 60 * 1000);
-                            const isPending = (lead as any).audit_status === 'data_uploaded' || (lead as any).audit_status === 'data_received';
+                            const isPending = (lead as unknown).audit_status === 'data_uploaded' || (lead as unknown).audit_status === 'data_received';
                             const isOverdue = isPending && isOld;
 
                             return (
@@ -274,23 +274,23 @@ export const AuditReviewPage: React.FC = () => {
                                     }
                                 }}
                             >
-                                <h3 className="font-bold text-slate-800">{(lead as any).organization_name || 'Unknown Org'}</h3>
+                                <h3 className="font-bold text-slate-800">{(lead as unknown).organization_name || 'Unknown Org'}</h3>
                                 <p className="text-xs text-slate-500 mb-1 truncate">{lead.email}</p>
                                 <p className={`text-xs font-medium mb-3 ${isOverdue ? 'text-red-600' : 'text-slate-500'}`}>
                                     Submitted: {submitDate.toLocaleDateString()}
                                     {isOverdue && ' (Overdue)'}
                                 </p>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${(lead as any).audit_status === 'data_uploaded' || (lead as any).audit_status === 'data_received' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-                                        {(lead as any).audit_status === 'data_uploaded' || (lead as any).audit_status === 'data_received' ? 'Needs Review' : 'Published'}
+                                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${(lead as unknown).audit_status === 'data_uploaded' || (lead as unknown).audit_status === 'data_received' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                        {(lead as unknown).audit_status === 'data_uploaded' || (lead as unknown).audit_status === 'data_received' ? 'Needs Review' : 'Published'}
                                     </span>
-                                    {(lead as any).file_url && (
+                                    {(lead as unknown).file_url && (
                                         <button
                                             onClick={async (e) => {
                                                 e.stopPropagation();
                                                 const csvWindow = window.open('', '_blank');
                                                 if (csvWindow) csvWindow.document.write('Loading CSV...');
-                                                const { data, error } = await supabase.storage.from('audit_uploads').createSignedUrl((lead as any).file_url!, 3600);
+                                                const { data, error } = await supabase.storage.from('audit_uploads').createSignedUrl((lead as unknown).file_url!, 3600);
                                                 if (error) {
                                                     console.error("[CSV_DOWNLOAD] Signed URL error:", error);
                                                     if (csvWindow) csvWindow.close();
@@ -335,13 +335,13 @@ export const AuditReviewPage: React.FC = () => {
                             {/* Calibration Section */}
                             <div className="p-4 border-b border-slate-200 bg-slate-50 shrink-0">
                                 <div className="flex items-baseline gap-3 mb-1">
-                                    <h2 className="text-lg font-bold text-slate-800">{(selectedLead as any).organization_name || 'Unknown Org'}</h2>
-                                    <p className="text-xs text-slate-500 truncate">{selectedLead.email}{(selectedLead as any).portfolio_context_count ? ` · ~${(selectedLead as any).portfolio_context_count} initiatives` : ''}</p>
+                                    <h2 className="text-lg font-bold text-slate-800">{(selectedLead as unknown).organization_name || 'Unknown Org'}</h2>
+                                    <p className="text-xs text-slate-500 truncate">{selectedLead.email}{(selectedLead as unknown).portfolio_context_count ? ` · ~${(selectedLead as unknown).portfolio_context_count} initiatives` : ''}</p>
                                 </div>
-                                {(selectedLead as any).primary_pain_point && (
+                                {(selectedLead as unknown).primary_pain_point && (
                                     <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
                                         <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wider mb-0.5">Primary Governance Pain Point</p>
-                                        <p className="text-xs text-amber-900 leading-snug">{(selectedLead as any).primary_pain_point}</p>
+                                        <p className="text-xs text-amber-900 leading-snug">{(selectedLead as unknown).primary_pain_point}</p>
                                     </div>
                                 )}
 
@@ -350,7 +350,7 @@ export const AuditReviewPage: React.FC = () => {
                                         <Calculator size={14} className="text-action-blue" />
                                         Capacity Calibration - Slot-Sync Session
                                         {calibrationSaving && <Loader2 size={13} className="ml-auto animate-spin text-slate-400" />}
-                                        {!calibrationSaving && isCalibrationValid && (selectedLead as any).calibration_large_steerable && <CheckCircle2 size={13} className="ml-auto text-green-500" />}
+                                        {!calibrationSaving && isCalibrationValid && (selectedLead as unknown).calibration_large_steerable && <CheckCircle2 size={13} className="ml-auto text-green-500" />}
                                     </h3>
                                     <div className="grid grid-cols-3 gap-3 mb-3">
                                           <div>
@@ -510,19 +510,19 @@ export const AuditReviewPage: React.FC = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <FileText size={48} className={`mb-4 ${(selectedLead as any).report_url ? "text-green-500" : "text-slate-300"}`} />
+                                            <FileText size={48} className={`mb-4 ${(selectedLead as unknown).report_url ? "text-green-500" : "text-slate-300"}`} />
                                             <p className="text-lg font-medium text-slate-600 mb-4">
-                                                {(selectedLead as any).report_url 
+                                                {(selectedLead as unknown).report_url 
                                                     ? "This report has already been published." 
                                                     : "Calibration complete. Ready to generate."}
                                             </p>
                                             <div className="flex items-center gap-4">
-                                                {(selectedLead as any).report_url && (
+                                                {(selectedLead as unknown).report_url && (
                                                     <button
                                                         onClick={async () => {
                                                             const pdfWindow = window.open('', '_blank');
                                                             if (pdfWindow) pdfWindow.document.write('Loading PDF...');
-                                                            const { data } = await supabase.storage.from('audit_reports').createSignedUrl((selectedLead as any).report_url, 3600);
+                                                            const { data } = await supabase.storage.from('audit_reports').createSignedUrl((selectedLead as unknown).report_url, 3600);
                                                             if (data) {
                                                                 let finalUrl = data.signedUrl;
                                                                 if (!finalUrl.startsWith('http')) {
@@ -548,7 +548,7 @@ export const AuditReviewPage: React.FC = () => {
                                                     onClick={handleGenerateDraft}
                                                     className="bg-action-blue text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
                                                 >
-                                                    {(selectedLead as any).report_url ? "Re-generate AI Draft" : "Generate AI Draft"} <Send size={16} />
+                                                    {(selectedLead as unknown).report_url ? "Re-generate AI Draft" : "Generate AI Draft"} <Send size={16} />
                                                 </button>
                                             </div>
                                         </>
@@ -562,10 +562,10 @@ export const AuditReviewPage: React.FC = () => {
                                     {successMsg && (
                                         <div className="w-full mb-2 flex flex-col items-center justify-center p-6 bg-green-50 border border-green-200 rounded-xl space-y-4 shadow-sm animate-in fade-in slide-in-from-bottom-2">
                                             <div className="text-green-800 font-bold text-center text-lg flex items-center gap-2"><ShieldCheck className="text-green-600" /> {successMsg}</div>
-                                            {(selectedLead as any).report_url && (
+                                            {(selectedLead as unknown).report_url && (
                                                 <button
                                                     onClick={async () => {
-                                                        const { data } = await supabase.storage.from('audit_reports').createSignedUrl((selectedLead as any).report_url!, 3600);
+                                                        const { data } = await supabase.storage.from('audit_reports').createSignedUrl((selectedLead as unknown).report_url!, 3600);
                                                         if (data) {
                                                             let finalUrl = data.signedUrl;
                                                             if (!finalUrl.startsWith('http')) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,9 +21,9 @@ export function useMeetingGroups() {
         if (user?.organization_id) {
             fetchMeetingGroups();
         }
-    }, [user?.organization_id]);
+    }, [user?.organization_id, fetchMeetingGroups]);
 
-    async function fetchMeetingGroups() {
+    const fetchMeetingGroups = useCallback(async function () {
         try {
             if (!user?.organization_id) {
                 console.log('⏭️ [fetchMeetingGroups] Skipping - no organization_id');
@@ -43,35 +43,31 @@ export function useMeetingGroups() {
             console.log(`✅ [fetchMeetingGroups] Loaded ${data?.length || 0} meeting groups`);
             setMeetingGroups(data || []);
 
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error('❌ [fetchMeetingGroups] Failed:', e);
             setError(e as Error);
         } finally {
             setLoading(false);
         }
-    }
+    }, [user?.organization_id]);
 
     async function createMeetingGroup(data: { name: string; description?: string }) {
-        try {
-            if (!user?.organization_id) throw new Error('No organization found');
+        if (!user?.organization_id) throw new Error('No organization found');
 
-            const { data: meetingGroup, error } = await supabase
-                .from('meeting_groups')
-                .insert({
-                    name: data.name,
-                    description: data.description || null,
-                    organization_id: user.organization_id
-                })
-                .select()
-                .single();
+        const { data: meetingGroup, error } = await supabase
+            .from('meeting_groups')
+            .insert({
+                name: data.name,
+                description: data.description || null,
+                organization_id: user.organization_id
+            })
+            .select()
+            .single();
 
-            if (error) throw error;
+        if (error) throw error;
 
-            setMeetingGroups(prev => [...prev, meetingGroup].sort((a, b) => a.name.localeCompare(b.name)));
-            return meetingGroup;
-        } catch (e) {
-            throw e;
-        }
+        setMeetingGroups(prev => [...prev, meetingGroup].sort((a, b) => a.name.localeCompare(b.name)));
+        return meetingGroup;
     }
 
     async function updateMeetingGroup(id: string, updates: Partial<MeetingGroup>) {

@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useSandboxState } from '../hooks/useSandboxState';
+import { useSandboxState, Initiative } from '../hooks/useSandboxState';
 import { ArrowRight, Save, CirclePause, TriangleAlert, Zap, Clock, LayoutDashboard, ListFilter, Check, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/Button';
 import { MeetingControls } from '../components/MeetingControls';
@@ -15,7 +15,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { EditInitiativeModal } from '../components/EditInitiativeModal';
 import { Settings, X } from 'lucide-react';
 
-const MandateTensionModal = ({ isOpen, item, from, to, onConfirm, onCancel }: any) => {
+const MandateTensionModal = ({ isOpen, item, from, to, onConfirm, onCancel }: unknown) => {
     const [rationale, setRationale] = useState('');
 
     /* eslint-disable react-hooks/exhaustive-deps */
@@ -113,10 +113,10 @@ export const CommandCenterPage = () => {
     const [isCommitOpen, setIsCommitOpen] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [hasSkippedImport, setHasSkippedImport] = useState(false);
-    const [activeDragItem, setActiveDragItem] = useState<any>(null);
-    const [editingInitiative, setEditingInitiative] = useState<any>(null);
+    const [activeDragItem, setActiveDragItem] = useState< unknown >(null);
+    const [editingInitiative, setEditingInitiative] = useState< unknown >(null);
     const [prePopulatedRationale, setPrePopulatedRationale] = useState('');
-    const [tensionModal, setTensionModal] = useState<{ isOpen: boolean; item: any; from: string; to: string; wasStatusChange: boolean } | null>(null);
+    const [tensionModal, setTensionModal] = useState<{ isOpen: boolean; item: unknown; from: string; to: string; wasStatusChange: boolean } | null>(null);
 
     const handleCommit = () => {
         if (!hasChanges) return;
@@ -142,7 +142,7 @@ export const CommandCenterPage = () => {
     // Group active list by quarter
     const quarters = ['Q1 FY26', 'Q2 FY26', 'Q3 FY26', 'Q4 FY26'];
     const quarterLists = useMemo(() => {
-        const grouped: Record<string, any[]> = {};
+        const grouped: Record<string, Initiative[]> = {};
         quarters.forEach(q => grouped[q] = []);
         activeList.forEach(i => {
             const q = i.target_delivery_quarter || 'Q1 FY26'; // Default to first if unsequenced
@@ -495,7 +495,7 @@ export const CommandCenterPage = () => {
 
 // --- SUB-COMPONENTS ---
 
-const Gauge = ({ label, value, limit, isOver, format, ghostValue, tooltip, limitTooltip, noLimit }: any) => {
+const Gauge = ({ label, value, limit, isOver, format, ghostValue, tooltip, limitTooltip, noLimit }: unknown) => {
     const percent = limit ? Math.min((value / limit) * 100, 100) : 0;
     const colorClass = isOver ? 'text-rose-400' : percent > 90 ? 'text-amber-400' : 'text-slate-200';
 
@@ -526,7 +526,7 @@ const Gauge = ({ label, value, limit, isOver, format, ghostValue, tooltip, limit
     );
 };
 
-const Column = ({ id, title, count, color, children, headerAction, isOverLimit }: any) => {
+const Column = ({ id, title, count, color, children, headerAction, isOverLimit }: unknown) => {
     const { isOver, setNodeRef } = useDroppable({ id });
 
     return (
@@ -553,7 +553,7 @@ const Column = ({ id, title, count, color, children, headerAction, isOverLimit }
     );
 };
 
-const DraggableInitiativeCard = (props: any) => {
+const DraggableInitiativeCard = (props: unknown) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: props.data.id,
     });
@@ -570,7 +570,7 @@ const DraggableInitiativeCard = (props: any) => {
     );
 };
 
-const InitiativeCard = ({ data, pillarName, onMove, onEdit, actionIcon: Icon, actionLabel, variant, isOverlay }: any) => {
+const InitiativeCard = ({ data, pillarName, onMove, onEdit, actionIcon: Icon, actionLabel, variant, isOverlay }: unknown) => {
     const isProposed = variant === 'proposed';
 
     const hasMandateTension = (
@@ -678,7 +678,7 @@ const InitiativeCard = ({ data, pillarName, onMove, onEdit, actionIcon: Icon, ac
     );
 };
 
-const EmptyState = ({ icon: Icon, title, message, action }: any) => (
+const EmptyState = ({ icon: Icon, title, message, action }: unknown) => (
     <div className="flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/20 min-h-[160px]">
         <Icon size={32} className="text-slate-600 mb-3" />
         <h3 className="font-bold text-slate-300 mb-1">{title}</h3>

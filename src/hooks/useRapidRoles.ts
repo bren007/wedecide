@@ -43,7 +43,7 @@ export function useRapidRoles() {
                 decide: []
             };
 
-            (data || []).forEach((role: any) => {
+            (data || []).forEach((role: unknown) => {
                 const assignment: RapidRoleAssignment = {
                     id: role.id,
                     role_type: role.role_type,
@@ -76,7 +76,7 @@ export function useRapidRoles() {
             if (deleteError) throw deleteError;
 
             // 2. Flatten roles structure into insert array
-            const insertData: any[] = [];
+            const insertData: unknown[] = [];
 
             Object.entries(roles).forEach(([roleType, assignments]) => {
                 assignments.forEach((assignment: RapidRoleAssignment) => {

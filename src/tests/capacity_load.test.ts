@@ -256,7 +256,7 @@ describe('Capacity Load Calculation (Command Center)', () => {
 
         it('should handle string numbers correctly (DB returns text)', () => {
             const initiatives = [
-                makeInitiative({ capex_current_fy: '250000' as any, opex_current_fy: '100000' as any }),
+                makeInitiative({ capex_current_fy: '250000' as unknown as number, opex_current_fy: '100000' as unknown as number }),
             ];
             const result = calculateLoad(DEFAULT_SETTINGS, initiatives);
             expect(result.currentCapexLoad).toBe(250000);

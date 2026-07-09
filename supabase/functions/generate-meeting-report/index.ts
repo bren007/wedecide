@@ -30,7 +30,7 @@ serve(async (req: Request) => {
         const { date, duration, events, metrics } = meetingData;
 
         // Formatting events for the prompt
-        const eventsText = events.map((e: any, i: number) => {
+        const eventsText = events.map((e: unknown, i: number) => {
             return `Event ${i + 1}: Action="${e.action_type}", Initiative="${e.initiative_title}", Rationale="${e.rationale}"`;
         }).join("\n");
 
@@ -90,7 +90,7 @@ End with a specific recommendation or warning if the Peak Focus Load exceeds the
             { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error generating meeting report:", error);
         return new Response(
             JSON.stringify({ error: error.message }),

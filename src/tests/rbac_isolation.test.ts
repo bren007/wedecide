@@ -3,24 +3,35 @@ import { createTestSupabaseClient } from './helpers/setup';
 
 const supabase = createTestSupabaseClient();
 
+interface TestUser {
+    id: string;
+    email: string;
+    organization_id: string;
+    is_global_admin?: boolean;
+    user_roles?: {
+        role: string;
+    }[];
+}
+
 describe('Role-Based Access Control (RBAC) & Tenant Isolation', () => {
-    let globalAdmin: any;
-    let tenantA_Chair: any;
-    let tenantB_Chair: any;
+    let globalAdmin: TestUser | undefined;
+    let tenantA_Chair: TestUser | undefined;
+    let tenantB_Chair: TestUser | undefined;
 
     beforeAll(async () => {
         // Fetch test users to run scenarios
         const { data: users } = await supabase.from('users').select('*, user_roles(*)');
         
-        globalAdmin = (users as any[])?.find((u: any) => u.is_global_admin);
+        const usersCast = users as TestUser[];
+        globalAdmin = usersCast?.find((u) => u.is_global_admin);
         
         // Find two distinct tenant chairs for isolation testing
-        const chairs = (users as any[])?.filter((u: any) => !u.is_global_admin && u.user_roles?.some((r: any) => r.role === 'chair' || r.role === 'admin'));
+        const chairs = usersCast?.filter((u) => !u.is_global_admin && u.user_roles?.some((r) => r.role === 'chair' || r.role === 'admin'));
         
-        if (chairs && (chairs as any[]).length >= 2) {
+        if (chairs && chairs.length >= 2) {
             // Ensure they belong to different organizations 
             tenantA_Chair = chairs[0];
-            tenantB_Chair = (chairs as any[]).find((c: any) => c.organization_id !== tenantA_Chair.organization_id);
+            tenantB_Chair = chairs.find((c) => c.organization_id !== tenantA_Chair?.organization_id);
         }
     });
 

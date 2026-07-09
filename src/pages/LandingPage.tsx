@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Target, ShieldCheck, Zap, Play, CirclePause, TriangleAlert, ArrowRight } from 'lucide-react';
 import './LandingPage.css';
 
-const Gauge = ({ label, value, limit, isOver }: any) => {
+const Gauge = ({ label, value, limit, isOver }: unknown) => {
   const colorClass = isOver
     ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]'
     : 'text-slate-100';
