@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Papa from 'papaparse';
 import { Button } from '../components/Button';
+import { UserRow, InitiativeRow, StrategicPillarRow } from '../types/supabase';
 import { supabase } from '../lib/supabase';
 import { StagingGrid, type StagingInitiative } from '../components/StagingGrid';
 import { Upload, FileUp, CheckCircle, AlertTriangle, Wand2, Database } from 'lucide-react';
@@ -30,22 +31,22 @@ export const StrategicIngestionPage: React.FC = () => {
 
             // Get user's org
             const { data: userData } = await supabase
-                .from('users' as unknown)
+                .from<UserRow>('users')
                 .select('organization_id')
                 .eq('id', user.id)
                 .single();
-            const orgId = (userData as unknown)?.organization_id;
+            const orgId = userData?.organization_id;
 
             if (orgId) {
                 const { count } = await supabase
-                    .from('initiatives' as unknown)
+                    .from<InitiativeRow>('initiatives')
                     .select('*', { count: 'exact', head: true })
                     .eq('org_id', orgId);
                 setExistingCount(count);
             }
 
-            const { data } = await supabase.from('strategic_pillars' as unknown).select('id, title');
-            if (data) setPillars(data as unknown);
+            const { data } = await supabase.from<StrategicPillarRow>('strategic_pillars').select('id, title');
+            if (data) setPillars(data);
         };
         fetchInitialData();
     }, []);
@@ -62,6 +63,9 @@ export const StrategicIngestionPage: React.FC = () => {
             header: true,
             skipEmptyLines: true,
             complete: async (results) => {
+                // Added type guard for CSV rows
+                const isRecord = (obj: unknown): obj is Record<string, unknown> =>
+                    typeof obj === 'object' && obj !== null;
                 const resultsData = results.data as unknown[];
                 if (resultsData.length === 0) return;
 
@@ -83,6 +87,7 @@ export const StrategicIngestionPage: React.FC = () => {
                 const parsed: StagingInitiative[] = resultsData.map((row: unknown, index: number) => {
                     // Helper to get value via Map or Heuristic
                     const getValue = (targetField: string, heuristicKeys: string[]) => {
+                        if (!isRecord(row)) return undefined;
                         // 1. Try AI Map
                         if (fieldMap) {
                             // Find CSV header that maps to targetField
@@ -195,11 +200,11 @@ export const StrategicIngestionPage: React.FC = () => {
 
             // Get user's org
             const { data: userData } = await supabase
-                .from('users' as unknown)
+                .from<UserRow>('users')
                 .select('organization_id')
                 .eq('id', user.id)
                 .single();
-            const orgId = (userData as unknown)?.organization_id;
+            const orgId = userData?.organization_id;
 
             if (shouldOverwrite) {
                 setLogs(prev => [...prev, '⚠️ Overwrite mode active: Clearing existing ledger...']);
@@ -218,7 +223,7 @@ export const StrategicIngestionPage: React.FC = () => {
                 const score = (item.complexity_stakeholder || 0) + (item.complexity_tech || 0) + (item.complexity_dependency || 0);
                 const computedSlots = score <= 5 ? 1 : score <= 10 ? 3 : 5;
 
-                const { error } = await supabase.from('initiatives' as unknown).insert({
+                const { error } = await supabase.from<InitiativeRow>('initiatives').insert({
                     org_id: orgId,
                     owner_id: user.id,
                     title: item.title,

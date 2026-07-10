@@ -35,3 +35,6 @@ deploy_staging_manual.js
 *.mjs
 drift_report.json
 compare_schemas.mjs
+
+.vercel
+.env*
