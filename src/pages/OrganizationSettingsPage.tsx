@@ -86,12 +86,6 @@ export const OrganizationSettingsPage: React.FC = () => {
     const [inviteLink, setInviteLink] = useState<string | null>(null);
     const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
 
-    useEffect(() => {
-        if (user) {
-            fetchOrganization();
-        }
-    }, [user, fetchOrganization]);
-
     const fetchOrganization = useCallback(async () => {
         try {
             if (!user) return;
@@ -236,6 +230,12 @@ export const OrganizationSettingsPage: React.FC = () => {
             setLoading(false);
         }
     }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            fetchOrganization();
+        }
+    }, [user, fetchOrganization]);
 
     const handleUpdateName = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'jsdom',
     testTimeout: 15000,
     hookTimeout: 20000,
-    include: ['src/tests/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 })

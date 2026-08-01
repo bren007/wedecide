@@ -143,7 +143,7 @@ serve(async (req: Request) => {
             }
 
             // 1. Resolve Pillars (String Name -> UUID)
-            const pillarNames = [...new Set(parsedJson.map((i: unknown) => i.alignment_pillar).filter(Boolean))];
+            const pillarNames = [...new Set(parsedJson.map((i: any) => i.alignment_pillar).filter(Boolean))];
             const pillarMap: Record<string, string> = {};
 
             for (const name of pillarNames) {
@@ -185,22 +185,11 @@ serve(async (req: Request) => {
                         org_id: orgId,
                         owner_id: user.id,
                         title: initiative.initiative_name || initiative.title || "Untitled",
-                        focus_slots: initiative.calculated_focus_slots || initiative.focus_slots || 3,
+                        focus_slots_required: initiative.calculated_focus_slots || initiative.focus_slots || 3,
                         
                         // Financial Mapping: Unified current_fy_budget maps to operational budget
                         opex_required: initiative.current_fy_budget || 0,
                         capex_required: 0,
-                        current_fy_budget: initiative.current_fy_budget || 0,
-
-                        // Multi-year and metadata
-                        total_initiative_cost: initiative.total_initiative_cost || initiative.current_fy_budget || 0,
-                        is_multi_year: initiative.is_multi_year || false,
-                        future_annual_opex: initiative.future_annual_opex || 0,
-
-                        // Gate/Mandate logic: strictly validate against DB CHECK constraints
-                        approval_mandate: ['Cabinet Approved', 'Ministerial Approved', 'Board/Delegated', 'Pre-Approval'].includes(initiative.approval_mandate) ? initiative.approval_mandate : null,
-                        relative_priority: ['Tier 1', 'Tier 2', 'Tier 3'].includes(initiative.relative_priority) ? initiative.relative_priority : null,
-                        target_delivery_quarter: initiative.target_delivery_quarter || null,
                         
                         // Pillar Link
                         strategic_pillar_id: initiative.alignment_pillar ? pillarMap[initiative.alignment_pillar] : null,
@@ -308,7 +297,7 @@ serve(async (req: Request) => {
             JSON.stringify({ status: "error", message: "Unknown action" }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
         );
-    } catch (err) {
+    } catch (err: any) {
         console.error("Error:", err);
         return new Response(
             JSON.stringify({ status: "error", message: err.message || "Internal error" }),

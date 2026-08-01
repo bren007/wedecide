@@ -14,6 +14,27 @@ export const AuditSuccessPage: React.FC = () => {
     const [customerData, setCustomerData] = useState<{ customer_email: string, customer_name: string, calendly_url?: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const fetchSessionDetails = useCallback(async () => {
+      console.log('🔍 Validating Stripe Session:', sessionId);
+      try {
+        console.log('Invoking get-session-details Edge Function...');
+        const { data, error: invokeError } = await supabase.functions.invoke(`get-session-details?session_id=${sessionId}`, {
+          method: 'GET'
+        });
+        if (invokeError) {
+          console.error('❌ Supabase Invoke Error:', invokeError);
+          throw invokeError;
+        }
+        console.log('Session Data Received:', data);
+        setCustomerData(data);
+      } catch (err: unknown) {
+        console.error("🔥 Error fetching session details:", err);
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    }, [sessionId]);
+
     useEffect(() => {
         if (sessionId) {
             fetchSessionDetails();
@@ -22,29 +43,6 @@ export const AuditSuccessPage: React.FC = () => {
             setLoading(false);
         }
     }, [sessionId, fetchSessionDetails]);
-
-    const fetchSessionDetails = useCallback(async () => {
-        console.log('🔍 Validating Stripe Session:', sessionId);
-        try {
-            console.log('Invoking get-session-details Edge Function...');
-            const { data, error: invokeError } = await supabase.functions.invoke(`get-session-details?session_id=${sessionId}`, {
-                method: 'GET'
-            });
-
-            if (invokeError) {
-                console.error('❌ Supabase Invoke Error:', invokeError);
-                throw invokeError;
-            }
-            
-            console.log('Session Data Received:', data);
-            setCustomerData(data);
-        } catch (err: unknown) {
-            console.error("🔥 Error fetching session details:", err);
-            setError((err as Error).message);
-        } finally {
-            setLoading(false);
-        }
-    }, [sessionId]);
 
     if (loading) {
         return (

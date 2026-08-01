@@ -14,7 +14,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { AuditFunnelPage } from './pages/AuditFunnelPage';
-import { SecureDropPage } from './pages/SecureDropPage';
+import SecureDropPage from './pages/SecureDropPage';
 import { AuditReviewPage } from './pages/AuditReviewPage';
 import { PulseDashboardPage } from './pages/PulseDashboardPage';
 import { AuditSuccessPage } from './pages/AuditSuccessPage';
@@ -23,6 +23,7 @@ import { CommandCenterPage } from './pages/CommandCenterPage';
 import { InitiativeProposalPage } from './pages/InitiativeProposalPage';
 import { StrategicIngestionPage } from './pages/StrategicIngestionPage';
 import { StrategicLedgerPage } from './pages/StrategicLedgerPage';
+import { MeetingsPage } from './pages/MeetingsPage';
 import { PublicLayout } from './components/layouts/PublicLayout';
 import { PricingPage } from './pages/PricingPage';
 import { MissionPage } from './pages/MissionPage';
@@ -138,6 +139,14 @@ function AppContent() {
               }
             />
             <Route
+              path="/meetings"
+              element={
+                <ProtectedRoute>
+                  <MeetingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/reset-password"
               element={
                 <ProtectedRoute>
@@ -162,15 +171,14 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
+    <ToastProvider>
+      <AuthProvider>
         <BrowserRouter>
           <ScrollToTop />
           <AppContent />
         </BrowserRouter>
-      </ToastProvider>
-    </AuthProvider>
-
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

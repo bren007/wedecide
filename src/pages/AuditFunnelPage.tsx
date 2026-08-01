@@ -49,7 +49,8 @@ export const AuditFunnelPage: React.FC = () => {
         setLoading(true);
         // Save initial lead to database
         try {
-            const { error } = await supabase.from('leads').insert({
+            // Upsert lead to avoid duplicate email conflicts. Use onConflict 'email'.
+            const { error: upsertError } = await supabase.from('leads').upsert({
                 email: formData.email,
                 organization_name: formData.organizationName,
                 portfolio_context_count: formData.portfolioContextCount ? parseInt(formData.portfolioContextCount, 10) : null,
@@ -57,8 +58,14 @@ export const AuditFunnelPage: React.FC = () => {
                 data_minimisation_acknowledged: formData.dataMinimisationAcknowledged,
                 nda_accepted: formData.ndaAccepted,
                 audit_status: 'checkout_started'
-            });
-            if (error) throw error;
+            }, { onConflict: 'email' });
+
+            if (upsertError) {
+                // If it's a unique violation (code 23505) we can safely ignore because the record already exists.
+                if (upsertError.code !== '23505') throw upsertError;
+                // Otherwise, continue as if insert succeeded.
+            }
+            // No additional error variable; upsertError already handled above.
             handleNext(); // Move to What You're Commissioning
         } catch (err) {
             console.error('Error saving audit intent:', err);
@@ -114,7 +121,8 @@ export const AuditFunnelPage: React.FC = () => {
             }
         } catch (err: unknown) {
             console.error('🔥 Stripe Payment Error:', err);
-            alert('Failed to initiate checkout: ' + err.message);
+            const errMsg = err instanceof Error ? err.message : String(err);
+            alert('Failed to initiate checkout: ' + errMsg);
         } finally {
             setLoading(false);
         }

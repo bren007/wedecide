@@ -76,7 +76,19 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
                 body: { action: 'import', audit_token: cleanedToken }
             });
 
-            if (error) throw error;
+            if (error) {
+                let errBody = "";
+                if (error.context && typeof error.context.text === 'function') {
+                    try {
+                        const clone = error.context.clone();
+                        errBody = await clone.text();
+                    } catch (e) {
+                        console.error("Could not parse error context:", e);
+                    }
+                }
+                console.error("Invoke error:", error, "Body:", errBody);
+                throw new Error(`Import failed: ${errBody || error.message}`);
+            }
             if (data.status !== 'success') throw new Error(data.message || 'Import failed');
 
             // Store calibration data for confirmation screen
@@ -86,6 +98,7 @@ export const AuditImportPrompt: React.FC<AuditImportPromptProps> = ({ onImportCo
 
             setStep('imported');
         } catch (err) {
+            console.error("Import catch error:", err);
             const error = err as Error;
             setErrorMessage(error.message || 'Import failed. Please try again.');
             setStep('error');

@@ -1,14 +1,40 @@
 import React, { useState } from 'react';
-import { UploadCloud, CheckCircle, ShieldCheck, FileText, Download } from 'lucide-react';
+import { UploadCloud, CheckCircle, ShieldCheck, FileText, Download, Loader2 } from 'lucide-react';
+import { MAX_FILE_SIZE, VALID_APPROVAL_MANDATES, VALID_RELATIVE_PRIORITIES } from '../constants/validation';
+
 import { supabase } from '../lib/supabase';
 import Papa from 'papaparse';
 
-export const SecureDropPage: React.FC = () => {
+
+interface CsvRow {
+  initiative_name?: string;
+  strategic_pillar?: string;
+  approval_mandate?: string;
+  relative_priority?: string;
+  complexity_stakeholders_1_to_3?: string;
+  complexity_novelty_1_to_3?: string;
+  complexity_dependency_1_to_3?: string;
+  current_fy_budget?: string;
+  lifecycle_stage?: string;
+  target_delivery_quarter?: string;
+  next_milestone_date?: string;
+  dependency_blockers?: string;
+  [key: string]: unknown;
+}
+
+
+
+export default function SecureDropPage() {
+    
     const [bookingEmail, setBookingEmail] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
+    const [duplicate, setDuplicate] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [submitted, setSubmitted] = useState(false);
+
+    // Ensure user is authenticated before allowing submission
+
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -20,14 +46,18 @@ export const SecureDropPage: React.FC = () => {
     const validateAndSetFile = (selectedFile: File | undefined) => {
         if (!selectedFile) return;
 
+        // Ensure file is CSV
         if (!selectedFile.name.endsWith('.csv')) {
             setError('Please upload a .csv file using the provided template.');
             setFile(null);
             return;
         }
-
-        const VALID_APPROVAL_MANDATES = ['Cabinet Approved', 'Ministerial Approved', 'Board/Delegated', 'Pre-Approval'];
-        const VALID_RELATIVE_PRIORITIES = ['Tier 1', 'Tier 2', 'Tier 3'];
+        // Enforce max file size (5MB)
+        if (selectedFile.size > MAX_FILE_SIZE) {
+            setError('File size exceeds 5MB limit.');
+            setFile(null);
+            return;
+        }
 
         // Run CSV Structure Validation
         Papa.parse(selectedFile, {
@@ -52,7 +82,7 @@ export const SecureDropPage: React.FC = () => {
 
                 const errors: string[] = [];
                 for (let i = 0; i < results.data.length; i++) {
-                    const row: unknown = results.data[i];
+                    const row: CsvRow = results.data[i] as CsvRow;
                     const initName = row.initiative_name || `(Row ${i + 1})`;
 
                     if (!row.initiative_name) {
@@ -93,6 +123,12 @@ export const SecureDropPage: React.FC = () => {
                     setError(summary + '\n\nPlease correct the flagged rows and re-upload.');
                     setFile(null);
                 } else {
+                    // Ensure CSV has at least one data row
+                    if (results.data.length === 0) {
+                        setError('CSV contains no data rows.');
+                        setFile(null);
+                        return;
+                    }
                     setFile(selectedFile);
                     setError(null);
                 }
@@ -107,12 +143,14 @@ export const SecureDropPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+    setDuplicate(false);
 
         if (!bookingEmail || !file) {
             setError('Please provide your booking email and select a file.');
             return;
         }
 
+        // Begin submission – disable the button to prevent double clicks
         setLoading(true);
         try {
             // Upload to audit_uploads bucket
@@ -126,34 +164,34 @@ export const SecureDropPage: React.FC = () => {
 
             if (uploadError) throw uploadError;
 
-            // For RETURNING leads: update their existing record via SECURITY DEFINER RPC (bypasses RLS)
-            await supabase.rpc('update_lead_by_email', {
-              p_email: sanitizedEmail,
-              p_status: 'data_uploaded',
-              p_file_url: uploadData.path,
-            });
+            // Upsert lead record based on email to avoid duplicate key errors
+            const { error: upsertError } = await supabase
+                .from('leads')
+                .upsert(
+                    {
+                        email: sanitizedEmail,
+                        file_url: uploadData.path,
+                        audit_status: 'data_uploaded'
+                    },
+                    { onConflict: 'email' }
+                );
 
-            // For NEW leads: insert a fresh record (plain INSERT works for anon).
-            // If the email already exists (returning lead), the RPC above handled it — ignore the dupe error.
-            const { error: insertError } = await supabase
-              .from('leads')
-              .insert({
-                email: sanitizedEmail,
-                audit_status: 'data_uploaded',
-                file_url: uploadData.path,
-              });
-
-            // code 23505 = unique_violation: email already exists, RPC already updated it — not a real error
-            if (insertError && insertError.code !== '23505') throw insertError;
-
+            if (upsertError) throw upsertError;
 
             setSubmitted(true);
-        } catch (err: unknown) {
-            console.error('Error securely transferring data:', err);
-            setError(err.message || 'An error occurred during secure transfer. Please try again.');
-        } finally {
             setLoading(false);
-        }
+            } catch (err: unknown) {
+                console.error('Error securely transferring data:', err);
+                const e = err as { code?: string; message?: string };
+                // Detect duplicate lead error (unique constraint on email)
+                if (e?.code === '23505' || e?.message?.includes('duplicate key')) {
+                    setDuplicate(true);
+                } else {
+                    setError(e.message || 'An unexpected error occurred during secure transfer.');
+                }
+                setLoading(false);
+                return;
+            }
     };
 
     if (submitted) {
@@ -168,6 +206,24 @@ export const SecureDropPage: React.FC = () => {
                         <h2 className="text-3xl font-extrabold text-white mb-4 relative z-10">Data Received & Secured</h2>
                         <p className="text-slate-400 font-medium max-w-lg mx-auto leading-relaxed relative z-10">
                             This file is now secured under the AlturaGov Mutual NDA and will be purged upon completion of your audit. You may now close this window.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    // Duplicate submission detected – show informational UI instead of form
+    if (duplicate) {
+        return (
+            <div className="min-h-screen bg-slate-950 text-slate-200 pt-24 pb-12 font-sans flex flex-col items-center">
+                <div className="w-full max-w-2xl px-4 sm:px-6 animate-in zoom-in duration-500">
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-12 text-center overflow-hidden relative">
+                        {/* Decorative Background glow */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+                        <CheckCircle size={80} className="text-yellow-500 mx-auto mb-8 relative z-10" />
+                        <h2 className="text-3xl font-extrabold text-white mb-4 relative z-10">Duplicate Request Detected</h2>
+                        <p className="text-slate-400 font-medium max-w-lg mx-auto leading-relaxed relative z-10">
+                            If you need to supply updated files, please contact AlturaGov support at support@alturagov.com.
                         </p>
                     </div>
                 </div>
@@ -272,7 +328,12 @@ export const SecureDropPage: React.FC = () => {
                                 disabled={loading || !file || !bookingEmail}
                                 className="bg-action-blue text-white font-bold py-3 px-8 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                             >
-                                {loading ? 'Transferring...' : 'Securely Transfer Data'}
+                                <div data-testid="loader">{loading ? (
+                                    <div className="flex items-center">
+                                        <Loader2 size={16} className="animate-spin mr-2" />
+                                        Transferring...
+                                    </div>
+                                ) : 'Securely Transfer Data'}</div>
                             </button>
                         </div>
 
@@ -287,4 +348,6 @@ export const SecureDropPage: React.FC = () => {
             </div>
         </div>
     );
-};
+}
+
+

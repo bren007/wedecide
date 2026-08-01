@@ -28,9 +28,26 @@ export const AuditReviewPage: React.FC = () => {
     const [frictionCoefficient, setFrictionCoefficient] = useState<string>('1.00');
     const [calibrationSaving, setCalibrationSaving] = useState(false);
 
+    const fetchLeads = useCallback(async () => {
+        const { data, error } = await supabase
+            .from('leads')
+            .select('*')
+            .in('audit_status', ['data_uploaded', 'draft_generated', 'report_delivered', 'data_received', 'report_generated'])
+            .order('created_at', { ascending: true });
+        console.log('Fetched leads:', data);
+        if (!error) {
+            setLeads(data || []);
+            setInitialLoading(false);
+        } else {
+            console.error('Error fetching leads:', error);
+            showToast('Failed to load audit queue.', 'error');
+            setInitialLoading(false);
+        }
+    }, [showToast]);
+
     useEffect(() => {
         fetchLeads();
-    }, [fetchLeads]);
+    }, [fetchLeads]); // Include fetchLeads dependency
 
     // When lead is selected, populate calibration fields from DB
     useEffect(() => {
@@ -67,22 +84,6 @@ export const AuditReviewPage: React.FC = () => {
             setSuccessMsg('');
         }
     }, [selectedLead]);
-
-    const fetchLeads = useCallback(async () => {
-            const { data, error } = await supabase
-                .from('leads')
-                .select('*')
-                .in('audit_status', ['data_uploaded', 'draft_generated', 'report_delivered', 'data_received', 'report_generated'])
-                .order('created_at', { ascending: true });
-            console.log('Fetched leads:', data);
-            if (!error) {
-                setLeads(data || []);
-            } else {
-                console.error('Error fetching leads:', error);
-                showToast('Failed to load audit queue.', 'error');
-            }
-        setInitialLoading(false);
-    }, [showToast]);
 
     // Derived calibration values
     const largeSteerable = parseInt(calibrationLargeSteerable, 10);

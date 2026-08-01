@@ -5,6 +5,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { PerformanceMarkers, markPerformance, measurePerformance } from '../utils/performance';
 import { AuthContext } from '../types/auth';
 import type { User } from '../types/auth';
+import { useToasts } from '../context/ToastContext';
 
 import { PROFILE_CACHE_KEY } from '../utils/contextHelpers';
 
@@ -24,9 +25,10 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToasts();
 
   // Track the current profile fetch promise to prevent concurrent fetches
-  const profileFetchRef = React.useRef<Promise<User | null> | null>(null);
+  const profileFetchRef = React.useRef<Promise<User | null | 'NETWORK_ERROR'> | null>(null);
   const initialFetchDoneRef = React.useRef(false);
   const lastProcessedUserIdRef = React.useRef<string | null>(null);
   const isSigningUpRef = React.useRef(false);
@@ -38,7 +40,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ): Promise<User | null | 'NETWORK_ERROR'> => {
     const userId = supabaseUser.id;
     // VERY STRICT retry policy during initial boot
-    const maxRetries = 1;
+    const maxRetries = 2; // allow one extra retry
 
     if (retryCount === 0) {
       markPerformance(PerformanceMarkers.PROFILE_FETCH_START);
@@ -61,7 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ]);
     };
 
-    const QUERY_TIMEOUT = 8000; // 8s hard timeout: fast-fail keeps auth from soft-hanging on tab return
+    const QUERY_TIMEOUT = 6000; // 6s timeout for faster feedback
 
     const fetchPromise = (async () => {
       try {
@@ -256,11 +258,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (mounted) {
           if (result === 'NETWORK_ERROR') {
-            console.warn('📡 Network error during fetch, retaining existing/cached state');
-            // If we have a cached user, we just stay with it.
-            // If we didn't have any user, we might want to show an error, but for now we just stop loading.
-            setIsLoading(false);
-            initialFetchDoneRef.current = true;
+                console.warn('📡 Network error during fetch, retaining existing/cached state');
+                showToast('Network issue while fetching profile, using cached data', 'warning');
+                setIsLoading(false);
+                initialFetchDoneRef.current = true;
           } else if (result) {
             // DEEP EQUALITY CHECK to prevent unnecessary re-renders
             // This is critical for preventing page reloads/effect triggers on window focus
@@ -269,11 +270,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               JSON.stringify(result) === JSON.stringify(user);
 
             if (isUnchanged) {
-              console.log('✅ Auth success (State unchanged, skipping update)');
-            } else {
-              console.log('✅ Auth success (Updating state)');
-              setUser(result);
-            }
+                console.log('✅ Auth success (State unchanged)');
+              } else {
+                console.log('🔄 Auth profile updated, applying new state');
+                setUser(result);
+                showToast('Profile refreshed', 'success');
+              }
           } else {
             console.warn('⚠️ No profile found');
             if (isSigningUpRef.current) {
@@ -308,7 +310,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile, user]); // Only subscribe once on mount, re-subscribing safely if dependencies change
+  }, [fetchUserProfile, showToast, user]); // Include showToast and user to satisfy exhaustive-deps
 
   // Visibility change guard: top-level useEffect (Rules of Hooks compliant).
   // Prevents any stale auth path from re-triggering when the user returns to the tab.
