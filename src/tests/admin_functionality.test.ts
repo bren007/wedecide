@@ -107,6 +107,26 @@ describe('Admin Functionality', () => {
 
     afterAll(async () => {
         if (pgClient) {
+            try {
+                // Delete test users created during this suite
+                if (adminId) {
+                    await pgClient.query('DELETE FROM public.user_roles WHERE user_id = $1', [adminId]);
+                    await pgClient.query('DELETE FROM public.users WHERE id = $1', [adminId]);
+                    await pgClient.query('DELETE FROM auth.users WHERE id = $1', [adminId]);
+                }
+                if (orgId) {
+                    await pgClient.query('DELETE FROM public.organizations WHERE id = $1', [orgId]);
+                }
+                if (memberEmail) {
+                    const memberRes = await pgClient.query('SELECT id FROM auth.users WHERE email = $1', [memberEmail]);
+                    const mId = memberRes.rows[0]?.id;
+                    if (mId) {
+                        await pgClient.query('DELETE FROM public.user_roles WHERE user_id = $1', [mId]);
+                        await pgClient.query('DELETE FROM public.users WHERE id = $1', [mId]);
+                        await pgClient.query('DELETE FROM auth.users WHERE id = $1', [mId]);
+                    }
+                }
+            } catch { /* ignore */ }
             try { await pgClient.end(); } catch { /* ignore */ }
         }
     });
