@@ -1,14 +1,19 @@
--- Migration: Update create_signup_data RPC to use upserts and handle conflicts
--- Allows safe repeated calls without duplicate key errors
+-- Migration: Fix create_signup_data — restore temp-org cleanup after trigger
 --
--- WHY THIS DROP EXISTS:
--- Earlier migrations (baseline + 20260801213000) defined this function with
--- p_user_id as UUID. This migration changes it to TEXT. PostgreSQL treats
--- different parameter types as distinct overloads, so CREATE OR REPLACE on the
--- TEXT signature leaves the old UUID overload intact, making the function name
--- non-unique and causing the GRANT below to fail with "function name is not unique".
--- We must explicitly drop the old UUID overload first.
-DROP FUNCTION IF EXISTS create_signup_data(UUID, TEXT, TEXT, TEXT, TEXT);
+-- WHAT BROKE:
+-- Migration 20260801215000 updated create_signup_data to accept p_user_id as TEXT
+-- instead of UUID, and added ON CONFLICT upserts. However, it accidentally dropped
+-- the temp-org cleanup block that migration 20260801213000 introduced.
+--
+-- HOW IT BREAKS:
+-- The handle_new_user trigger fires on auth.signUp() and creates a temporary org
+-- (slug: 'org-{user_uuid}') plus one admin user_role in that temp org.
+-- When create_signup_data then runs, it moves the user to the real org and inserts
+-- a second admin role there — but never deletes the trigger's stale role.
+-- Result: user has 2 user_role rows; integration test asserts exactly 1 → FAIL.
+--
+-- FIX:
+-- Re-apply the function with the cleanup block restored.
 
 CREATE OR REPLACE FUNCTION create_signup_data(
   p_user_id TEXT,
@@ -22,9 +27,9 @@ SET search_path = public
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  v_org_id  TEXT;
+  v_org_id     TEXT;
   v_old_org_id TEXT;
-  v_result  JSON;
+  v_result     JSON;
 BEGIN
   -- Capture the user's current org BEFORE we move them (may be a trigger-created temp org).
   SELECT organization_id INTO v_old_org_id FROM users WHERE id = p_user_id;
@@ -90,9 +95,8 @@ BEGIN
   ) ON CONFLICT DO NOTHING;
 
   -- 4. Clean up the trigger-created temporary org (slug: 'org-{uuid}') if the user
-  --    was moved to a different org. The handle_new_user trigger fires on auth.signUp()
-  --    and creates a placeholder org + role. Without this cleanup, two user_role rows
-  --    exist for the user (one in the temp org, one in the real org).
+  --    was moved to a different org. Without this, two user_role rows exist:
+  --    one from the trigger's temp org, one from the real org.
   IF v_old_org_id IS NOT NULL AND v_old_org_id <> v_org_id THEN
     DELETE FROM user_roles WHERE organization_id = v_old_org_id AND user_id = p_user_id;
     DELETE FROM organizations WHERE id = v_old_org_id AND slug LIKE 'org-%';
@@ -110,4 +114,4 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION create_signup_data(TEXT, TEXT, TEXT, TEXT, TEXT) TO public, anon, authenticated;
+-- No GRANT needed: permissions on the TEXT signature were already granted in 215000.
