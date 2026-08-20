@@ -263,19 +263,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setIsLoading(false);
                 initialFetchDoneRef.current = true;
           } else if (result) {
-            // DEEP EQUALITY CHECK to prevent unnecessary re-renders
-            // This is critical for preventing page reloads/effect triggers on window focus
-            const isUnchanged = user &&
-              result.id === user.id &&
-              JSON.stringify(result) === JSON.stringify(user);
+            // DEEP EQUALITY CHECK to prevent unnecessary re-renders.
+            // Use functional update to read current state without closing over the `user`
+            // reference (which would require `user` in deps and re-register this subscription
+            // on every profile change — the root cause of infinite fetch loops).
+            setUser(prev => {
+              const isUnchanged = prev &&
+                result.id === prev.id &&
+                JSON.stringify(result) === JSON.stringify(prev);
 
-            if (isUnchanged) {
+              if (isUnchanged) {
                 console.log('✅ Auth success (State unchanged)');
-              } else {
-                console.log('🔄 Auth profile updated, applying new state');
-                setUser(result);
-                showToast('Profile refreshed', 'success');
+                return prev; // No state change = no re-render
               }
+              console.log('🔄 Auth profile updated, applying new state');
+              showToast('Profile refreshed', 'success');
+              return result;
+            });
           } else {
             console.warn('⚠️ No profile found');
             if (isSigningUpRef.current) {
@@ -310,7 +314,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile, showToast, user]); // Include showToast and user to satisfy exhaustive-deps
+  }, [fetchUserProfile, showToast]); // `user` intentionally omitted: the deep-equality check uses functional setUser(prev=>) so it never closes over `user`. Including it here would re-register the auth subscription on every profile change, recreating the infinite loop.
 
   // Visibility change guard: top-level useEffect (Rules of Hooks compliant).
   // Prevents any stale auth path from re-triggering when the user returns to the tab.

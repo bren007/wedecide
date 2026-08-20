@@ -86,17 +86,20 @@ export const OrganizationSettingsPage: React.FC = () => {
     const [inviteLink, setInviteLink] = useState<string | null>(null);
     const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
 
-    const fetchOrganization = useCallback(async () => {
-        try {
-            if (!user) return;
+    // Stable primitive key — avoids the callback identity churn that caused infinite loops.
+    const userId = user?.id;
 
+    const fetchOrganization = useCallback(async (signal?: AbortSignal) => {
+        if (!userId) return;
+        try {
             // 1. Get the organization the user belongs to via users table
             const { data: userData, error: userError } = await supabase
                 .from('users')
                 .select('organization_id')
-                .eq('id', user.id)
+                .eq('id', userId)
                 .single();
 
+            if (signal?.aborted) return;
             if (userError) throw userError;
 
             if (userData) {
@@ -109,6 +112,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .eq('id', orgId)
                     .single();
 
+                if (signal?.aborted) return;
                 if (orgError) throw orgError;
 
                 setOrg(orgData);
@@ -120,6 +124,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .select('*')
                     .eq('organization_id', orgId);
 
+                if (signal?.aborted) return;
                 if (usersError) throw usersError;
 
                 const { data: rolesData, error: rolesError } = await supabase
@@ -127,6 +132,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .select('*')
                     .eq('organization_id', orgId);
 
+                if (signal?.aborted) return;
                 if (rolesError) throw rolesError;
 
                 if (usersData) {
@@ -154,6 +160,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .eq('status', 'pending')
                     .order('created_at', { ascending: false });
 
+                if (signal?.aborted) return;
                 if (!invitesError && invitesData) {
                     setPendingInvites(invitesData as PendingInvite[]);
                 }
@@ -165,6 +172,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .eq('organization_id', orgId)
                     .order('created_at', { ascending: true });
 
+                if (signal?.aborted) return;
                 if (groupsError) throw groupsError;
                 setMeetingGroups(groupsData || []);
 
@@ -175,6 +183,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .eq('org_id', orgId)
                     .maybeSingle();
 
+                if (signal?.aborted) return;
                 if (capData) {
                     setCapacitySettings(capData as unknown as CapacitySettings);
                     // Sync local Fm slider state from DB value
@@ -202,6 +211,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                     .eq('org_id', orgId)
                     .order('target_weight', { ascending: false });
 
+                if (signal?.aborted) return;
                 if (pillarsData) {
                     setPillars(pillarsData as unknown as StrategicPillar[]);
                 }
@@ -215,6 +225,7 @@ export const OrganizationSettingsPage: React.FC = () => {
                         .eq('org_id', orgId)
                         .in('status', ['active', 'approved', 'on_hold', 'delayed']);
 
+                    if (signal?.aborted) return;
                     if (initiatives) {
                         const totalTokens = (initiatives as unknown[]).reduce((sum, init) => sum + (Number(init.focus_slots_required) || 0), 0);
                         setCurrentLoad(totalTokens);
@@ -224,18 +235,41 @@ export const OrganizationSettingsPage: React.FC = () => {
                 }
             }
         } catch (error) {
+            if (signal?.aborted) return; // Ignore errors from cancelled requests
             console.error('Error fetching organization:', error);
             setMessage({ type: 'error', text: 'Failed to load organization details' });
         } finally {
-            setLoading(false);
+            if (!signal?.aborted) {
+                setLoading(false);
+            }
         }
-    }, [user]);
+    // userId is a stable primitive (string | undefined) — safe to depend on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId]);
+
+    // Lightweight helper: refreshes only the pending invites list after a new invite is created.
+    const fetchPendingInvites = useCallback(async (orgId: string) => {
+        const { data: invitesData, error: invitesError } = await supabase
+            .from('invitations')
+            .select('*')
+            .eq('organization_id', orgId)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        if (!invitesError && invitesData) {
+            setPendingInvites(invitesData as PendingInvite[]);
+        }
+    }, []);
 
     useEffect(() => {
-        if (user) {
-            fetchOrganization();
-        }
-    }, [user, fetchOrganization]);
+        if (!userId) return;
+
+        const controller = new AbortController();
+        fetchOrganization(controller.signal);
+
+        // Abort any in-flight requests when the component unmounts or userId changes.
+        return () => { controller.abort(); };
+    }, [userId, fetchOrganization]);
 
     const handleUpdateName = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -458,14 +492,14 @@ export const OrganizationSettingsPage: React.FC = () => {
             if (data?.success) {
                 const fullLink = `${window.location.origin}/signup?token=${data.token}`;
                 setInviteLink(fullLink);
-                // Refresh pending list
-                fetchOrganization();
+                // Only refresh the invites list — avoid re-fetching the entire page.
+                fetchPendingInvites(org.id);
             } else {
                 throw new Error('Failed to generate invite');
             }
         } catch (err: unknown) {
             console.error('Invite error:', err);
-            setMessage({ type: 'error', text: err.message || 'Failed to send invite' });
+            setMessage({ type: 'error', text: (err as Error).message || 'Failed to send invite' });
         } finally {
             setInviteLoading(false);
         }
