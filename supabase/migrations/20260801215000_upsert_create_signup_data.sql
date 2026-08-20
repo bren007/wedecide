@@ -1,5 +1,14 @@
 -- Migration: Update create_signup_data RPC to use upserts and handle conflicts
 -- Allows safe repeated calls without duplicate key errors
+--
+-- WHY THIS DROP EXISTS:
+-- Earlier migrations (baseline + 20260801213000) defined this function with
+-- p_user_id as UUID. This migration changes it to TEXT. PostgreSQL treats
+-- different parameter types as distinct overloads, so CREATE OR REPLACE on the
+-- TEXT signature leaves the old UUID overload intact, making the function name
+-- non-unique and causing the GRANT below to fail with "function name is not unique".
+-- We must explicitly drop the old UUID overload first.
+DROP FUNCTION IF EXISTS create_signup_data(UUID, TEXT, TEXT, TEXT, TEXT);
 
 CREATE OR REPLACE FUNCTION create_signup_data(
   p_user_id TEXT,
@@ -88,4 +97,4 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION create_signup_data TO public, anon, authenticated;
+GRANT EXECUTE ON FUNCTION create_signup_data(TEXT, TEXT, TEXT, TEXT, TEXT) TO public, anon, authenticated;
