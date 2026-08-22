@@ -1,18 +1,21 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
-import { InlineWidget } from 'react-calendly';
+import { InlineWidget, useCalendlyEventListener } from 'react-calendly';
 import { supabase } from '../lib/supabase';
+import { useToasts } from '../context/ToastContext';
 import './AuditSuccessPage.css';
 
 export const AuditSuccessPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { showToast } = useToasts();
     const sessionId = searchParams.get('session_id');
     
     const [loading, setLoading] = useState(true);
     const [customerData, setCustomerData] = useState<{ customer_email: string, customer_name: string, calendly_url?: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [scheduled, setScheduled] = useState(false);
 
     const fetchSessionDetails = useCallback(async () => {
       console.log('🔍 Validating Stripe Session:', sessionId);
@@ -44,6 +47,14 @@ export const AuditSuccessPage: React.FC = () => {
         }
     }, [sessionId, fetchSessionDetails]);
 
+    useCalendlyEventListener({
+        onEventScheduled: (e) => {
+            console.log('Calendly Event Scheduled:', e);
+            setScheduled(true);
+            showToast('Slot-Sync session successfully scheduled!', 'success');
+        }
+    });
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
@@ -73,6 +84,8 @@ export const AuditSuccessPage: React.FC = () => {
             </div>
         );
     }
+
+    const calendlyUrl = customerData?.calendly_url || "https://calendly.com/alturagov/executive-slot-sync";
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-200 pt-32 pb-16 font-sans">
@@ -121,30 +134,63 @@ export const AuditSuccessPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Right Column: Calendly Embed */}
-                    <div className="bg-slate-900/40 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-right-8 duration-700 delay-200 min-h-[700px] border border-slate-800">
-                        <InlineWidget 
-                            url={customerData?.calendly_url || "https://calendly.com/alturagov/executive-slot-sync"}
-                            styles={{ height: '700px' }}
-                            pageSettings={{
-                                backgroundColor: '0a0f1c',
-                                hideEventTypeDetails: false,
-                                hideLandingPageDetails: false,
-                                primaryColor: '3b82f6',
-                                textColor: 'ffffff'
-                            }}
-                            prefill={{
-                                email: customerData?.customer_email,
-                                name: customerData?.customer_name,
-                                customAnswers: {
-                                    a1: sessionId || undefined, // Often maps to "Anything to share"
-                                    a2: sessionId || undefined  // Often maps to the first custom question like "Audit Reference"
-                                }
-                            }}
-                        />
+                    {/* Right Column: Calendly Embed or Confirmation */}
+                    <div className="space-y-4">
+                        <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <span>
+                                🔒 Having trouble loading the calendar or using ad/tracker blockers?
+                            </span>
+                            <a 
+                                href={calendlyUrl}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-action-blue hover:underline font-bold shrink-0 flex items-center gap-1"
+                            >
+                                Open Scheduler in New Tab <ArrowRight size={12} />
+                            </a>
+                        </div>
+
+                        <div className="bg-slate-900/40 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-right-8 duration-700 delay-200 min-h-[700px] border border-slate-800">
+                            {scheduled ? (
+                                <div className="flex flex-col items-center justify-center p-12 text-center h-[700px] bg-slate-900/60 border border-slate-800 rounded-3xl animate-in zoom-in duration-500">
+                                    <CheckCircle size={64} className="text-green-500 mb-6" />
+                                    <h2 className="text-3xl font-bold text-white mb-4">Slot-Sync Scheduled!</h2>
+                                    <p className="text-slate-400 max-w-md mx-auto leading-relaxed mb-8">
+                                        Your calibration session is locked in. We have sent a confirmation email with calendar details to <strong className="text-slate-200">{customerData?.customer_email}</strong>.
+                                    </p>
+                                    <button
+                                        onClick={() => navigate('/command-center')}
+                                        className="px-6 py-3 bg-action-blue hover:bg-blue-700 text-white rounded-lg font-bold transition-colors shadow-lg shadow-blue-500/20"
+                                    >
+                                        Go to Command Center
+                                    </button>
+                                </div>
+                            ) : (
+                                <InlineWidget 
+                                    url={calendlyUrl}
+                                    styles={{ height: '700px' }}
+                                    pageSettings={{
+                                        backgroundColor: '0a0f1c',
+                                        hideEventTypeDetails: false,
+                                        hideLandingPageDetails: false,
+                                        primaryColor: '3b82f6',
+                                        textColor: 'ffffff'
+                                    }}
+                                    prefill={{
+                                        email: customerData?.customer_email,
+                                        name: customerData?.customer_name,
+                                        customAnswers: {
+                                            a1: sessionId || undefined,
+                                            a2: sessionId || undefined
+                                        }
+                                    }}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     );
 };
+

@@ -10,6 +10,53 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
+const getCleanErrorMessage = (err: unknown): string => {
+    if (!err) return 'An unexpected error occurred.';
+    let message = '';
+    if (err instanceof Error) {
+        message = err.message;
+    } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        message = String((err as { message: unknown }).message);
+    } else {
+        message = String(err);
+    }
+
+    if (message.includes('violates unique constraint') || message.includes('duplicate key')) {
+        return 'A record with this information already exists.';
+    }
+    if (message.includes('relation') && message.includes('does not exist')) {
+        return 'Database service temporary misalignment. Please contact support.';
+    }
+    if (message.includes('column') && message.includes('does not exist')) {
+        return 'Schema cache mismatch. Please reload and try again.';
+    }
+    if (message.includes('JWT') || message.includes('token') || message.includes('invalid claims') || message.includes('Auth')) {
+        return 'Authentication session expired or invalid. Please sign in again.';
+    }
+    
+    const sqlKeywords = ['select', 'insert', 'update', 'delete', 'where', 'foreign key', 'constraint', 'null value in column', 'pg_tblspc'];
+    const lowerMessage = message.toLowerCase();
+    if (sqlKeywords.some(keyword => lowerMessage.includes(keyword))) {
+        return 'A database error occurred. Please contact support.';
+    }
+
+    if (message.length > 150) {
+        return message.substring(0, 150) + '...';
+    }
+
+    return message;
+};
+
+const escapeHtml = (unsafe: string): string => {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
+
+
 export const AuditReviewPage: React.FC = () => {
     useAuth();
     const { showToast } = useToasts();
@@ -120,7 +167,9 @@ export const AuditReviewPage: React.FC = () => {
             setLeads(prev => prev.map(l => l.id === selectedLead.id ? updatedLead : l));
             showToast('Calibration saved.', 'success');
         } catch (e: unknown) {
-            showToast('Failed to save calibration: ' + e.message, 'error');
+            console.error('Failed to save calibration:', e);
+            const errMsg = getCleanErrorMessage(e);
+            showToast('Failed to save calibration: ' + errMsg, 'error');
         } finally {
             setCalibrationSaving(false);
         }
@@ -164,7 +213,8 @@ export const AuditReviewPage: React.FC = () => {
             localStorage.setItem(`draftAnalysis_${selectedLead.id}`, JSON.stringify(json.analysis));
         } catch (e: unknown) {
             console.error('Draft generation error:', e);
-            showToast(e.message || 'Failed to generate draft. Check Edge Function logs.', 'error');
+            const errMsg = getCleanErrorMessage(e);
+            showToast(errMsg, 'error');
         } finally {
             setLoading(false);
         }
@@ -233,10 +283,21 @@ export const AuditReviewPage: React.FC = () => {
             }
         } catch (e: unknown) {
             console.error('Publish error:', e);
+            const errMsg = getCleanErrorMessage(e);
             if (pdfWindow) {
-                pdfWindow.document.write(`<div style="color: red;">Failed to publish: ${e.message}</div>`);
+                try {
+                    pdfWindow.document.body.innerHTML = '';
+                    const errDiv = pdfWindow.document.createElement('div');
+                    errDiv.style.color = 'red';
+                    errDiv.style.fontFamily = 'sans-serif';
+                    errDiv.style.padding = '20px';
+                    errDiv.textContent = `Failed to publish: ${errMsg}`;
+                    pdfWindow.document.body.appendChild(errDiv);
+                } catch {
+                    pdfWindow.document.write(`<div style="font-family: sans-serif; padding: 20px; color: red;">Failed to publish: ${escapeHtml(errMsg)}</div>`);
+                }
             }
-            showToast(e.message || 'Failed to publish report. Check Edge Function logs.', 'error');
+            showToast(errMsg, 'error');
         } finally {
             setPublishing(false);
         }
